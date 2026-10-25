@@ -181,6 +181,9 @@ def test_qasm_export_round_trips_supported_circuit(store):
     code = client.post("/api/export/qiskit", json=payload).json()["code"]
     assert "circuit.cx(0, 1)" in code
     assert "exec(" not in code
+    cirq = client.post("/api/export/cirq", json=payload).json()
+    assert cirq["format"] == "cirq_python"
+    assert "cirq.CNOT(qubits[0], qubits[1])" in cirq["code"]
 
 
 def test_platform_requires_login_and_simulation_requires_csrf(store):

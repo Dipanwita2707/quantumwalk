@@ -18,9 +18,9 @@
 
 | ID | Ticket | Files (primary) | Verify |
 | --- | --- | --- | --- |
-| R1-1 | Extract Qiskit build from `simulate()` into `api/circuit_bridge.py` (`to_qiskit`, shared validation) | `api/simulator.py`, `api/circuit_bridge.py` | Existing `api/tests/test_simulator.py` green |
-| R1-2 | Add `to_cirq()` + string export helper on same bridge | `api/circuit_bridge.py` | Unit test: H on q0 → expected Cirq source snippet |
-| R1-3 | `POST /api/export/cirq` (rate limit + CSRF like Qiskit export) | `api/platform_routes.py`, `api/tests/test_platform.py` | HTTP test returns importable-style code |
+| R1-1 | ~~Extract Qiskit build~~ → `circuit_schema.py` + `apply_operation` in bridge | `api/circuit_schema.py`, `api/circuit_bridge.py` | **Done** (32 pytest in slice) |
+| R1-2 | ~~Cirq export helper~~ `export_cirq_python` | `api/circuit_bridge.py` | **Done** |
+| R1-3 | ~~`POST /api/export/cirq`~~ | `api/platform_routes.py` | **Done** |
 | R1-4 | Add optional `engine: Literal["qiskit","cirq"]` on `CircuitRequest`; default `qiskit` | `api/simulator.py`, `api/main.py` | OpenAPI/clients unchanged when field omitted |
 | R1-5 | Implement Cirq statevector path (step snapshots match Qiskit structure) | `api/simulator.py`, `cirq-core` in `requirements.txt` | `test_cirq_parity.py`: Bell, H, small Grover fixture |
 | R1-6 | Extend simulate response with `engine` field | `api/simulator.py`, `web` simulate client types | Typecheck web |

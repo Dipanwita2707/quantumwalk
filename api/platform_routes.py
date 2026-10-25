@@ -26,6 +26,7 @@ from content import ALGORITHMS, CHALLENGES, LESSONS, LESSON_ANSWERS
 from database import Circuit, Progress, User
 from limits import enforce_rate, simulation_slot
 from settings import ai_api_base_url, ai_api_style, google_enabled, openai_api_key, openai_model
+from circuit_bridge import export_cirq_python, export_qiskit_python
 from simulator import CircuitRequest, simulate
 
 def require_platform_session(request: Request, auth: AuthContext | None = Depends(optional_auth)) -> None:
@@ -356,17 +357,13 @@ def hardware_status() -> dict:
 @router.post("/export/qiskit")
 def export_qiskit(circuit: CircuitRequest, request: Request) -> dict:
     enforce_rate(request, "export", 30)
-    lines = ["from qiskit import QuantumCircuit", f"circuit = QuantumCircuit({circuit.qubits}, {circuit.qubits})"]
-    for operation in circuit.operations:
-        if operation.gate in {"cx", "cz", "swap"}:
-            lines.append(f"circuit.{operation.gate}({operation.control}, {operation.target})")
-        elif operation.gate in {"rx", "ry", "rz"}:
-            lines.append(f"circuit.{operation.gate}({operation.angle!r}, {operation.target})")
-        elif operation.gate == "measure":
-            lines.append(f"circuit.measure({operation.target}, {operation.target})")
-        else:
-            lines.append(f"circuit.{operation.gate}({operation.target})")
-    return {"format": "qiskit_python", "code": "\n".join(lines) + "\n"}
+    return {"format": "qiskit_python", "code": export_qiskit_python(circuit)}
+
+
+@router.post("/export/cirq")
+def export_cirq(circuit: CircuitRequest, request: Request) -> dict:
+    enforce_rate(request, "export", 30)
+    return {"format": "cirq_python", "code": export_cirq_python(circuit)}
 
 
 @router.post("/export/qasm")

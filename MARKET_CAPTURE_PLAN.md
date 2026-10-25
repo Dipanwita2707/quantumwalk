@@ -290,6 +290,7 @@ Keep the canonical circuit JSON. Do not add a second editor format.
 | QW-REF-SIRRAYA-001 | [SIRRAYA_REFERENCE_AND_ROADMAP.md](SIRRAYA_REFERENCE_AND_ROADMAP.md) | Competitive inventory and phased feature gaps |
 | QW-PLAN-CIRQ-ENG-002 | [CIRQ_ENGINE_AND_GAMIFICATION_PLAN.md](CIRQ_ENGINE_AND_GAMIFICATION_PLAN.md) | Engine architecture, XP model, animation rules |
 | QW-PLAN-MARKET-003 | This file | What to add, in what order, to be new in the market |
+| QW-BACKLOG-004 | [IMPLEMENTATION_BACKLOG.md](IMPLEMENTATION_BACKLOG.md) | Ticket-level PR slices (R1–R4) |
 | — | [PLATFORM_BUILD_PLAN.md](PLATFORM_BUILD_PLAN.md) | Security, privacy, and release boundaries that still apply |
 
 ---
