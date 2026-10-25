@@ -1,0 +1,4 @@
+# Example placeholder only.
+# Review against the Codex version you use before adopting any setting.
+# No model is forced; no undocumented token budget setting is assumed.
+# Do not replace %USERPROFILE%\.codex\config.toml with this file blindly.

@@ -1,0 +1,65 @@
+.qw-site-ambience {
+  pointer-events: none;
+  z-index: 0;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #070c18;
+}
+.qw-flow-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.72;
+}
+.qw-site-ambience-landing .qw-flow-canvas {
+  opacity: 0.82;
+}
+.qw-site-ambience-journey .qw-flow-canvas {
+  opacity: 0.78;
+}
+.qw-site-ambience-lab .qw-flow-canvas {
+  opacity: 0.42;
+}
+.qw-site-ambience-default .qw-flow-canvas {
+  opacity: 0.65;
+}
+.qw-ambience-grid {
+  opacity: 0.07;
+  background-image: linear-gradient(#7ca7be28 1px, transparent 1px),
+    linear-gradient(90deg, #7ca7be28 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 85% 70% at 50% 42%, #000, transparent 78%);
+  width: 118%;
+  height: 118%;
+  position: absolute;
+  top: -9%;
+  left: -9%;
+  animation: qw-grid-drift 56s linear infinite;
+  transform: perspective(800px) rotateX(52deg) rotateZ(-18deg)
+    translate3d(0, calc(var(--ql-scroll-y, 0) * 0.012px), 0);
+  transform-origin: 50% 40%;
+}
+.qw-site-ambience-journey .qw-ambience-grid {
+  transform: perspective(800px) rotateX(52deg) rotateZ(-18deg)
+    translate3d(0, calc(var(--start-scroll-y, 0) * 0.012px), 0);
+}
+.qw-ambience-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 88% 78% at 50% 44%, transparent 32%, #070c18d9 100%);
+}
+.qw-site-ambience-paused .qw-ambience-grid {
+  animation-play-state: paused;
+}
+@keyframes qw-grid-drift {
+  to {
+    background-position: 72px 36px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qw-ambience-grid {
+    animation: none;
+  }
+}
