@@ -142,6 +142,11 @@
   margin: 1.25rem 0;
 }
 
+.qft-table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
 .mapper-lab label {
   display: block;
   margin: 0.75rem 0;
