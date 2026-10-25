@@ -126,8 +126,35 @@ export function ShorEducationalLab() {
               {result.countingProbabilities && (
                 <p data-testid="shor-measurement">
                   Simulated counting peaks (deterministic tie-break): c = {result.measuredCounting ?? "—"}; order from
-                  measurement post-processing r = {result.orderFromMeasurement ?? "—"}.
+                  measurement post-processing r = {result.orderFromMeasurement ?? "—"}. Post-processing uses{" "}
+                  <strong>direct IQFT</strong> reference probabilities (not hardware).
                 </p>
+              )}
+              {result.iqftComparison && (
+                <div className="explorer-note" data-testid="shor-iqft-comparison">
+                  <p>
+                    IQFT reference: direct inverse DFT on counting (k index, q0 = LSB). Gate check: NC decomposition +
+                    swap layer from the QFT lab.
+                  </p>
+                  {result.iqftComparison.gateIqftSupported ? (
+                    <>
+                      <p>
+                        Bhattacharyya fidelity (distribution match):{" "}
+                        {result.iqftComparison.bhattacharyyaFidelity?.toFixed(6) ?? "—"} (1 = identical); L1 distance:{" "}
+                        {result.iqftComparison.l1Distance?.toExponential(3) ?? "—"}; max |ΔP|:{" "}
+                        {result.iqftComparison.maxAbsoluteDifference?.toExponential(3) ?? "—"}.
+                      </p>
+                      {!result.iqftComparison.distributionsAligned && (
+                        <p className="content-error" role="alert">
+                          Gate and direct counting distributions diverge beyond tolerance — inspect register layout or
+                          report if reproducible.
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p>Gate-level IQFT comparison unavailable for this register width.</p>
+                  )}
+                </div>
               )}
             </section>
           )}

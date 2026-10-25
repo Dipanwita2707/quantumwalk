@@ -11,6 +11,7 @@ test("Shor lab factors 15 with base 7", async ({ page }) => {
   await expect(page.getByTestId("shor-measurement")).toContainText(/c =/);
   await expect(page.getByTestId("shor-classical-ref")).toContainText(/verification only/i);
   await expect(page.getByTestId("shor-simulation-mode")).toContainText(/ideal quantum-state simulation/i);
+  await expect(page.getByTestId("shor-iqft-comparison")).toContainText(/Bhattacharyya fidelity/i);
 });
 
 test("Shor lesson links QFT prerequisite", async ({ page }) => {

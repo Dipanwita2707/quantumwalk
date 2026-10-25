@@ -10,9 +10,13 @@ import {
   isQftValidationError,
   normSquared,
   scale,
+  QFT_MAX_QUBITS,
+  QFT_MIN_QUBITS,
+  QFT_NUMERIC_TOLERANCE,
   type Complex,
   type QftStateVector,
 } from "@/lib/qftSimulator";
+import { applyQftGateSequence } from "@/lib/qftGates";
 
 export const SHOR_N_MIN = 4;
 export const SHOR_N_MAX = 21;
@@ -37,6 +41,7 @@ export type ShorStepKind =
   | "gcd"
   | "quantum_plan"
   | "quantum_evolve"
+  | "iqft_comparison"
   | "measurement"
   | "continued_fraction"
   | "factor_attempt"
@@ -69,7 +74,48 @@ export type ShorRunResult = {
   factors: ShorFactorResult | null;
   /** Brute-force period for teaching checks only — never labeled as measurement. */
   classicalReferenceOrder: number | null;
+  iqftComparison: ShorIqftComparison | null;
 };
+
+export type ShorIqftMode = "direct" | "gate";
+
+export type ShorIqftComparison = {
+  gateIqftSupported: boolean;
+  /** Measurement and phase post-processing use direct IQFT (reference). */
+  referenceMode: "direct";
+  gateModeLabel: string;
+  preIqftNorm: number;
+  postIqftNormDirect: number;
+  directProbabilities: number[];
+  gateProbabilities: number[] | null;
+  /** L1 distance Σ|c| P_direct(c) − P_gate(c)|. */
+  l1Distance: number | null;
+  /** Bhattacharyya fidelity (Σ√(P_i Q_i))² — 1 means identical distributions. */
+  bhattacharyyaFidelity: number | null;
+  maxAbsoluteDifference: number | null;
+  distributionsAligned: boolean;
+};
+
+export function gateIqftSupported(countingBits: number): boolean {
+  return countingBits >= QFT_MIN_QUBITS && countingBits <= QFT_MAX_QUBITS;
+}
+
+export function compareCountingProbabilities(
+  direct: number[],
+  gate: number[],
+): { l1: number; bhattacharyyaFidelity: number; maxAbsDiff: number } {
+  let l1 = 0;
+  let bc = 0;
+  let maxAbs = 0;
+  for (let i = 0; i < direct.length; i += 1) {
+    const d = direct[i];
+    const g = gate[i];
+    l1 += Math.abs(d - g);
+    bc += Math.sqrt(Math.max(0, d) * Math.max(0, g));
+    maxAbs = Math.max(maxAbs, Math.abs(d - g));
+  }
+  return { l1, bhattacharyyaFidelity: bc * bc, maxAbsDiff: maxAbs };
+}
 
 export function gcd(a: number, b: number): number {
   let x = Math.abs(a);
@@ -259,10 +305,26 @@ function indexCountWork(count: number, work: number, countingBits: number): numb
   return count + (work << countingBits);
 }
 
-function applyInverseQftOnCounting(
+function transformCountingSlice(
+  normalized: Complex[],
+  countingBits: number,
+  mode: ShorIqftMode,
+): Complex[] | ShorValidationError {
+  if (mode === "gate") {
+    return applyQftGateSequence({ qubits: countingBits, amplitudes: normalized }, true).amplitudes;
+  }
+  const transformed = applyInverseQft({ qubits: countingBits, amplitudes: normalized });
+  if (isQftValidationError(transformed)) {
+    return { ok: false, message: transformed.message };
+  }
+  return transformed.amplitudes;
+}
+
+function applyIqftOnJoint(
   amps: Complex[],
   countingBits: number,
   workDim: number,
+  mode: ShorIqftMode,
 ): Complex[] | ShorValidationError {
   const out = amps.map((z) => complex(z.re, z.im));
   const tDim = 2 ** countingBits;
@@ -275,16 +337,94 @@ function applyInverseQftOnCounting(
     if (weight < 1e-14) continue;
     const invNorm = 1 / Math.sqrt(weight);
     const normalized = slice.map((z) => scale(z, invNorm));
-    const transformed = applyInverseQft({ qubits: countingBits, amplitudes: normalized });
-    if (isQftValidationError(transformed)) {
-      return { ok: false, message: transformed.message };
-    }
+    const transformed = transformCountingSlice(normalized, countingBits, mode);
+    if (isShorValidationError(transformed)) return transformed;
     const scaleBack = Math.sqrt(weight);
     for (let c = 0; c < tDim; c += 1) {
-      out[indexCountWork(c, w, countingBits)] = scale(transformed.amplitudes[c], scaleBack);
+      out[indexCountWork(c, w, countingBits)] = scale(transformed[c], scaleBack);
     }
   }
   return out;
+}
+
+function marginalCountingProbabilities(amps: Complex[], countingBits: number, workDim: number): number[] {
+  const tDim = 2 ** countingBits;
+  const probs = Array.from({ length: tDim }, () => 0);
+  for (let w = 0; w < workDim; w += 1) {
+    for (let c = 0; c < tDim; c += 1) {
+      probs[c] += normSquared(amps[indexCountWork(c, w, countingBits)]);
+    }
+  }
+  return probs;
+}
+
+function buildPreIqftJointAmplitudes(
+  N: number,
+  a: number,
+  plan: ShorQuantumPlan,
+): Complex[] | ShorValidationError {
+  const { countingQubits: t, workDimension: M } = plan;
+  const cycle = multiplicativeCycleValues(a, N);
+  const valueToIndex = new Map(cycle.map((v, i) => [v, i]));
+  const tDim = 2 ** t;
+  const scale = 1 / Math.sqrt(tDim);
+  const amps = Array.from({ length: M * tDim }, () => complex(0, 0));
+  for (let j = 0; j < tDim; j += 1) {
+    const val = modPow(a, j, N);
+    const wi = valueToIndex.get(val);
+    if (wi === undefined) continue;
+    amps[indexCountWork(j, wi, t)] = complex(scale, 0);
+  }
+  return amps;
+}
+
+export function jointTotalProbability(amps: Complex[]): number {
+  return amps.reduce((s, z) => s + normSquared(z), 0);
+}
+
+export function simulateIqftComparison(N: number, a: number): ShorIqftComparison | ShorValidationError {
+  const err = validateShorInput(N, a);
+  if (err) return err;
+  const plan = planQuantumSimulation(N, a);
+  if (!plan) {
+    return { ok: false, message: "Quantum register plan exceeds the 5-qubit educational simulator budget." };
+  }
+  const pre = buildPreIqftJointAmplitudes(N, a, plan);
+  if (isShorValidationError(pre)) return pre;
+  const preNorm = jointTotalProbability(pre);
+  const { countingQubits: t, workDimension: M } = plan;
+  const directOut = applyIqftOnJoint(pre.slice(), t, M, "direct");
+  if (isShorValidationError(directOut)) return directOut;
+  const directProbs = marginalCountingProbabilities(directOut, t, M);
+  const postNormDirect = jointTotalProbability(directOut);
+  const supported = gateIqftSupported(t);
+  let gateProbs: number[] | null = null;
+  let metrics: ReturnType<typeof compareCountingProbabilities> | null = null;
+  if (supported) {
+    const gateOut = applyIqftOnJoint(pre.slice(), t, M, "gate");
+    if (isShorValidationError(gateOut)) return gateOut;
+    if (Math.abs(jointTotalProbability(gateOut) - 1) > QFT_NUMERIC_TOLERANCE) {
+      return { ok: false, message: "Gate IQFT path did not preserve unit norm." };
+    }
+    gateProbs = marginalCountingProbabilities(gateOut, t, M);
+    metrics = compareCountingProbabilities(directProbs, gateProbs);
+  }
+  return {
+    gateIqftSupported: supported,
+    referenceMode: "direct",
+    gateModeLabel: supported
+      ? "NC gate IQFT + swap layer (same as QFT lab gate path)"
+      : "unsupported — counting width outside gate simulator",
+    preIqftNorm: preNorm,
+    postIqftNormDirect: postNormDirect,
+    directProbabilities: directProbs,
+    gateProbabilities: gateProbs,
+    l1Distance: metrics?.l1 ?? null,
+    bhattacharyyaFidelity: metrics?.bhattacharyyaFidelity ?? null,
+    maxAbsoluteDifference: metrics?.maxAbsDiff ?? null,
+    distributionsAligned:
+      metrics !== null && metrics.bhattacharyyaFidelity >= 1 - QFT_NUMERIC_TOLERANCE,
+  };
 }
 
 export type ShorQuantumSimulationResult = {
@@ -304,31 +444,13 @@ export function simulateQuantumCountingDistribution(
   if (!plan) {
     return { ok: false, message: "Quantum register plan exceeds the 5-qubit educational simulator budget." };
   }
+  const pre = buildPreIqftJointAmplitudes(N, a, plan);
+  if (isShorValidationError(pre)) return pre;
   const { countingQubits: t, workDimension: M } = plan;
-  const cycle = multiplicativeCycleValues(a, N);
-  const valueToIndex = new Map(cycle.map((v, i) => [v, i]));
-  const tDim = 2 ** t;
-  const dim = M * tDim;
-  const scale = 1 / Math.sqrt(tDim);
-  let amps = Array.from({ length: dim }, () => complex(0, 0));
-  for (let j = 0; j < tDim; j += 1) {
-    const val = modPow(a, j, N);
-    const wi = valueToIndex.get(val);
-    if (wi === undefined) continue;
-    amps[indexCountWork(j, wi, t)] = complex(scale, 0);
-  }
-
-  const afterQftResult = applyInverseQftOnCounting(amps, t, M);
-  if (isShorValidationError(afterQftResult)) return afterQftResult;
-  const afterQft = afterQftResult;
-
-  const probs = Array.from({ length: tDim }, () => 0);
-  for (let w = 0; w < M; w += 1) {
-    for (let c = 0; c < tDim; c += 1) {
-      probs[c] += normSquared(afterQft[indexCountWork(c, w, t)]);
-    }
-  }
-  return { ok: true, plan, probabilities: probs, cycleLength: cycle.length };
+  const afterQft = applyIqftOnJoint(pre.slice(), t, M, "direct");
+  if (isShorValidationError(afterQft)) return afterQft;
+  const probs = marginalCountingProbabilities(afterQft, t, M);
+  return { ok: true, plan, probabilities: probs, cycleLength: multiplicativeCycleValues(a, N).length };
 }
 
 export function pickDeterministicMeasurement(probabilities: number[]): number {
@@ -409,6 +531,7 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
       orderFromMeasurement: null,
       factors: fac.ok ? fac : null,
       classicalReferenceOrder: null,
+      iqftComparison: null,
     };
   }
 
@@ -453,6 +576,7 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
       orderFromMeasurement: null,
       factors,
       classicalReferenceOrder,
+      iqftComparison: null,
     };
   }
 
@@ -466,6 +590,19 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
   const simResult = simulateQuantumCountingDistribution(N, a);
   if (isShorValidationError(simResult)) return simResult;
   const sim = simResult;
+
+  const iqftCmpResult = simulateIqftComparison(N, a);
+  const iqftComparison = isShorValidationError(iqftCmpResult) ? null : iqftCmpResult;
+  if (iqftComparison) {
+    steps.push({
+      kind: "iqft_comparison",
+      title: "IQFT path comparison (ideal simulation)",
+      detail: iqftComparison.gateIqftSupported
+        ? `Reference: direct inverse DFT on counting (index k, q0 = LSB). Gate path: documented NC IQFT + swap layer. Bhattacharyya fidelity ${iqftComparison.bhattacharyyaFidelity?.toFixed(6) ?? "—"} (1 = identical distributions), L1 = ${iqftComparison.l1Distance?.toExponential(2) ?? "—"}. Phase post-processing uses direct reference probabilities only.`
+        : `Gate-level IQFT not shown: ${iqftComparison.gateModeLabel}.`,
+      status: iqftComparison.distributionsAligned ? "success" : "warning",
+    });
+  }
 
   steps.push({
     kind: "quantum_evolve",
@@ -537,6 +674,7 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
     orderFromMeasurement,
     factors,
     classicalReferenceOrder,
+    iqftComparison,
   };
 }
 

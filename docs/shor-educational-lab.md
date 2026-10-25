@@ -43,9 +43,20 @@ Among outcomes with probability within **1e−9** of the maximum, pick the **sma
 | 21 | 2 | 6 | 3 × 7 |
 | 8 | 3 | 2 | 2 × 4 |
 
-## QFT integration
-- Counting register only; **same k index / LSB convention** as `qftSimulator.ts`.
-- Gate-sequence QFT (with swap layer) is **not** used on this path — only the direct inverse transform.
+## QFT integration (dual IQFT paths)
+| Path | Role |
+|------|------|
+| **Direct inverse DFT** | Reference for measurement / phase post-processing (`applyInverseQft` / `apply_qft(inverse=True)`). |
+| **Gate IQFT** | Same pre-IQFT joint state; counting slices transformed with `applyQftGateSequence` / `apply_qft_gates` (NC order + **swap layer** — see `docs/qft-simulator-conventions.md`). |
+
+**Comparison metrics** (ideal simulation, not hardware):
+- **Bhattacharyya fidelity** on counting marginals: \((\sum_c \sqrt{P_{\text{direct}}(c)\,P_{\text{gate}}(c)})^2\) — 1 means identical distributions.
+- **L1 distance** \(\sum_c |P_{\text{direct}}(c)-P_{\text{gate}}(c)|\).
+- Tolerance: `SHOR_NUMERIC_TOLERANCE` / `QFT_NUMERIC_TOLERANCE` = **1e−8**.
+
+Gate comparison requires **1 ≤ t ≤ 5** counting qubits (within total ≤5 qubit budget). If unsupported, UI labels **gate comparison unavailable**; direct reference still runs.
+
+Norm checks: pre-IQFT joint, post-IQFT (direct and gate), and marginal **Σ P(c)=1** are asserted in pytest (`test_shor_gate_iqft.py`).
 
 ## Academy links
 - Prerequisites: `/learn/qft-intro`, `/academy/labs/qft`.
@@ -57,4 +68,4 @@ Among outcomes with probability within **1e−9** of the maximum, pick the **sma
 - Sirraya parity: **PARTIAL** — see `sirraya/docs/references/sirraya-captures/quantumwalk-parity-matrix.md`.
 
 ## Next milestone
-Gate-level QPE for the smallest registers where t + work ≤ 5, with IQFT via the **gate** QFT path for end-to-end convention parity — optional future work.
+Gate-level **modular exponentiation** (not just IQFT) on the smallest registers; optional side-by-side with current closed-form QPE state prep.

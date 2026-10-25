@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import math
 
-from qft_simulator import apply_qft
+from qft_gates import apply_qft_gates
+from qft_simulator import QFT_MAX_QUBITS, QFT_MIN_QUBITS, apply_qft
 
 SHOR_N_MIN = 4
 SHOR_N_MAX = 21
@@ -212,6 +213,55 @@ def build_pre_iqft_joint_amplitudes(n: int, a: int) -> tuple[dict[str, int], lis
     return plan, amps, len(cycle)
 
 
+def gate_iqft_supported(counting_bits: int) -> bool:
+    return QFT_MIN_QUBITS <= counting_bits <= QFT_MAX_QUBITS
+
+
+def _transform_counting_slice(normalized: list[complex], counting_bits: int, iqft_mode: str) -> list[complex]:
+    if iqft_mode == "gate":
+        return apply_qft_gates(normalized, inverse=True)
+    return apply_qft(normalized, inverse=True)
+
+
+def _apply_iqft_on_joint(
+    amps: list[complex], counting_bits: int, work_dim: int, iqft_mode: str
+) -> list[complex]:
+    t = counting_bits
+    t_dim = 2**t
+    out = amps[:]
+    for w in range(work_dim):
+        slice_amps = [out[_index_count_work(c, w, t)] for c in range(t_dim)]
+        weight = sum(abs(z) ** 2 for z in slice_amps)
+        if weight < 1e-14:
+            continue
+        inv_norm = 1 / math.sqrt(weight)
+        normalized = [z * inv_norm for z in slice_amps]
+        transformed = _transform_counting_slice(normalized, t, iqft_mode)
+        scale_back = math.sqrt(weight)
+        for c in range(t_dim):
+            out[_index_count_work(c, w, t)] = transformed[c] * scale_back
+    return out
+
+
+def _marginal_counting_probabilities(amps: list[complex], counting_bits: int, work_dim: int) -> list[float]:
+    t_dim = 2**counting_bits
+    probs = [0.0] * t_dim
+    for w in range(work_dim):
+        for c in range(t_dim):
+            z = amps[_index_count_work(c, w, counting_bits)]
+            probs[c] += abs(z) ** 2
+    return probs
+
+
+def compare_counting_probabilities(
+    direct: list[float], gate: list[float]
+) -> dict[str, float]:
+    l1 = sum(abs(a - b) for a, b in zip(direct, gate))
+    bc = sum(math.sqrt(max(0.0, a) * max(0.0, b)) for a, b in zip(direct, gate)) ** 2
+    max_abs = max(abs(a - b) for a, b in zip(direct, gate))
+    return {"l1": l1, "bhattacharyya_fidelity": bc, "max_abs_diff": max_abs}
+
+
 def verify_orbit_covers_modular_powers(n: int, a: int, counting_bits: int) -> bool:
     cycle = set(multiplicative_cycle_values(a, n))
     for j in range(2**counting_bits):
@@ -220,32 +270,53 @@ def verify_orbit_covers_modular_powers(n: int, a: int, counting_bits: int) -> bo
     return True
 
 
-def build_post_iqft_joint_amplitudes(n: int, a: int) -> tuple[dict[str, int], list[complex], list[float], int] | str:
+def build_post_iqft_joint_amplitudes(
+    n: int, a: int, iqft_mode: str = "direct"
+) -> tuple[dict[str, int], list[complex], list[float], int] | str:
     built = build_pre_iqft_joint_amplitudes(n, a)
     if isinstance(built, str):
         return built
     plan, amps, cycle_len = built
     t = plan["counting_qubits"]
     m = plan["work_dimension"]
-    t_dim = 2**t
-    for w in range(m):
-        slice_amps = [amps[_index_count_work(c, w, t)] for c in range(t_dim)]
-        weight = sum(abs(z) ** 2 for z in slice_amps)
-        if weight < 1e-14:
-            continue
-        inv_norm = 1 / math.sqrt(weight)
-        normalized = [z * inv_norm for z in slice_amps]
-        transformed = apply_qft(normalized, inverse=True)
-        scale_back = math.sqrt(weight)
-        for c in range(t_dim):
-            amps[_index_count_work(c, w, t)] = transformed[c] * scale_back
-
-    probs = [0.0] * t_dim
-    for w in range(m):
-        for c in range(t_dim):
-            z = amps[_index_count_work(c, w, t)]
-            probs[c] += abs(z) ** 2
+    if iqft_mode == "gate" and not gate_iqft_supported(t):
+        return "Gate-level IQFT unsupported for this counting register width."
+    amps = _apply_iqft_on_joint(amps, t, m, iqft_mode)
+    probs = _marginal_counting_probabilities(amps, t, m)
     return plan, amps, probs, cycle_len
+
+
+def simulate_iqft_comparison(n: int, a: int) -> dict[str, object] | str:
+    """Direct (reference) vs gate IQFT counting marginals on the same pre-IQFT state."""
+    built = build_pre_iqft_joint_amplitudes(n, a)
+    if isinstance(built, str):
+        return built
+    plan, pre_amps, _cycle = built
+    t = plan["counting_qubits"]
+    m = plan["work_dimension"]
+    pre_norm = _joint_total_probability(pre_amps)
+    direct_amps = _apply_iqft_on_joint(pre_amps[:], t, m, "direct")
+    direct_probs = _marginal_counting_probabilities(direct_amps, t, m)
+    post_norm = _joint_total_probability(direct_amps)
+    supported = gate_iqft_supported(t)
+    gate_probs: list[float] | None = None
+    metrics: dict[str, float] | None = None
+    if supported:
+        gate_amps = _apply_iqft_on_joint(pre_amps[:], t, m, "gate")
+        gate_probs = _marginal_counting_probabilities(gate_amps, t, m)
+        metrics = compare_counting_probabilities(direct_probs, gate_probs)
+        if abs(_joint_total_probability(gate_amps) - 1.0) > SHOR_NUMERIC_TOLERANCE:
+            return "Gate IQFT path did not preserve unit norm."
+    return {
+        "plan": plan,
+        "pre_iqft_norm": pre_norm,
+        "post_iqft_norm_direct": post_norm,
+        "gate_iqft_supported": supported,
+        "direct_probabilities": direct_probs,
+        "gate_probabilities": gate_probs,
+        "metrics": metrics,
+        "aligned": metrics is not None and metrics["bhattacharyya_fidelity"] >= 1 - SHOR_NUMERIC_TOLERANCE,
+    }
 
 
 def simulate_quantum_counting_distribution(n: int, a: int) -> tuple[dict[str, int], list[float], int] | str:
