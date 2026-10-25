@@ -1,0 +1,162 @@
+{
+  "browser": {
+    "mode": "launch",
+    "executable_path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "headless": true
+  },
+  "environment": {
+    "viewport": { "width": 1440, "height": 900, "device_scale_factor": 1 },
+    "locale": "en-US",
+    "timezone": "UTC",
+    "color_scheme": "light",
+    "reduced_motion": "reduce",
+    "service_workers": "block"
+  },
+  "start_url": { "url": "https://tools.sirraya.org/" },
+  "capture": {
+    "after_each_step": ["url", "accessibility"],
+    "at_end": ["url", "accessibility", "screenshot", "dom"],
+    "events": ["network", "console", "page-errors"],
+    "network": {
+      "request_body": false,
+      "response_body": true,
+      "header_values": false
+    }
+  },
+  "actions": [
+    {
+      "step_id": "hub-ready",
+      "action": "wait_for",
+      "timeout_ms": 60000,
+      "locator": { "kind": "role", "role": "button", "name": "Create a document" },
+      "state": "visible"
+    },
+    {
+      "step_id": "tool-quantum-explorer",
+      "action": "click",
+      "timeout_ms": 25000,
+      "locator": {
+        "kind": "role",
+        "role": "button",
+        "name": "Experimental Quantum Explorer Experimental platform for quantum algorithm testing and Traveling Salesman Problem solutions. Research"
+      }
+    },
+    { "step_id": "tool-quantum-explorer-settle", "action": "wait_for_timeout", "duration_ms": 10000 },
+    {
+      "step_id": "hub-reset-1",
+      "action": "goto",
+      "timeout_ms": 45000,
+      "destination": { "url": "https://tools.sirraya.org/" },
+      "wait_until": "domcontentloaded"
+    },
+    { "step_id": "hub-reset-1-wait", "action": "wait_for_timeout", "duration_ms": 2000 },
+    {
+      "step_id": "tool-quantum-mapper",
+      "action": "click",
+      "timeout_ms": 25000,
+      "locator": {
+        "kind": "role",
+        "role": "button",
+        "name": "Quantum Mapper Visual guide understanding classical to quantum computing mappings Learn"
+      }
+    },
+    { "step_id": "tool-quantum-mapper-settle", "action": "wait_for_timeout", "duration_ms": 10000 },
+    {
+      "step_id": "hub-reset-2",
+      "action": "goto",
+      "timeout_ms": 45000,
+      "destination": { "url": "https://tools.sirraya.org/" },
+      "wait_until": "domcontentloaded"
+    },
+    { "step_id": "hub-reset-2-wait", "action": "wait_for_timeout", "duration_ms": 2000 },
+    {
+      "step_id": "tool-ml-studio",
+      "action": "click",
+      "timeout_ms": 25000,
+      "locator": {
+        "kind": "role",
+        "role": "button",
+        "name": "Popular ML Studio Interactive visualization and exploration of machine learning architectures and neural networks. Research"
+      }
+    },
+    { "step_id": "tool-ml-studio-settle", "action": "wait_for_timeout", "duration_ms": 10000 },
+    {
+      "step_id": "hub-reset-3",
+      "action": "goto",
+      "timeout_ms": 45000,
+      "destination": { "url": "https://tools.sirraya.org/" },
+      "wait_until": "domcontentloaded"
+    },
+    { "step_id": "hub-reset-3-wait", "action": "wait_for_timeout", "duration_ms": 2000 },
+    {
+      "step_id": "tool-doc-editor",
+      "action": "click",
+      "timeout_ms": 25000,
+      "locator": {
+        "kind": "role",
+        "role": "button",
+        "name": "Doc Editor A fast live-preview Markdown editor with AI writing help, math, diagrams, version history and PDF, Word and HTML export. Live Markdown Preview AI Writing Assistant Math & Diagrams PDF / Word Export Open Doc Editor"
+      }
+    },
+    { "step_id": "tool-doc-editor-settle", "action": "wait_for_timeout", "duration_ms": 10000 },
+    {
+      "step_id": "hub-reset-4",
+      "action": "goto",
+      "timeout_ms": 45000,
+      "destination": { "url": "https://tools.sirraya.org/" },
+      "wait_until": "domcontentloaded"
+    },
+    { "step_id": "hub-reset-4-wait", "action": "wait_for_timeout", "duration_ms": 2000 },
+    {
+      "step_id": "tool-document-pro",
+      "action": "click",
+      "timeout_ms": 25000,
+      "locator": {
+        "kind": "role",
+        "role": "button",
+        "name": "New Document Pro Create agreements, letters and business documents from legal-grade templates ? auto-numbered clauses, e-signatures, tamper-evident sealing, PDF and Word export. 25+ Templates & Clause Library E-Signatures & SHA-256 Sealing AI Drafting & Risk Review PDF & Word Export Open Document Pro"
+      }
+    },
+    { "step_id": "tool-document-pro-settle", "action": "wait_for_timeout", "duration_ms": 10000 },
+    {
+      "step_id": "hub-reset-5",
+      "action": "goto",
+      "timeout_ms": 45000,
+      "destination": { "url": "https://tools.sirraya.org/" },
+      "wait_until": "domcontentloaded"
+    },
+    { "step_id": "hub-reset-5-wait", "action": "wait_for_timeout", "duration_ms": 2000 },
+    {
+      "step_id": "tool-quantum-academy",
+      "action": "click",
+      "timeout_ms": 25000,
+      "locator": { "kind": "css", "selector": "button:has(h3:text-is('Quantum Academy'))" }
+    },
+    { "step_id": "tool-quantum-academy-settle", "action": "wait_for_timeout", "duration_ms": 12000 },
+    {
+      "step_id": "explorer-check-status",
+      "action": "goto",
+      "timeout_ms": 45000,
+      "destination": { "url": "https://tools.sirraya.org/" },
+      "wait_until": "domcontentloaded"
+    },
+    {
+      "step_id": "reopen-explorer",
+      "action": "click",
+      "timeout_ms": 25000,
+      "locator": {
+        "kind": "role",
+        "role": "button",
+        "name": "Experimental Quantum Explorer Experimental platform for quantum algorithm testing and Traveling Salesman Problem solutions. Research"
+      }
+    },
+    { "step_id": "reopen-explorer-settle", "action": "wait_for_timeout", "duration_ms": 6000 },
+    {
+      "step_id": "click-check-status",
+      "action": "click",
+      "timeout_ms": 15000,
+      "locator": { "kind": "role", "role": "button", "name": "Check Status" }
+    },
+    { "step_id": "after-check-status", "action": "wait_for_timeout", "duration_ms": 3000 }
+  ]
+}
