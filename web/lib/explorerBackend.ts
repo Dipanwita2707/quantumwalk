@@ -3,6 +3,7 @@
  */
 
 import { ApiError, getApiBase } from "@/lib/api";
+import { validateNumberMatrix } from "@/lib/tspMatrixConfig";
 
 export type BackendHealthState = "checking" | "online" | "offline";
 
@@ -115,7 +116,7 @@ export function healthFailureMessage(reason: HealthFailureReason, status?: numbe
   }
 }
 
-export function buildThreeCitySolveRequest(distanceMatrix: number[][]): SolveTspRequest {
+export function buildGroverSolveRequest(distanceMatrix: number[][]): SolveTspRequest {
   return {
     distance_matrix: distanceMatrix,
     algorithm: "grover",
@@ -127,13 +128,12 @@ export function buildThreeCitySolveRequest(distanceMatrix: number[][]): SolveTsp
   };
 }
 
+/** @deprecated Use buildGroverSolveRequest */
+export const buildThreeCitySolveRequest = buildGroverSolveRequest;
+
 export function validateDistanceMatrix(matrix: number[][]): string | null {
-  const n = matrix.length;
-  if (n < 3 || n > 6) return "Distance matrix must have 3–6 cities.";
-  for (const row of matrix) {
-    if (row.length !== n) return "Distance matrix must be square.";
-  }
-  return null;
+  const result = validateNumberMatrix(matrix);
+  return result.ok ? null : result.message;
 }
 
 export async function postSolveTsp(body: SolveTspRequest, signal?: AbortSignal): Promise<SolveTspResponse> {

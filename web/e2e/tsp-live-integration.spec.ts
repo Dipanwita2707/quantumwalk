@@ -73,6 +73,51 @@ test.describe("TSP live backend @live-backend", () => {
       timeout: 30_000,
     });
 
+    await page.getByTestId("tsp-matrix-cell-0-1").fill("1");
+    await page.getByTestId("tsp-matrix-cell-0-1").blur();
+
+    const solveBtn = page.getByRole("button", { name: "Run backend Grover solve" });
+    await expect(solveBtn).toBeEnabled();
+
+    const solveResponsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/v3/solve-tsp") && res.request().method() === "POST",
+      { timeout: 120_000 },
+    );
+    await solveBtn.click();
+    const solveResponse = await solveResponsePromise;
+    expect(solveResponse.status()).toBe(200);
+
+    const requestBody = solveResponse.request().postDataJSON() as { distance_matrix: number[][] };
+    expect(requestBody.distance_matrix[0][1]).toBe(1);
+
+    const body = (await solveResponse.json()) as SolveTspResponse;
+    expect(body.success).toBe(true);
+    expect(body.quantum_solutions.length).toBeGreaterThan(0);
+    expect(body.quantum_advantage.classical_optimal_distance).toBeGreaterThan(0);
+    for (const row of body.quantum_solutions) {
+      expect(row.route).toHaveLength(3);
+      expect(row.distance).toBeGreaterThan(0);
+      expect(row.probability).toBeGreaterThan(0);
+      expect(row.probability).toBeLessThanOrEqual(1);
+    }
+
+    const results = page.getByTestId("tsp-backend-solve-results");
+    await expect(results).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("tsp-backend-solve-summary")).toContainText(
+      `Classical optimal: ${body.quantum_advantage.classical_optimal_distance}`,
+    );
+    await expect(page.getByTestId("tsp-backend-solve-row-0")).toBeVisible();
+    await expect(page.getByTestId("tsp-backend-solve-distance-0")).toContainText(/^cost /);
+  });
+
+  test("default matrix live solve matches classical optimum 7", async ({ page }) => {
+    test.setTimeout(180_000);
+
+    await page.goto("/explorer/tsp");
+    await expect(page.getByRole("status", { name: "Backend API status" })).toContainText(/API online/i, {
+      timeout: 30_000,
+    });
+
     const solveBtn = page.getByRole("button", { name: "Run backend Grover solve" });
     await expect(solveBtn).toBeEnabled();
 

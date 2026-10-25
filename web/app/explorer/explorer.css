@@ -109,6 +109,39 @@
   text-align: center;
 }
 
+.tsp-matrix-input {
+  width: 3.25rem;
+  text-align: center;
+  background: rgba(8, 16, 32, 0.75);
+  border: 1px solid rgba(140, 245, 226, 0.35);
+  border-radius: 0.35rem;
+  color: inherit;
+  padding: 0.25rem 0.35rem;
+  font: inherit;
+}
+
+.tsp-matrix-input:read-only {
+  opacity: 0.65;
+}
+
+.tsp-city-count-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.tsp-city-count-label input[type="range"] {
+  flex: 1 1 8rem;
+  min-width: 6rem;
+}
+
+.tsp-config-panel {
+  margin: 1.25rem 0;
+}
+
 .tsp-threshold-table {
   width: 100%;
   border-collapse: collapse;
