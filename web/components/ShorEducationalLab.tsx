@@ -130,6 +130,29 @@ export function ShorEducationalLab() {
                   <strong>direct IQFT</strong> reference probabilities (not hardware).
                 </p>
               )}
+              {result.modexpComparison && (
+                <div className="explorer-note" data-testid="shor-modexp-comparison">
+                  <p>
+                    Pre-IQFT prep: <strong>closed-form</strong> (reference amplitudes) vs{" "}
+                    <strong>gate-level</strong> (H on counting, |1&gt; on orbit index 0, controlled multiplies by
+                    a^{"{2^j}"} as orbit permutations). Encoding: {result.modexpComparison.workEncoding}; orbit size r
+                    = {result.modexpComparison.orbitSize}.
+                  </p>
+                  <p>
+                    Pre-IQFT state fidelity (global phase ignored):{" "}
+                    {result.modexpComparison.preIqftStateFidelity.toFixed(8)}; after direct IQFT — Bhattacharyya:{" "}
+                    {result.modexpComparison.bhattacharyyaFidelity.toFixed(6)}, L1:{" "}
+                    {result.modexpComparison.l1Distance.toExponential(3)}, max |ΔP|:{" "}
+                    {result.modexpComparison.maxAbsoluteDifference.toExponential(3)}.
+                  </p>
+                  {(!result.modexpComparison.preIqftStatesAligned ||
+                    !result.modexpComparison.distributionsAligned) && (
+                    <p className="content-error" role="alert">
+                      Gate mod-exp and closed-form paths diverge beyond tolerance — not hidden by renormalization.
+                    </p>
+                  )}
+                </div>
+              )}
               {result.iqftComparison && (
                 <div className="explorer-note" data-testid="shor-iqft-comparison">
                   <p>

@@ -17,6 +17,12 @@ import {
   type QftStateVector,
 } from "@/lib/qftSimulator";
 import { applyQftGateSequence } from "@/lib/qftGates";
+import {
+  applyControlledOrbitMultiply,
+  applyHadamardCountingQubit,
+  SHOR_WORK_ENCODING,
+  stateOverlapFidelity,
+} from "@/lib/shorModExp";
 
 export const SHOR_N_MIN = 4;
 export const SHOR_N_MAX = 21;
@@ -41,6 +47,7 @@ export type ShorStepKind =
   | "gcd"
   | "quantum_plan"
   | "quantum_evolve"
+  | "modexp_comparison"
   | "iqft_comparison"
   | "measurement"
   | "continued_fraction"
@@ -75,6 +82,23 @@ export type ShorRunResult = {
   /** Brute-force period for teaching checks only — never labeled as measurement. */
   classicalReferenceOrder: number | null;
   iqftComparison: ShorIqftComparison | null;
+  modexpComparison: ShorModExpComparison | null;
+};
+
+export type ShorModExpComparison = {
+  workEncoding: typeof SHOR_WORK_ENCODING;
+  orbitSize: number;
+  closedPreNorm: number;
+  gatePreNorm: number;
+  /** |<psi_closed|psi_gate>|^2 (global phase ignored). */
+  preIqftStateFidelity: number;
+  preIqftStatesAligned: boolean;
+  closedProbabilities: number[];
+  gatePreparationProbabilities: number[];
+  l1Distance: number;
+  bhattacharyyaFidelity: number;
+  maxAbsoluteDifference: number;
+  distributionsAligned: boolean;
 };
 
 export type ShorIqftMode = "direct" | "gate";
@@ -358,7 +382,7 @@ function marginalCountingProbabilities(amps: Complex[], countingBits: number, wo
   return probs;
 }
 
-function buildPreIqftJointAmplitudes(
+export function buildPreIqftJointAmplitudes(
   N: number,
   a: number,
   plan: ShorQuantumPlan,
@@ -376,6 +400,67 @@ function buildPreIqftJointAmplitudes(
     amps[indexCountWork(j, wi, t)] = complex(scale, 0);
   }
   return amps;
+}
+
+/** |0..0>|1> (orbit index 0) -> H on counting -> controlled orbit multiplies a^{2^j}. */
+export function buildPreIqftViaGates(
+  N: number,
+  a: number,
+  plan: ShorQuantumPlan,
+): Complex[] | ShorValidationError {
+  const t = plan.countingQubits;
+  const m = plan.workDimension;
+  const r = multiplicativeCycleValues(a, N).length;
+  const dim = m * 2 ** t;
+  let amps = Array.from({ length: dim }, () => complex(0, 0));
+  amps[indexCountWork(0, 0, t)] = complex(1, 0);
+  for (let q = 0; q < t; q += 1) {
+    amps = applyHadamardCountingQubit(amps, t, m, q);
+  }
+  for (let j = 0; j < t; j += 1) {
+    amps = applyControlledOrbitMultiply(amps, t, m, j, 2 ** j, r);
+  }
+  if (Math.abs(jointTotalProbability(amps) - 1) > QFT_NUMERIC_TOLERANCE) {
+    return { ok: false, message: "Gate mod-exp path did not preserve unit norm." };
+  }
+  return amps;
+}
+
+export function simulateModExpComparison(N: number, a: number): ShorModExpComparison | ShorValidationError {
+  const err = validateShorInput(N, a);
+  if (err) return err;
+  const plan = planQuantumSimulation(N, a);
+  if (!plan) {
+    return { ok: false, message: "Quantum register plan exceeds the 5-qubit educational simulator budget." };
+  }
+  const closed = buildPreIqftJointAmplitudes(N, a, plan);
+  if (isShorValidationError(closed)) return closed;
+  const gated = buildPreIqftViaGates(N, a, plan);
+  if (isShorValidationError(gated)) return gated;
+  const r = multiplicativeCycleValues(a, N).length;
+  const preFidelity = stateOverlapFidelity(closed, gated);
+  const { countingQubits: t, workDimension: M } = plan;
+  const closedPost = applyIqftOnJoint(closed.slice(), t, M, "direct");
+  if (isShorValidationError(closedPost)) return closedPost;
+  const gatePost = applyIqftOnJoint(gated.slice(), t, M, "direct");
+  if (isShorValidationError(gatePost)) return gatePost;
+  const closedProbs = marginalCountingProbabilities(closedPost, t, M);
+  const gateProbs = marginalCountingProbabilities(gatePost, t, M);
+  const metrics = compareCountingProbabilities(closedProbs, gateProbs);
+  return {
+    workEncoding: SHOR_WORK_ENCODING,
+    orbitSize: r,
+    closedPreNorm: jointTotalProbability(closed),
+    gatePreNorm: jointTotalProbability(gated),
+    preIqftStateFidelity: preFidelity,
+    preIqftStatesAligned: preFidelity >= 1 - QFT_NUMERIC_TOLERANCE,
+    closedProbabilities: closedProbs,
+    gatePreparationProbabilities: gateProbs,
+    l1Distance: metrics.l1,
+    bhattacharyyaFidelity: metrics.bhattacharyyaFidelity,
+    maxAbsoluteDifference: metrics.maxAbsDiff,
+    distributionsAligned: metrics.bhattacharyyaFidelity >= 1 - QFT_NUMERIC_TOLERANCE,
+  };
 }
 
 export function jointTotalProbability(amps: Complex[]): number {
@@ -532,6 +617,7 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
       factors: fac.ok ? fac : null,
       classicalReferenceOrder: null,
       iqftComparison: null,
+      modexpComparison: null,
     };
   }
 
@@ -577,19 +663,33 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
       factors,
       classicalReferenceOrder,
       iqftComparison: null,
+      modexpComparison: null,
     };
   }
 
   steps.push({
     kind: "quantum_plan",
     title: "Quantum register layout",
-      detail: `${plan.countingQubits} counting qubits (q0…q${plan.countingQubits - 1}, LSB-first index) + ${plan.workQubits} work qubits encoding the multiplicative orbit (compact layout). State prep builds |j⟩|a^j mod N⟩ classically for simulation, then inverse QFT on counting (QFT lab convention).`,
+    detail: `${plan.countingQubits} counting qubits (q0…q${plan.countingQubits - 1}, LSB-first index) + ${plan.workQubits} work qubits (${SHOR_WORK_ENCODING}: orbit index, not a full value register). Closed-form prep builds (1/sqrt(2^t)) sum_j |j>|a^j>; gate prep uses H on counting, |1> on work, then controlled orbit multiplies a^{2^j}.`,
     status: "info",
   });
 
   const simResult = simulateQuantumCountingDistribution(N, a);
   if (isShorValidationError(simResult)) return simResult;
   const sim = simResult;
+
+  const modexpCmpResult = simulateModExpComparison(N, a);
+  const modexpComparison = isShorValidationError(modexpCmpResult) ? null : modexpCmpResult;
+  if (modexpComparison) {
+    steps.push({
+      kind: "modexp_comparison",
+      title: "State preparation: gate mod-exp vs closed-form",
+      detail: modexpComparison.preIqftStatesAligned
+        ? `Ideal gate sequence (Hadamard + controlled orbit permutations, r=${modexpComparison.orbitSize}) matches closed-form pre-IQFT state (fidelity ${modexpComparison.preIqftStateFidelity.toFixed(8)}). After direct IQFT, Bhattacharyya ${modexpComparison.bhattacharyyaFidelity.toFixed(6)} on counting marginals.`
+        : `Gate and closed-form paths diverge: pre-IQFT fidelity ${modexpComparison.preIqftStateFidelity.toFixed(6)}, Bhattacharyya ${modexpComparison.bhattacharyyaFidelity.toFixed(6)} — inspect without renormalizing away the gap.`,
+      status: modexpComparison.distributionsAligned && modexpComparison.preIqftStatesAligned ? "success" : "warning",
+    });
+  }
 
   const iqftCmpResult = simulateIqftComparison(N, a);
   const iqftComparison = isShorValidationError(iqftCmpResult) ? null : iqftCmpResult;
@@ -608,7 +708,7 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
     kind: "quantum_evolve",
     title: "Ideal state-vector simulation",
     detail:
-      "Ideal state-vector path: build (1/√2^t) Σ_j |j⟩|a^j mod N⟩ on a compact orbit-indexed work register, apply inverse QFT on each counting slice (normalized per slice, same convention as the QFT lab), then read Born probabilities. Not live hardware; no cryptoscale speedup claim.",
+      "Ideal state-vector simulation: measurement uses closed-form pre-IQFT + direct inverse QFT (reference). Gate mod-exp prep is compared separately; neither path uses classical period to fabricate amplitudes. Not live hardware.",
     status: "info",
   });
 
@@ -675,6 +775,7 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
     factors,
     classicalReferenceOrder,
     iqftComparison,
+    modexpComparison,
   };
 }
 

@@ -19,11 +19,15 @@
 - **Total qubits:** t + work ≤ 5. If **t < 1**, the lab uses the **classical reference** path only (labeled; no simulated measurement).
 - **Exponent truncation:** j runs 0 … 2^t−1 only (t counting qubits). This matches the truncated QPE superposition used in small demos.
 
+## Work register encoding
+- **`orbit_compact` (default in this lab):** work index **i** labels the **i-th** value on the discovered orbit {a^k mod N}, not a full ⌈log₂ N⌉ binary value register. Controlled multiply by **a^{2^j}** is the permutation **i → (i + 2^j) mod r** on orbit indices (unitary on the supported subspace; padding indices ≥ r stay identity). A full value register would need ⌈log₂ N⌉ work qubits and modular arithmetic on integers 0…N−1; we truncate to **⌈log₂ |orbit|⌉** to stay within **≤ 5** total qubits.
+
 ## Quantum state construction (simulation)
-1. **Pre-IQFT:** |ψ⟩ = (1/√2^t) Σ_{j=0}^{2^t−1} |j⟩ |orbit(a^j mod N)⟩ with amplitudes on index **c = j**, work = orbit index. **Σ|α|² = 1** (pytest `test_fixture_pre_iqft_state_normalized`).
-2. **Orbit check:** every a^j mod N for j in range appears in the discovered cycle (pytest `test_fixture_orbit_covers_exponent_superposition`).
-3. **Inverse QFT on counting:** for each work slice with non-zero weight, normalize the counting slice to unit, apply **inverse QFT** (`applyInverseQft` / `apply_qft(inverse=True)` — direct DFT convention in `docs/qft-simulator-conventions.md`), scale back by √weight. Preserves global norm (pytest `test_fixture_post_iqft_state_normalized`).
-4. **Marginal probabilities:** P(c) = Σ_work |α(c, work)|²; **Σ P(c) = 1**.
+1. **Pre-IQFT (closed-form reference):** |ψ⟩ = (1/√2^t) Σ_{j=0}^{2^t−1} |j⟩ |orbit(a^j mod N)⟩ with amplitudes on index **c = j**, work = orbit index. **Σ|α|² = 1** (pytest `test_fixture_pre_iqft_state_normalized`).
+2. **Pre-IQFT (gate-level mod-exp):** |0…0⟩|1⟩ (orbit index 0) → **H^{⊗t}** on counting → for each **j**, controlled orbit multiply by **a^{2^j}**. Compared to closed-form via state overlap fidelity and counting marginals after direct IQFT (`test_shor_gate_modexp.py`). **No classical period** is used to build gate amplitudes.
+3. **Orbit check:** every a^j mod N for j in range appears in the discovered cycle (pytest `test_fixture_orbit_covers_exponent_superposition`).
+4. **Inverse QFT on counting:** for each work slice with non-zero weight, normalize the counting slice to unit, apply **inverse QFT** (`applyInverseQft` / `apply_qft(inverse=True)` — direct DFT convention in `docs/qft-simulator-conventions.md`), scale back by √weight. Preserves global norm (pytest `test_fixture_post_iqft_state_normalized`).
+5. **Marginal probabilities:** P(c) = Σ_work |α(c, work)|²; **Σ P(c) = 1**.
 
 ## Analytical checks (when r | 2^t)
 If the true period **r** divides **2^t**, ideal QPE peaks at **c = k·2^t/r** with equal probability **1/r** (pytest `test_fixture_analytical_peaks_when_period_divides_2t` on fixtures N=15,a=7,r=4,t=3 etc.).
@@ -63,9 +67,10 @@ Norm checks: pre-IQFT joint, post-IQFT (direct and gate), and marginal **Σ P(c)
 - Lab: `/academy/labs/shor` · Lesson: `/learn/shor-intro`.
 
 ## Limitations
-- State prep uses closed-form QPE amplitudes (not gate-level modular exponentiation).
+- Work register is **orbit_compact**, not a full modular multiplier on ⌈log₂ N⌉ value bits; larger N need more qubits than the 5-qubit educational budget.
+- Measurement workflow still uses **closed-form pre-IQFT + direct IQFT**; gate mod-exp is validated side-by-side, not yet the sole production path for factor demos.
 - Some (N, a) pairs fail factor extraction (e.g. N = 9, a = 2); the lab reports why instead of inventing factors.
 - Sirraya parity: **PARTIAL** — see `sirraya/docs/references/sirraya-captures/quantumwalk-parity-matrix.md`.
 
 ## Next milestone
-Gate-level **modular exponentiation** (not just IQFT) on the smallest registers; optional side-by-side with current closed-form QPE state prep.
+Optional end-to-end demo using **gate pre-IQFT + gate IQFT** for measurement; value-register mod-mult when budget allows (with explicit fallback).
