@@ -39,6 +39,16 @@ const LESSON_CIRCUITS: Record<string, { qubits: number; operations: Operation[] 
       { gate: "cx", control: 0, target: 1 },
     ],
   },
+  "deutsch-jozsa-balanced": {
+    qubits: 2,
+    operations: [
+      { gate: "x", target: 1 },
+      { gate: "h", target: 0 },
+      { gate: "h", target: 1 },
+      { gate: "cx", control: 0, target: 1 },
+      { gate: "h", target: 0 },
+    ],
+  },
   "grover-two": {
     qubits: 2,
     operations: [

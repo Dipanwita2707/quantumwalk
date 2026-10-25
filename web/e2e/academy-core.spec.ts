@@ -55,3 +55,19 @@ test("Grover lab updates success probability", async ({ page }) => {
   await page.goto("/academy/labs/grover");
   await expect(page.getByTestId("grover-lab-success")).toBeVisible();
 });
+
+test("QEC explanation matches s01/s12 syndrome toy", async ({ page }) => {
+  await page.goto("/academy/labs/qec");
+  const intro = page.getByTestId("qec-explanation");
+  await expect(intro).toContainText("s01");
+  await expect(intro).toContainText("s12");
+  await expect(intro).not.toContainText("ZZZ");
+});
+
+test("Reservoir lab runs educational simulation", async ({ page }) => {
+  await page.goto("/academy/labs/reservoir");
+  await expect(page.getByTestId("reservoir-lab")).toBeVisible();
+  await expect(page.getByTestId("reservoir-mse")).toBeVisible();
+  await page.getByTestId("reservoir-rerun").click();
+  await expect(page.getByTestId("reservoir-mse")).toBeVisible();
+});

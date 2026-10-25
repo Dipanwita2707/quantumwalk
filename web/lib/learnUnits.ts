@@ -15,7 +15,7 @@ export const LEARN_UNITS: LearnUnit[] = [
   {
     id: "foundations",
     title: "Foundations",
-    lessonSlugs: ["first-qubit", "entanglement", "grover-boost"],
+    lessonSlugs: ["first-qubit", "entanglement", "grover-boost", "deutsch-intro"],
     links: [],
   },
   {
@@ -47,8 +47,11 @@ export const LEARN_UNITS: LearnUnit[] = [
   {
     id: "reservoir",
     title: "Reservoir computing",
-    lessonSlugs: [],
-    links: [{ label: "Concept overview", href: "/academy/reservoir" }],
+    lessonSlugs: ["quantum-reservoir"],
+    links: [
+      { label: "Concept overview", href: "/academy/reservoir" },
+      { label: "Reservoir lab (simulation)", href: "/academy/labs/reservoir" },
+    ],
   },
 ];
 

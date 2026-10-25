@@ -77,3 +77,24 @@ export function suggestedGroverIterations(searchSize: number): number {
   const theta = Math.asin(1 / Math.sqrt(searchSize));
   return Math.max(0, Math.floor(Math.PI / (4 * theta)));
 }
+
+export type DecodeRouteResult =
+  | { ok: true; routeIndex: number; bitstring: string; nCities: number }
+  | { ok: false; message: string };
+
+/** Inverse of encodeTspRouteIndex when bitstring matches width for n cities. */
+export function decodeTspRouteBitstring(bitstring: string, nCities: number): DecodeRouteResult {
+  if (!/^[01]+$/.test(bitstring)) {
+    return { ok: false, message: "Bitstring must contain only 0 and 1." };
+  }
+  const qubits = qubitsForRouteEncoding(nCities);
+  if (bitstring.length !== qubits) {
+    return { ok: false, message: `For ${nCities} cities use exactly ${qubits} bits.` };
+  }
+  const routeIndex = parseInt(bitstring, 2);
+  const count = permutationCount(nCities);
+  if (routeIndex >= count) {
+    return { ok: false, message: `Index ${routeIndex} exceeds ${count - 1} (padding label).` };
+  }
+  return { ok: true, routeIndex, bitstring, nCities };
+}

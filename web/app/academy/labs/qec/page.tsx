@@ -23,9 +23,10 @@ export default function QecLabPage() {
         <p className="eyebrow">ACADEMY LAB · SIMULATOR</p>
         <h1>Bit-flip error detection (3-qubit code)</h1>
         <GuestExperienceBanner context="learn" />
-        <p className="content-intro">
-          Toggle a bit-flip on one data qubit and read stabilizer parities (ZZZ, ZIZ). This is a classical simulation of
-          syndrome extraction — not a live device.
+        <p className="content-intro" data-testid="qec-explanation">
+          Toggle a bit-flip on one data qubit and read neighbor parities{" "}
+          <strong>s01 = d0 ⊕ d1</strong> and <strong>s12 = d1 ⊕ d2</strong>. The pair (s01, s12) identifies which qubit
+          flipped. This pedagogical toy is a classical simulation — not stabilizer circuits on live hardware.
         </p>
         <section className="content-card" aria-labelledby="qec-data-title">
           <h2 id="qec-data-title">Data qubits</h2>

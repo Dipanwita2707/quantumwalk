@@ -13,6 +13,7 @@ const PRESET_BY_LESSON: Record<string, string> = {
   "pedagogy-noise": "bell",
   "tsp-classical": "tsp3",
   "qec-bit-flip": "bell",
+  "quantum-reservoir": "bell",
 };
 
 export function LearnPathSidebar({ activeSlug }: { activeSlug?: string }) {

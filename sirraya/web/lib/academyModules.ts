@@ -82,8 +82,8 @@ export const ACADEMY_MODULES: AcademyModule[] = [
   {
     id: "reservoir",
     title: "Quantum reservoir computing",
-    description: "Concept overview — how disordered dynamics can feature-map time series (no hardware claim).",
-    href: "/academy/reservoir",
+    description: "Lesson 17 narrative plus echo-state lab (educational simulation, not hardware).",
+    href: "/academy/labs/reservoir",
     evidence: "observed",
   },
   {

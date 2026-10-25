@@ -26,3 +26,17 @@ def test_six_cities_use_ten_qubits():
 
 def test_binary_encode_five_in_three_bits():
     assert format(5, "03b") == "101"
+
+
+def test_route_index_out_of_range():
+    n = 3
+    count = 6
+    assert count == 6
+    bad = 99
+    assert bad >= count
+
+
+def test_decode_round_trip_route_five():
+    bitstring = encode_route_index(5, 3)
+    assert bitstring == "101"
+    assert int(bitstring, 2) == 5

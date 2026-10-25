@@ -13,11 +13,11 @@
 | Sirraya tool | QW primary surface | Overall parity | P0 gap |
 | --- | --- | --- | --- |
 | Quantum Explorer | `/explorer/tsp`, `/api/explorer/tsp`, `/api/v3/solve-tsp` | **PARTIAL** | 4–6 city live solve UX + health wiring to QW API |
-| Quantum Mapper | Hub → `/workspace?mode=circuit` | **PARTIAL** | Dedicated mapping explainer page |
+| Quantum Mapper | `/explorer/mapper` | **PARTIAL** (IMPLEMENTED+TESTED) | Gate-level Sirraya UI UNKNOWN |
 | ML Studio | `/hub/ml-studio` | **PARTIAL** | ResNet/LISA-style demo vs layer toy |
 | Doc Editor | `/hub/doc-editor` | **PARTIAL** | CodeMirror, KaTeX, Mermaid, AI |
 | Document Pro | `/hub/document-pro` | **PARTIAL** | Template library, docx, e-sign |
-| Quantum Academy | `/academy`, `/learn/*`, `/academy/labs/*` | **PARTIAL** (IMPLEMENTED+TESTED slice) | Full Sirraya curriculum breadth (E017) |
+| Quantum Academy | `/academy`, `/learn/*`, `/academy/labs/*` | **PARTIAL** (8 lessons + labs) | 14/22 Sirraya titles still MISSING/PARTIAL (E017) |
 
 ---
 
@@ -87,7 +87,8 @@
 | Sirraya feature / workflow | Evidence | Observed Sirraya behavior | QuantumWalk implementation | Status | Backend / deps | Work needed | Pri | Verification |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Command palette open | OBSERVED E023 | Mod+K search | No global palette; direct routes | **PARTIAL** | — | Optional palette; routes suffice | P3 | — |
-| 22+ lesson curriculum sidebar | OBSERVED academy-v2 a11y | Foundations→NISQ lessons listed | `web/lib/learnUnits.ts`, `/learn/[slug]` | **PARTIAL** | Content | Map lessons to units; original prose | P1 | Lesson count + slugs |
+| 22 lesson curriculum sidebar | OBSERVED academy-v2 a11y | 22 titled lessons listed | `docs/academy-curriculum-inventory.md`, 8 `/learn/*` slugs | **PARTIAL** | Content | Teleport, QFT, Shor, VQE titles only | P1 | Inventory + e2e |
+| Reservoir computing lab | OBSERVED title L17 | Interactive QRC in marketing | `/academy/labs/reservoir` echo-state sim | **PARTIAL** (IMPLEMENTED+TESTED sim) | — | Not Sirraya proprietary demo | P0 | pytest + e2e |
 | Start here / guided paths | OBSERVED a11y | Three persona paths | Academy hub tiles (`sirraya/web/routes/academy/page.tsx`) | **PARTIAL** | — | Persona copy alignment | P2 | Paths link correctly |
 | Circuit composer in-browser | OBSERVED E017 | Virtual lab in bundle | `/workspace` lab | **PARTIAL** | Simulator | Already core QW | P0 | Guest demo simulate works |
 | Hardware lab (5 platforms) | OBSERVED E017 | Hardware Lab tab | `/learn/hardware`, `ArchitectureConnectivity.tsx` | **PARTIAL** | — | Expand platform compare UI | P1 | Five platform cards |

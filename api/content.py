@@ -99,13 +99,122 @@ LESSONS = [
         "question": "Which ideal outcomes can appear from this Bell circuit?",
         "choices": ["00 and 11", "01 and 10", "All four equally"],
     },
+    {
+        "slug": "grover-boost",
+        "title": "Boost a marked route",
+        "level": "Intermediate",
+        "minutes": 8,
+        "objective": "See how Grover-style steps raise the chance of one labeled outcome before you measure.",
+        "steps": [
+            "Start from equal chances on four two-qubit labels.",
+            "Apply an oracle that marks |11⟩, then a diffuser that amplifies it.",
+            "Open the Grover explorer, then run preset grover2 in the lab.",
+        ],
+        "algorithm_slug": "grover-two",
+        "question": "After one Grover pass on four labels with one marked, the marked ideal probability is closest to:",
+        "choices": ["25%", "50%", "100%"],
+    },
+    {
+        "slug": "tsp-classical",
+        "title": "Routes and classical costs",
+        "level": "Intermediate",
+        "minutes": 6,
+        "objective": "Relate tour cost to basis labels before discussing Grover amplification.",
+        "steps": [
+            "Open the TSP explorer and read the distance matrix.",
+            "Stage 1 lists classical costs for all six permutations.",
+            "Stage 5 compares brute force to simulator ideal weights from the Grover preset.",
+        ],
+        "algorithm_slug": "grover-two",
+        "question": "Classical brute force on three cities checks how many tours here?",
+        "choices": ["Three", "Six", "Eight"],
+    },
+    {
+        "slug": "deutsch-intro",
+        "title": "Oracle promise in one query",
+        "level": "Intermediate",
+        "minutes": 7,
+        "objective": "See why interference lets Deutsch–Jozsa decide constant vs balanced oracles with one final measurement.",
+        "steps": [
+            "Prepare |+⟩ on the query qubit and |−⟩ on the ancilla using X then H.",
+            "Apply a balanced oracle (CNOT) so phase kickback depends on the hidden function.",
+            "Measure the query in X-basis (H then Z): a balanced oracle yields 1 with certainty in the ideal model.",
+        ],
+        "algorithm_slug": "deutsch-jozsa-balanced",
+        "question": "In the ideal balanced-oracle demo, measuring the query qubit after H gives:",
+        "choices": ["Always 0", "Always 1", "50/50 random"],
+    },
+    {
+        "slug": "pedagogy-noise",
+        "title": "Pedagogical noise",
+        "level": "Intermediate",
+        "minutes": 7,
+        "objective": "Compare ideal shot counts with a depolarizing teaching model on the same circuit revision.",
+        "steps": [
+            "Build or load a small circuit with measurements.",
+            "Enable pedagogical noise on the next run in the lab advanced panel.",
+            "Read the dual histogram: ideal sampling beside the noisy model — not live hardware.",
+        ],
+        "algorithm_slug": "bell-pair",
+        "question": "Pedagogical noise in QuantumWalk means:",
+        "choices": [
+            "Live IBM hardware results",
+            "A bounded simulator noise model for teaching",
+            "Random UI animation only",
+        ],
+    },
+    {
+        "slug": "qec-bit-flip",
+        "title": "Bit-flip code vocabulary",
+        "level": "Advanced",
+        "minutes": 5,
+        "objective": "Learn encode → error → syndrome → correct without claiming real device data.",
+        "steps": [
+            "Open the bit-flip lab and inject X on one data qubit from |000⟩.",
+            "Read neighbor parities s01 = d0 ⊕ d1 and s12 = d1 ⊕ d2 — they identify the flipped qubit.",
+            "Real hardware needs stabilizer circuits, timing, and calibration; QuantumWalk stays simulator-first.",
+        ],
+        "algorithm_slug": "bell-pair",
+        "question": "In the three-qubit lab toy, syndrome bits s01 and s12 are used to:",
+        "choices": ["Identify which data qubit flipped", "Post to a leaderboard", "Skip simulation"],
+    },
+    {
+        "slug": "quantum-reservoir",
+        "title": "Reservoir features for time series",
+        "level": "Advanced",
+        "minutes": 8,
+        "objective": "Connect lesson 17 narratives to a reproducible feature map plus linear readout — without hardware claims.",
+        "steps": [
+            "Read how fixed random dynamics expand a sine wave into a high-dimensional state.",
+            "Open the reservoir lab, adjust leak rate and hidden size, and rerun the readout.",
+            "Compare test MSE to the mean baseline — better MSE means the reservoir helped the linear model.",
+        ],
+        "algorithm_slug": "bell-pair",
+        "question": "The QuantumWalk reservoir lab is:",
+        "choices": [
+            "A classical echo-state educational simulation",
+            "Live IBM hardware execution",
+            "Proof of quantum advantage on real data",
+        ],
+    },
 ]
 
-LESSON_ANSWERS = {"first-qubit": 1, "entanglement": 0}
+LESSON_ANSWERS = {
+    "first-qubit": 1,
+    "entanglement": 0,
+    "grover-boost": 2,
+    "deutsch-intro": 1,
+    "pedagogy-noise": 1,
+    "tsp-classical": 1,
+    "qec-bit-flip": 0,
+    "quantum-reservoir": 0,
+}
 
 CHALLENGE_TIERS = {
     "make-superposition": {"max_gates": 2, "reference_ops": 1},
     "make-bell-pair": {"max_gates": 3, "reference_ops": 2},
+    "mark-grover-state": {"max_gates": 15, "reference_ops": 14},
+    "tsp-encode-superposition": {"max_gates": 4, "reference_ops": 3},
 }
 
 CHALLENGES = [
@@ -122,5 +231,19 @@ CHALLENGES = [
         "level": "Beginner",
         "summary": "Build a two-qubit circuit whose ideal outcomes are only 00 and 11, equally likely.",
         "qubits": 2,
+    },
+    {
+        "slug": "mark-grover-state",
+        "title": "Mark |11⟩",
+        "level": "Intermediate",
+        "summary": "Ideal probability on |11⟩ should dominate after your Grover-style circuit.",
+        "qubits": 2,
+    },
+    {
+        "slug": "tsp-encode-superposition",
+        "title": "Route superposition",
+        "level": "Intermediate",
+        "summary": "Three Hadamards on three qubits create equal ideal weight on each basis label (encoding step).",
+        "qubits": 3,
     },
 ]
