@@ -32,9 +32,25 @@ export function measureSyndrome(state: BitFlipLabState): { s01: QubitBit; s12: Q
 }
 
 export function inferErrorFromSyndrome(s01: QubitBit, s12: QubitBit): 0 | 1 | 2 | null {
+  if (!isValidSyndromeBit(s01) || !isValidSyndromeBit(s12)) return null;
   if (s01 === 0 && s12 === 0) return null;
   if (s01 === 1 && s12 === 0) return 0;
   if (s01 === 1 && s12 === 1) return 1;
   if (s01 === 0 && s12 === 1) return 2;
   return null;
+}
+
+export function isValidSyndromeBit(bit: number): bit is QubitBit {
+  return bit === 0 || bit === 1;
+}
+
+/** Teaching correction: restore logical |000⟩ when syndrome indicates a single bit-flip. */
+export function applyTeachingCorrection(state: BitFlipLabState): BitFlipLabState {
+  const { s01, s12 } = measureSyndrome(state);
+  if (!isValidSyndromeBit(s01) || !isValidSyndromeBit(s12)) {
+    return state;
+  }
+  const target = inferErrorFromSyndrome(s01, s12);
+  if (target === null) return state;
+  return resetBitFlipLab();
 }

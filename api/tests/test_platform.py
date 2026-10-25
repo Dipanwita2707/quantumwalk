@@ -93,11 +93,23 @@ def test_private_circuit_crud_and_csrf(store):
     assert owner.get(f"/api/circuits/{circuit_id}").status_code == 404
 
 
+def test_lesson_answer_unknown_slug_and_invalid_choice(store):
+    guest = TestClient(app)
+    assert guest.post("/api/lessons/not-a-lesson/answer", json={"choice": 0}).status_code == 404
+    assert guest.post("/api/lessons/first-qubit/answer", json={"choice": 99}).status_code == 422
+    assert guest.post("/api/lessons/first-qubit/answer", json={"choice": -1}).status_code == 422
+
+
 def test_progress_is_private_and_challenge_is_graded_by_simulator(store):
     owner, _, csrf = signed_client(store)
     guest = TestClient(app)
     answer = guest.post("/api/lessons/first-qubit/answer", json={"choice": 1}).json()
     assert answer["saved"] is False
+    assert answer["correct"] is True
+    assert answer["score"] == 100
+    wrong = guest.post("/api/lessons/first-qubit/answer", json={"choice": 0}).json()
+    assert wrong["correct"] is False
+    assert wrong["score"] == 0
     assert "correct" in answer
     assert owner.post("/api/lessons/first-qubit/answer", json={"choice": 1}).status_code == 403
     assert owner.post("/api/lessons/first-qubit/answer", json={"choice": 1}, headers=csrf).json()["saved"] is True

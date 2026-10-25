@@ -51,6 +51,59 @@ test("QEC lab shows syndrome after flip", async ({ page }) => {
   await expect(page.getByTestId("qec-syndrome")).toContainText("inferred error qubit: q1");
 });
 
+test("QEC lab detects flips on q0 and q2 and correction restores zero", async ({ page }) => {
+  await page.goto("/academy/labs/qec");
+  await page.getByTestId("qec-flip-0").click();
+  await expect(page.getByTestId("qec-syndrome")).toContainText("q0");
+  await page.getByTestId("qec-correct").click();
+  await expect(page.getByTestId("qec-syndrome")).toContainText("inferred error qubit: none");
+  await page.getByTestId("qec-flip-2").click();
+  await expect(page.getByTestId("qec-syndrome")).toContainText("q2");
+});
+
+test("Guest can retry quiz after wrong answer", async ({ page }) => {
+  await page.goto("/learn/first-qubit");
+  await page.getByRole("button", { name: "Answer: Always 0" }).click();
+  await expect(page.getByText(/Not quite/i)).toBeVisible();
+  await page.getByRole("button", { name: "Answer: 50/50 random 0 or 1" }).click();
+  await expect(page.getByText(/Correct! Progress stored on this device/i)).toBeVisible();
+});
+
+test("Lesson prev/next navigation follows catalog order", async ({ page }) => {
+  await page.route("**/api/lessons", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          slug: "lesson-a",
+          title: "A",
+          level: "Beginner",
+          minutes: 1,
+          objective: "A",
+          steps: ["s"],
+          algorithm_slug: "superposition",
+          question: "Q?",
+          choices: ["a", "b"],
+        },
+        {
+          slug: "lesson-b",
+          title: "B",
+          level: "Beginner",
+          minutes: 1,
+          objective: "B",
+          steps: ["s"],
+          algorithm_slug: "superposition",
+          question: "Q?",
+          choices: ["a", "b"],
+        },
+      ]),
+    });
+  });
+  await page.goto("/learn/lesson-b");
+  await expect(page.getByRole("link", { name: "← Previous lesson" })).toHaveAttribute("href", "/learn/lesson-a");
+});
+
 test("Grover lab updates success probability", async ({ page }) => {
   await page.goto("/academy/labs/grover");
   await expect(page.getByTestId("grover-lab-success")).toBeVisible();
@@ -85,6 +138,7 @@ test("Teleportation lesson shows prerequisites", async ({ page }) => {
           minutes: 9,
           objective: "Follow teleportation.",
           prerequisites: "Bell pair lesson.",
+          prerequisite_slugs: ["entanglement"],
           steps: ["Step"],
           algorithm_slug: "teleportation-demo",
           question: "Needs?",
@@ -95,4 +149,8 @@ test("Teleportation lesson shows prerequisites", async ({ page }) => {
   });
   await page.goto("/learn/quantum-teleportation");
   await expect(page.getByTestId("lesson-prereq-quantum-teleportation")).toContainText("Bell pair");
+  await expect(page.getByTestId("lesson-prereq-link-quantum-teleportation-entanglement")).toHaveAttribute(
+    "href",
+    "/learn/entanglement",
+  );
 });

@@ -121,6 +121,7 @@ LESSONS = [
         "level": "Intermediate",
         "minutes": 9,
         "prerequisites": "Bell pair / entanglement lesson (original QuantumWalk; Sirraya lesson 11 title only).",
+        "prerequisite_slugs": ["entanglement"],
         "objective": "Follow how entanglement plus two classical bits move an unknown qubit state without sending the qubit itself.",
         "steps": [
             "Alice holds message qubit q0 and half of a Bell pair (q1); Bob holds q2.",
@@ -182,6 +183,7 @@ LESSONS = [
         "level": "Advanced",
         "minutes": 8,
         "prerequisites": "Hadamard phase kickback and the Deutsch lesson (original QuantumWalk; Sirraya lesson 14 title only).",
+        "prerequisite_slugs": ["deutsch-intro"],
         "objective": "See the QFT as a basis change that reveals periodicity in amplitudes — the heart of phase estimation.",
         "steps": [
             "Classical FFT extracts frequency content; QFT is the unitary analogue on qubit amplitudes.",
@@ -198,6 +200,7 @@ LESSONS = [
         "level": "Advanced",
         "minutes": 8,
         "prerequisites": "QFT intro and modular arithmetic intuition (original QuantumWalk; Sirraya lesson 15 title only).",
+        "prerequisite_slugs": ["qft-intro"],
         "objective": "Outline how finding the period of a modular function reduces factoring — without running full Shor here.",
         "steps": [
             "Factoring N reduces to finding the period r of a modular function a^x mod N when r is even and a^{r/2} ≢ −1 (mod N).",
@@ -214,6 +217,7 @@ LESSONS = [
         "level": "Advanced",
         "minutes": 8,
         "prerequisites": "Superposition, measurement, and noise vocabulary (original QuantumWalk; Sirraya lesson 16 title only).",
+        "prerequisite_slugs": ["first-qubit", "pedagogy-noise"],
         "objective": "Understand VQE as classical optimization over parameterized quantum circuits estimating ⟨H⟩.",
         "steps": [
             "Choose a small ansatz circuit U(θ) and prepare |ψ(θ)⟩.",

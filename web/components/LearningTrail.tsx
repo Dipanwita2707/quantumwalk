@@ -20,6 +20,7 @@ type Lesson = {
   minutes: number;
   objective: string;
   prerequisites?: string;
+  prerequisite_slugs?: string[];
   steps: string[];
   algorithm_slug: string;
   question: string;
@@ -282,6 +283,19 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
                   {item.prerequisites && (
                     <p className="explorer-note" data-testid={`lesson-prereq-${item.slug}`}>
                       <strong>Prerequisites:</strong> {item.prerequisites}
+                      {item.prerequisite_slugs && item.prerequisite_slugs.length > 0 && (
+                        <>
+                          {" "}
+                          {item.prerequisite_slugs.map((pre, i) => (
+                            <span key={pre}>
+                              {i > 0 ? ", " : ""}
+                              <Link href={`/learn/${pre}`} data-testid={`lesson-prereq-link-${item.slug}-${pre}`}>
+                                {pre.replace(/-/g, " ")}
+                              </Link>
+                            </span>
+                          ))}
+                        </>
+                      )}
                     </p>
                   )}
 
@@ -343,6 +357,7 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
                       <button
                         type="button"
                         key={choice}
+                        aria-label={`Answer: ${choice}`}
                         onClick={() => void answer(item.slug, choiceIndex)}
                         style={{ margin: "6px 8px 6px 0" }}
                       >
