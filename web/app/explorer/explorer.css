@@ -147,6 +147,24 @@
   max-width: 100%;
 }
 
+.qft-amp-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.qft-amp-row label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+}
+
+.qft-custom-editor {
+  margin-top: 12px;
+}
+
 .mapper-lab label {
   display: block;
   margin: 0.75rem 0;

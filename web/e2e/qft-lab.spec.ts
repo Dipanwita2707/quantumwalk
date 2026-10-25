@@ -1,5 +1,16 @@
 import { test, expect } from "@playwright/test";
 
+test("Custom amplitudes require normalize before run", async ({ page }) => {
+  await page.goto("/academy/labs/qft");
+  await page.getByRole("radio", { name: /Custom amplitudes/i }).check();
+  await page.getByTestId("qft-amp-re-0").fill("2");
+  await page.getByTestId("qft-run").click();
+  await expect(page.getByTestId("qft-validation")).toContainText(/not normalized/i);
+  await page.getByTestId("qft-normalize").click();
+  await page.getByTestId("qft-run").click();
+  await expect(page.getByTestId("qft-norm")).toContainText("1.000000");
+});
+
 test("QFT lab preserves norm and round-trips", async ({ page }) => {
   await page.goto("/academy/labs/qft");
   await expect(page.getByTestId("qft-lab")).toBeVisible();

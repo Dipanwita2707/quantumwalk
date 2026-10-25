@@ -9,6 +9,8 @@
 
 export const QFT_MIN_QUBITS = 1;
 export const QFT_MAX_QUBITS = 5;
+/** Arbitrary amplitude editing in the lab (basis workflow still up to 5 qubits). */
+export const QFT_CUSTOM_MAX_QUBITS = 3;
 
 export type Complex = { re: number; im: number };
 
@@ -50,6 +52,85 @@ export function validateQubitCount(qubits: number): QftValidationError | null {
     return { ok: false, message: `Qubit count must be ${QFT_MIN_QUBITS}–${QFT_MAX_QUBITS}.` };
   }
   return null;
+}
+
+export function totalProbabilityFromAmplitudes(amplitudes: Complex[]): number {
+  return amplitudes.reduce((s, a) => s + normSquared(a), 0);
+}
+
+export type AmplitudeDraftCheck =
+  | { ok: true; totalProbability: number; isNormalized: boolean }
+  | QftValidationError;
+
+/** Check drafts without auto-normalizing (lab editor). */
+export function validateAmplitudeDrafts(qubits: number, amplitudes: Complex[]): AmplitudeDraftCheck {
+  if (qubits > QFT_CUSTOM_MAX_QUBITS) {
+    return { ok: false, message: `Custom amplitudes supported for at most ${QFT_CUSTOM_MAX_QUBITS} qubits.` };
+  }
+  const qErr = validateQubitCount(qubits);
+  if (qErr) return qErr;
+  const dim = stateDimension(qubits);
+  if (amplitudes.length !== dim) {
+    return { ok: false, message: `Expected ${dim} amplitudes.` };
+  }
+  let sum = 0;
+  for (const amp of amplitudes) {
+    if (!Number.isFinite(amp.re) || !Number.isFinite(amp.im)) {
+      return { ok: false, message: "Amplitudes must be finite numbers." };
+    }
+    sum += normSquared(amp);
+  }
+  if (sum <= QFT_NUMERIC_TOLERANCE) {
+    return { ok: false, message: "Zero-norm state — cannot run QFT." };
+  }
+  const isNormalized = Math.abs(sum - 1) <= QFT_NUMERIC_TOLERANCE;
+  return { ok: true, totalProbability: sum, isNormalized };
+}
+
+export function normalizeAmplitudes(qubits: number, amplitudes: Complex[]): QftStateVector | QftValidationError {
+  const check = validateAmplitudeDrafts(qubits, amplitudes);
+  if (!check.ok) return check;
+  const normScale = 1 / Math.sqrt(check.totalProbability);
+  return {
+    qubits,
+    amplitudes: amplitudes.map((a) => scale(a, normScale)),
+  };
+}
+
+export function equalSuperpositionState(qubits: number): QftStateVector | QftValidationError {
+  const qErr = validateQubitCount(qubits);
+  if (qErr) return qErr;
+  if (qubits > QFT_CUSTOM_MAX_QUBITS) {
+    return { ok: false, message: `Preset supported for at most ${QFT_CUSTOM_MAX_QUBITS} qubits.` };
+  }
+  const dim = stateDimension(qubits);
+  const amp = 1 / Math.sqrt(dim);
+  return { qubits, amplitudes: Array.from({ length: dim }, () => complex(amp, 0)) };
+}
+
+/** H on q0 starting from |0…0⟩ (|+⟩ on q0, others 0). */
+export function plusOnQ0State(qubits: number): QftStateVector | QftValidationError {
+  const base = basisState(qubits, 0);
+  if (isQftValidationError(base)) return base;
+  if (qubits > QFT_CUSTOM_MAX_QUBITS) {
+    return { ok: false, message: `Preset supported for at most ${QFT_CUSTOM_MAX_QUBITS} qubits.` };
+  }
+  const steps = applyHadamardToState(base, 0);
+  return steps;
+}
+
+function applyHadamardToState(state: QftStateVector, qubit: number): QftStateVector {
+  const n = state.amplitudes.length;
+  const out = Array.from({ length: n }, () => complex(0, 0));
+  const s = Math.sqrt(2);
+  const amps = state.amplitudes;
+  for (let k = 0; k < n; k += 1) {
+    if ((k >> qubit) & 1) continue;
+    const k1 = k | (1 << qubit);
+    out[k] = complex((amps[k].re + amps[k1].re) / s, (amps[k].im + amps[k1].im) / s);
+    out[k1] = complex((amps[k].re - amps[k1].re) / s, (amps[k].im - amps[k1].im) / s);
+  }
+  return { qubits: state.qubits, amplitudes: out };
 }
 
 export function validateStateVector(state: QftStateVector): QftValidationError | null {
