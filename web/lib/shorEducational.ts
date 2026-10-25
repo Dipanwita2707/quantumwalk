@@ -471,7 +471,7 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
     kind: "quantum_evolve",
     title: "Ideal state-vector simulation",
     detail:
-      "Prepared |1⟩ on the work register, uniform superposition on counting, controlled modular multiplies a^{2^k}, then inverse QFT on counting. This is not live hardware and does not demonstrate cryptoscale speedup.",
+      "Ideal state-vector path: build (1/√2^t) Σ_j |j⟩|a^j mod N⟩ on a compact orbit-indexed work register, apply inverse QFT on each counting slice (normalized per slice, same convention as the QFT lab), then read Born probabilities. Not live hardware; no cryptoscale speedup claim.",
     status: "info",
   });
 

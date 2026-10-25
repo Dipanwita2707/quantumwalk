@@ -91,7 +91,7 @@
 | Reservoir computing lab | OBSERVED title L17 | Interactive QRC in marketing | `/academy/labs/reservoir` echo-state sim | **PARTIAL** (IMPLEMENTED+TESTED sim) | — | Not Sirraya proprietary demo | P0 | pytest + e2e |
 | Bit-flip QEC lab | OBSERVED title L18 | Error correction in marketing | `/academy/labs/qec` s01/s12 toy + teaching correction | **PARTIAL** (IMPLEMENTED+TESTED sim) | — | Single-X pedagogical; not hardware | P0 | pytest + e2e |
 | QFT lab | OBSERVED title L14 | Phase estimation in curriculum | `/academy/labs/qft` direct QFT + NC gate seq + swap layer (pytest parity n≤5) | **PARTIAL** (IMPLEMENTED+TESTED sim) | — | QW-original; not Sirraya lesson body | P0 | pytest + e2e |
-| Shor lab | OBSERVED title L15 | Factoring / period finding in curriculum | `/academy/labs/shor` bounded N 4–21, QPE+IQFT sim (pytest) | **PARTIAL** (IMPLEMENTED+TESTED sim) | — | QW-original; not cryptoscale Sirraya run | P0 | pytest + e2e |
+| Shor lab | OBSERVED title L15 | Factoring / period finding in curriculum | `/academy/labs/shor` QPE+IQFT validation fixtures (pytest phase tests) | **PARTIAL** (IMPLEMENTED+TESTED sim) | — | QW-original; not cryptoscale Sirraya run | P0 | pytest + e2e |
 | Start here / guided paths | OBSERVED a11y | Three persona paths | Academy hub tiles (`sirraya/web/routes/academy/page.tsx`) | **PARTIAL** | — | Persona copy alignment | P2 | Paths link correctly |
 | Circuit composer in-browser | OBSERVED E017 | Virtual lab in bundle | `/workspace` lab | **PARTIAL** | Simulator | Already core QW | P0 | Guest demo simulate works |
 | Hardware lab (5 platforms) | OBSERVED E017 | Hardware Lab tab | `/learn/hardware`, `ArchitectureConnectivity.tsx` | **PARTIAL** | — | Expand platform compare UI | P1 | Five platform cards |

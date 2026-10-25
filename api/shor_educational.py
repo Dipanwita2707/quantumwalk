@@ -9,6 +9,14 @@ from qft_simulator import apply_qft
 SHOR_N_MIN = 4
 SHOR_N_MAX = 21
 SHOR_MAX_TOTAL_QUBITS = 5
+SHOR_NUMERIC_TOLERANCE = 1e-8
+
+# Deterministic end-to-end fixtures (n, a, expected period, expected factor pair).
+SHOR_KNOWN_FIXTURES: list[dict[str, object]] = [
+    {"n": 15, "a": 7, "period": 4, "factors": (3, 5)},
+    {"n": 21, "a": 2, "period": 6, "factors": (3, 7)},
+    {"n": 8, "a": 3, "period": 2, "factors": (2, 4)},
+]
 
 
 def gcd(a: int, b: int) -> int:
@@ -160,7 +168,27 @@ def _index_count_work(count: int, work: int, counting_bits: int) -> int:
     return count + (work << counting_bits)
 
 
-def simulate_quantum_counting_distribution(n: int, a: int) -> tuple[dict[str, int], list[float], int] | str:
+def _joint_total_probability(amplitudes: list[complex]) -> float:
+    return sum(abs(z) ** 2 for z in amplitudes)
+
+
+def expected_peak_outcomes(period: int, counting_bits: int) -> list[int] | None:
+    """When 2^t is a multiple of r, IQFT peaks at c = k·2^t/r (Shor ideal model)."""
+    m = 2**counting_bits
+    if period <= 0 or m % period != 0:
+        return None
+    step = m // period
+    return list(range(0, m, step))
+
+
+def expected_peak_probability(period: int, counting_bits: int) -> float | None:
+    peaks = expected_peak_outcomes(period, counting_bits)
+    if peaks is None:
+        return None
+    return 1.0 / len(peaks)
+
+
+def build_pre_iqft_joint_amplitudes(n: int, a: int) -> tuple[dict[str, int], list[complex], int] | str:
     err = validate_shor_input(n, a)
     if err:
         return err
@@ -181,7 +209,25 @@ def simulate_quantum_counting_distribution(n: int, a: int) -> tuple[dict[str, in
         if wi is None:
             continue
         amps[_index_count_work(j, wi, t)] = scale + 0j
+    return plan, amps, len(cycle)
 
+
+def verify_orbit_covers_modular_powers(n: int, a: int, counting_bits: int) -> bool:
+    cycle = set(multiplicative_cycle_values(a, n))
+    for j in range(2**counting_bits):
+        if mod_pow(a, j, n) not in cycle:
+            return False
+    return True
+
+
+def build_post_iqft_joint_amplitudes(n: int, a: int) -> tuple[dict[str, int], list[complex], list[float], int] | str:
+    built = build_pre_iqft_joint_amplitudes(n, a)
+    if isinstance(built, str):
+        return built
+    plan, amps, cycle_len = built
+    t = plan["counting_qubits"]
+    m = plan["work_dimension"]
+    t_dim = 2**t
     for w in range(m):
         slice_amps = [amps[_index_count_work(c, w, t)] for c in range(t_dim)]
         weight = sum(abs(z) ** 2 for z in slice_amps)
@@ -199,7 +245,15 @@ def simulate_quantum_counting_distribution(n: int, a: int) -> tuple[dict[str, in
         for c in range(t_dim):
             z = amps[_index_count_work(c, w, t)]
             probs[c] += abs(z) ** 2
-    return plan, probs, len(cycle)
+    return plan, amps, probs, cycle_len
+
+
+def simulate_quantum_counting_distribution(n: int, a: int) -> tuple[dict[str, int], list[float], int] | str:
+    built = build_post_iqft_joint_amplitudes(n, a)
+    if isinstance(built, str):
+        return built
+    plan, _amps, probs, cycle_len = built
+    return plan, probs, cycle_len
 
 
 def pick_deterministic_measurement(probabilities: list[float]) -> int:

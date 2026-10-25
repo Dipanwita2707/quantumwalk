@@ -111,6 +111,10 @@ export function ShorEducationalLab() {
             </ol>
           </section>
 
+          <p data-testid="shor-simulation-mode" className="explorer-note">
+            Mode: {result.quantumPlan ? "ideal quantum-state simulation + classical post-processing" : "classical reference only (no counting-register simulation)"}
+          </p>
+
           {result.quantumPlan && (
             <section className="content-card">
               <h2>Quantum simulation summary</h2>

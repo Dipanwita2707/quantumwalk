@@ -10,6 +10,43 @@ test("Shor lab factors 15 with base 7", async ({ page }) => {
   await expect(page.getByTestId("shor-factors")).toContainText(/3.*5.*=.*15|5.*3.*=.*15/);
   await expect(page.getByTestId("shor-measurement")).toContainText(/c =/);
   await expect(page.getByTestId("shor-classical-ref")).toContainText(/verification only/i);
+  await expect(page.getByTestId("shor-simulation-mode")).toContainText(/ideal quantum-state simulation/i);
+});
+
+test("Shor lesson links QFT prerequisite", async ({ page }) => {
+  await page.route("**/api/me", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ authenticated: false, google_enabled: true }),
+    });
+  });
+  await page.route("**/api/lessons", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          slug: "shor-intro",
+          title: "Shor's algorithm (period finding)",
+          level: "Advanced",
+          minutes: 18,
+          objective: "Period finding.",
+          prerequisites: "QFT lesson and lab.",
+          prerequisite_slugs: ["qft-intro"],
+          steps: ["Open /academy/labs/shor."],
+          algorithm_slug: "grover-two",
+          question: "Simulated measurement is:",
+          choices: ["Counting outcome c", "Classical brute force", "Random"],
+        },
+      ]),
+    });
+  });
+  await page.goto("/learn/shor-intro");
+  await expect(page.getByTestId("lesson-prereq-link-shor-intro-qft-intro")).toHaveAttribute(
+    "href",
+    "/learn/qft-intro",
+  );
 });
 
 test("Shor lab rejects non-coprime base", async ({ page }) => {
