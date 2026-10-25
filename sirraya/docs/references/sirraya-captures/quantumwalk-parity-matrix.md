@@ -17,7 +17,7 @@
 | ML Studio | `/hub/ml-studio` | **PARTIAL** | ResNet/LISA-style demo vs layer toy |
 | Doc Editor | `/hub/doc-editor` | **PARTIAL** | CodeMirror, KaTeX, Mermaid, AI |
 | Document Pro | `/hub/document-pro` | **PARTIAL** | Template library, docx, e-sign |
-| Quantum Academy | `/academy`, `/learn/*` | **PARTIAL** | In-browser lesson/quiz/hardware lab |
+| Quantum Academy | `/academy`, `/learn/*`, `/academy/labs/*` | **PARTIAL** (IMPLEMENTED+TESTED slice) | Full Sirraya curriculum breadth (E017) |
 
 ---
 
@@ -39,8 +39,8 @@
 
 | Sirraya feature / workflow | Evidence | Observed Sirraya behavior | QuantumWalk implementation | Status | Backend / deps | Work needed | Pri | Verification |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Classical ↔ quantum mapping explainer | OBSERVED v3 `tool-quantum-mapper-settle` | “Quantum-Classical Mapping”, TSP classical, encoding, concepts | Hub links to `/workspace?mode=circuit` (`sirraya/web/lib/hubTools.ts`); no dedicated mapper page | **PARTIAL** | — | New `/explorer/mapper` or academy lesson with static diagrams | P1 | Page matches Sirraya section headings |
-| Interactive gate mapping lab | UNKNOWN | Not exercised | Workspace circuit builder | **UNKNOWN** | Simulator | Compare after mapper page spec | P2 | — |
+| Classical ↔ quantum mapping explainer | OBSERVED v3 `tool-quantum-mapper-settle` | “Quantum-Classical Mapping”, TSP classical, encoding, concepts | `/explorer/mapper` + `QuantumMapperLab` (`web/lib/quantumMapper.ts`) | **PARTIAL** (IMPLEMENTED+TESTED slice) | — | Sirraya gate-level UI UNKNOWN | P1 | e2e `mapper.spec.ts` |
+| Interactive gate mapping lab | UNKNOWN | Not exercised | Mapper + workspace circuit builder | **PARTIAL** | Simulator | Deeper gate mapping if evidence grows | P2 | — |
 | Learn-category placement | OBSERVED hub | “Learn” on card | Hub category “Quantum” | **MATCH** | — | Copy/labels only | P3 | Hub card text |
 
 ---

@@ -30,9 +30,26 @@ from circuit_bridge import build_qiskit_circuit, export_cirq_python, export_qisk
 from qiskit import transpile
 from simulator import CircuitRequest, simulate
 
+_PUBLIC_GET_PREFIXES = (
+    "/api/me",
+    "/api/lessons",
+    "/api/challenges",
+    "/api/algorithms",
+    "/api/hardware/status",
+)
+
+
 def require_platform_session(request: Request, auth: AuthContext | None = Depends(optional_auth)) -> None:
-    if request.url.path != "/api/me" and auth is None:
-        raise HTTPException(status_code=401, detail="Sign in to enter your private lab")
+    path = request.url.path
+    if auth is not None:
+        return
+    if path == "/api/me":
+        return
+    if request.method == "GET" and any(path == prefix or path.startswith(f"{prefix}/") for prefix in _PUBLIC_GET_PREFIXES):
+        return
+    if request.method == "POST" and path.startswith("/api/lessons/") and path.endswith("/answer"):
+        return
+    raise HTTPException(status_code=401, detail="Sign in to enter your private lab")
 
 
 router = APIRouter(prefix="/api", dependencies=[Depends(require_platform_session)])
@@ -203,9 +220,14 @@ def submit_challenge(
         final = simulate(ideal_request).steps[-1]
     probabilities = {entry.basis: entry.probability for entry in final.probabilities}
     if slug == "make-superposition":
-        solved = abs(probabilities["0"] - 0.5) < 1e-6 and abs(probabilities["1"] - 0.5) < 1e-6
+        solved = abs(probabilities.get("0", 0) - 0.5) < 1e-6 and abs(probabilities.get("1", 0) - 0.5) < 1e-6
+    elif slug == "mark-grover-state":
+        solved = probabilities.get("11", 0) >= 0.9
+    elif slug == "tsp-encode-superposition":
+        targets = [1 / 8] * 8
+        solved = all(abs(probabilities.get(format(i, "03b"), 0) - targets[i]) < 0.02 for i in range(8))
     else:
-        solved = all(abs(probabilities[basis] - expected) < 1e-6 for basis, expected in {"00": 0.5, "01": 0, "10": 0, "11": 0.5}.items())
+        solved = all(abs(probabilities.get(basis, 0) - expected) < 1e-6 for basis, expected in {"00": 0.5, "01": 0, "10": 0, "11": 0.5}.items())
     tier = "none"
     gate_ops = [op for op in submission.circuit.operations if op.gate != "measure"]
     limits = CHALLENGE_TIERS.get(slug, {"max_gates": 99, "reference_ops": 99})

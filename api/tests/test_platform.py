@@ -23,29 +23,6 @@ def test_real_database_dependency_opens_a_session():
         dependency.close()
 
 
-@pytest.fixture
-def store():
-    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
-
-    @event.listens_for(engine, "connect")
-    def enable_keys(connection, _record):
-        connection.execute("PRAGMA foreign_keys=ON")
-
-    Base.metadata.create_all(engine)
-    sessions = sessionmaker(bind=engine, expire_on_commit=False)
-
-    def override_db():
-        with sessions() as db:
-            yield db
-
-    app.dependency_overrides[get_db] = override_db
-    try:
-        yield sessions
-    finally:
-        app.dependency_overrides.clear()
-        engine.dispose()
-
-
 def signed_client(store, name="Learner"):
     with store() as db:
         user = User(display_name=name, email=f"{name.lower()}@example.test")
@@ -120,7 +97,8 @@ def test_progress_is_private_and_challenge_is_graded_by_simulator(store):
     owner, _, csrf = signed_client(store)
     guest = TestClient(app)
     answer = guest.post("/api/lessons/first-qubit/answer", json={"choice": 1}).json()
-    assert answer == {"detail": "Sign in to enter your private lab"}
+    assert answer["saved"] is False
+    assert "correct" in answer
     assert owner.post("/api/lessons/first-qubit/answer", json={"choice": 1}).status_code == 403
     assert owner.post("/api/lessons/first-qubit/answer", json={"choice": 1}, headers=csrf).json()["saved"] is True
     circuit = {"qubits": 2, "operations": [{"gate": "h", "target": 0}, {"gate": "cx", "control": 0, "target": 1}]}
@@ -188,7 +166,9 @@ def test_qasm_export_round_trips_supported_circuit(store):
 
 def test_platform_requires_login_and_simulation_requires_csrf(store):
     guest = TestClient(app)
-    for endpoint in ("algorithms", "lessons", "challenges", "circuits", "progress", "hardware/status"):
+    for endpoint in ("algorithms", "lessons", "challenges", "hardware/status"):
+        assert guest.get(f"/api/{endpoint}").status_code == 200
+    for endpoint in ("circuits", "progress"):
         assert guest.get(f"/api/{endpoint}").status_code == 401
     circuit = {"qubits": 1, "operations": [{"gate": "h", "target": 0}]}
     assert guest.post("/api/simulate", json=circuit).status_code == 401

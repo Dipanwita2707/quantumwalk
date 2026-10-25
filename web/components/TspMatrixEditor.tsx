@@ -84,6 +84,7 @@ export function TspMatrixEditor({
           step={1}
           value={cityCount}
           onChange={(e) => handleCityCount(e.target.value)}
+          onInput={(e) => handleCityCount((e.target as HTMLInputElement).value)}
           data-testid="tsp-city-count"
           aria-valuemin={TSP_MIN_CITIES}
           aria-valuemax={TSP_MAX_CITIES}

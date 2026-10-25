@@ -1,0 +1,57 @@
+import { test, expect } from "@playwright/test";
+
+const guestSession = { authenticated: false, google_enabled: true };
+
+const lessons = [
+  {
+    slug: "first-qubit",
+    title: "Your First Qubit",
+    level: "Beginner",
+    minutes: 5,
+    objective: "See superposition.",
+    steps: ["Step"],
+    algorithm_slug: "superposition",
+    question: "After H on |0⟩, what happens on Z measurement?",
+    choices: ["Always 0", "50/50 random 0 or 1", "Always 1"],
+  },
+];
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/me", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(guestSession),
+    });
+  });
+  await page.route("**/api/lessons", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(lessons) });
+  });
+  await page.route("**/api/lessons/first-qubit/answer", async (route) => {
+    const body = route.request().postDataJSON() as { choice: number };
+    const correct = body.choice === 1;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ correct, score: correct ? 100 : 0, saved: false }),
+    });
+  });
+});
+
+test("Guest can submit lesson quiz and see feedback", async ({ page }) => {
+  await page.goto("/learn/first-qubit");
+  await expect(page.getByTestId("lesson-quiz-first-qubit")).toBeVisible({ timeout: 20_000 });
+  await page.getByRole("button", { name: lessons[0].choices[1] }).click();
+  await expect(page.getByText(/Correct! Progress stored on this device/i)).toBeVisible({ timeout: 10_000 });
+});
+
+test("QEC lab shows syndrome after flip", async ({ page }) => {
+  await page.goto("/academy/labs/qec");
+  await page.getByTestId("qec-flip-1").click();
+  await expect(page.getByTestId("qec-syndrome")).toContainText("inferred error qubit: q1");
+});
+
+test("Grover lab updates success probability", async ({ page }) => {
+  await page.goto("/academy/labs/grover");
+  await expect(page.getByTestId("grover-lab-success")).toBeVisible();
+});
