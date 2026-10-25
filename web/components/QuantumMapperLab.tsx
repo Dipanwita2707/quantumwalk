@@ -6,9 +6,11 @@ import { CIRCUIT_PRESETS } from "@/lib/circuitPresets";
 import {
   MAPPER_MAX_CITIES,
   MAPPER_MIN_CITIES,
+  decodeBinaryInteger,
+  decodeTspRouteBitstring,
   encodeBinaryInteger,
   encodeTspRouteIndex,
-  groverSuccessProbability,
+  mapGroverSuccess,
   suggestedGroverIterations,
   type MapperExampleId,
 } from "@/lib/quantumMapper";
@@ -39,11 +41,18 @@ export function QuantumMapperLab() {
   const [binaryBits, setBinaryBits] = useState(3);
   const [searchSize, setSearchSize] = useState(16);
   const [groverIters, setGroverIters] = useState(3);
+  const [decodeBits, setDecodeBits] = useState("101");
 
   const tspResult = useMemo(() => encodeTspRouteIndex(routeIndex, nCities), [routeIndex, nCities]);
+  const tspDecode = useMemo(() => decodeTspRouteBitstring(decodeBits.trim(), nCities), [decodeBits, nCities]);
   const binaryResult = useMemo(() => encodeBinaryInteger(binaryValue, binaryBits), [binaryValue, binaryBits]);
-  const groverP = useMemo(() => groverSuccessProbability(searchSize, groverIters), [searchSize, groverIters]);
-  const groverSuggested = useMemo(() => suggestedGroverIterations(searchSize), [searchSize]);
+  const binaryDecode = useMemo(
+    () => decodeBinaryInteger(binaryResult.ok ? binaryResult.bitstring : "", binaryBits),
+    [binaryResult, binaryBits],
+  );
+  const groverMap = useMemo(() => mapGroverSuccess(searchSize, groverIters), [searchSize, groverIters]);
+  const groverP = groverMap.ok ? groverMap.successProbability : 0;
+  const groverSuggested = groverMap.ok ? groverMap.suggestedIterations : suggestedGroverIterations(searchSize);
 
   return (
     <div className="mapper-lab">
@@ -84,6 +93,7 @@ export function QuantumMapperLab() {
               min={MAPPER_MIN_CITIES}
               max={MAPPER_MAX_CITIES}
               value={nCities}
+              aria-label="Number of cities for route encoding"
               data-testid="mapper-city-count"
               onChange={(e) => {
                 const n = Number(e.target.value);
@@ -100,10 +110,36 @@ export function QuantumMapperLab() {
               min={0}
               max={tspResult.ok ? tspResult.permutationCount - 1 : 999}
               value={routeIndex}
+              aria-label="TSP route permutation index"
               data-testid="mapper-route-index"
               onChange={(e) => setRouteIndex(Number(e.target.value))}
             />
           </label>
+          <label>
+            Decode bitstring → route index
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[01]*"
+              value={decodeBits}
+              aria-label="Route bitstring to decode"
+              data-testid="mapper-decode-bitstring"
+              onChange={(e) => setDecodeBits(e.target.value.replace(/[^01]/g, ""))}
+            />
+          </label>
+          {!tspDecode.ok && decodeBits.length > 0 && (
+            <p className="explorer-note" role="alert" data-testid="mapper-decode-error">
+              {tspDecode.message}
+            </p>
+          )}
+          {tspDecode.ok && (
+            <p className="explorer-note" data-testid="mapper-decode-result">
+              Decoded route index: {tspDecode.routeIndex}
+              {tspResult.ok && tspResult.bitstring === tspDecode.bitstring && tspResult.routeIndex === tspDecode.routeIndex
+                ? " · round-trip matches encode above"
+                : ""}
+            </p>
+          )}
           {!tspResult.ok && (
             <p className="explorer-note" role="alert" data-testid="mapper-validation">
               {tspResult.message}
@@ -171,10 +207,11 @@ export function QuantumMapperLab() {
               {binaryResult.message}
             </p>
           )}
-          {binaryResult.ok && (
+          {binaryResult.ok && binaryDecode.ok && (
             <div className="mapper-result" data-testid="mapper-binary-result">
               <p>
-                Classical: {binaryResult.value} → quantum label |{binaryResult.bitstring}⟩
+                Classical: {binaryResult.value} → quantum label |{binaryResult.bitstring}⟩ · decode value{" "}
+                {binaryDecode.value}
               </p>
               <code data-testid="mapper-bitstring">{binaryResult.bitstring}</code>
             </div>

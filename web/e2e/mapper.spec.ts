@@ -25,6 +25,12 @@ test("Mapper rejects invalid route index", async ({ page }) => {
   await expect(page.getByTestId("mapper-validation")).toBeVisible();
 });
 
+test("Mapper decode rejects invalid padding bitstring", async ({ page }) => {
+  await page.goto("/explorer/mapper");
+  await page.getByTestId("mapper-decode-bitstring").fill("111");
+  await expect(page.getByTestId("mapper-decode-error")).toContainText(/padding/i);
+});
+
 test("Mapper binary example encodes value", async ({ page }) => {
   await page.goto("/explorer/mapper");
   await expect(page.getByTestId("mapper-example-binary-int")).toBeVisible();

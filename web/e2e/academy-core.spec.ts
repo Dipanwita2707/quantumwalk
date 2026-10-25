@@ -67,7 +67,32 @@ test("QEC explanation matches s01/s12 syndrome toy", async ({ page }) => {
 test("Reservoir lab runs educational simulation", async ({ page }) => {
   await page.goto("/academy/labs/reservoir");
   await expect(page.getByTestId("reservoir-lab")).toBeVisible();
-  await expect(page.getByTestId("reservoir-mse")).toBeVisible();
+  await expect(page.getByTestId("reservoir-mse")).toContainText("Test baseline MSE");
   await page.getByTestId("reservoir-rerun").click();
   await expect(page.getByTestId("reservoir-mse")).toBeVisible();
+});
+
+test("Teleportation lesson shows prerequisites", async ({ page }) => {
+  await page.route("**/api/lessons", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        {
+          slug: "quantum-teleportation",
+          title: "Teleport a qubit state",
+          level: "Intermediate",
+          minutes: 9,
+          objective: "Follow teleportation.",
+          prerequisites: "Bell pair lesson.",
+          steps: ["Step"],
+          algorithm_slug: "teleportation-demo",
+          question: "Needs?",
+          choices: ["Shared entanglement", "Cloning", "FTL"],
+        },
+      ]),
+    });
+  });
+  await page.goto("/learn/quantum-teleportation");
+  await expect(page.getByTestId("lesson-prereq-quantum-teleportation")).toContainText("Bell pair");
 });

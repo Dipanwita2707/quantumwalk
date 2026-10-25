@@ -35,8 +35,8 @@ def synthetic_series(length: int, seed: int) -> list[float]:
     return [math.sin(2 * math.pi * t / 17 + phase) for t in range(length)]
 
 
-def run_reservoir_mse(params: ReservoirParams) -> tuple[float, float]:
-    """Return (train_mse, test_mse) for regression checks."""
+def run_reservoir_mse(params: ReservoirParams) -> tuple[float, float, float]:
+    """Return (train_mse, test_mse, test_baseline_mse) for regression checks."""
     rand = _mulberry32(params.seed)
     h = params.hidden_size
     w_in = [(rand() * 2 - 1) * params.input_scale for _ in range(h)]
@@ -108,4 +108,6 @@ def run_reservoir_mse(params: ReservoirParams) -> tuple[float, float]:
     def mse(actual: list[float], pred: list[float]) -> float:
         return sum((a - p) ** 2 for a, p in zip(actual, pred)) / max(1, len(actual))
 
-    return mse(train_y, train_pred), mse(test_y, test_pred)
+    train_mean = sum(train_y) / max(1, len(train_y))
+    test_baseline = mse(test_y, [train_mean] * len(test_y))
+    return mse(train_y, train_pred), mse(test_y, test_pred), test_baseline

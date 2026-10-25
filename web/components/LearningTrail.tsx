@@ -19,6 +19,7 @@ type Lesson = {
   level: string;
   minutes: number;
   objective: string;
+  prerequisites?: string;
   steps: string[];
   algorithm_slug: string;
   question: string;
@@ -37,6 +38,16 @@ const LESSON_CIRCUITS: Record<string, { qubits: number; operations: Operation[] 
     operations: [
       { gate: "h", target: 0 },
       { gate: "cx", control: 0, target: 1 },
+    ],
+  },
+  "teleportation-demo": {
+    qubits: 3,
+    operations: [
+      { gate: "h", target: 0 },
+      { gate: "h", target: 1 },
+      { gate: "cx", control: 1, target: 2 },
+      { gate: "cx", control: 0, target: 1 },
+      { gate: "cz", control: 0, target: 2 },
     ],
   },
   "deutsch-jozsa-balanced": {
@@ -268,6 +279,11 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
                   </h2>
 
                   <p>{item.objective}</p>
+                  {item.prerequisites && (
+                    <p className="explorer-note" data-testid={`lesson-prereq-${item.slug}`}>
+                      <strong>Prerequisites:</strong> {item.prerequisites}
+                    </p>
+                  )}
 
                   <ol>
                     {item.steps.map((step) => (

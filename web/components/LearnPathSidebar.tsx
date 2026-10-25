@@ -8,7 +8,9 @@ import { loadGuestLessonProgress } from "@/lib/guestLessonProgress";
 
 const PRESET_BY_LESSON: Record<string, string> = {
   "first-qubit": "superposition",
+  "math-amplitudes": "superposition",
   entanglement: "bell",
+  "quantum-teleportation": "bell",
   "grover-boost": "grover2",
   "pedagogy-noise": "bell",
   "tsp-classical": "tsp3",

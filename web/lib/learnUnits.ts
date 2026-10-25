@@ -15,13 +15,20 @@ export const LEARN_UNITS: LearnUnit[] = [
   {
     id: "foundations",
     title: "Foundations",
-    lessonSlugs: ["first-qubit", "entanglement", "grover-boost", "deutsch-intro"],
+    lessonSlugs: [
+      "first-qubit",
+      "math-amplitudes",
+      "entanglement",
+      "quantum-teleportation",
+      "grover-boost",
+      "deutsch-intro",
+    ],
     links: [],
   },
   {
     id: "algorithms",
     title: "Algorithms & search",
-    lessonSlugs: ["tsp-classical"],
+    lessonSlugs: ["tsp-classical", "qft-intro", "shor-intro", "vqe-intro"],
     links: [
       { label: "Quantum mapper", href: "/explorer/mapper" },
       { label: "Grover explorer", href: "/explorer/grover" },

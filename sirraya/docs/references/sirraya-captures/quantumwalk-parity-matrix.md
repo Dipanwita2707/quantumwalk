@@ -17,7 +17,7 @@
 | ML Studio | `/hub/ml-studio` | **PARTIAL** | ResNet/LISA-style demo vs layer toy |
 | Doc Editor | `/hub/doc-editor` | **PARTIAL** | CodeMirror, KaTeX, Mermaid, AI |
 | Document Pro | `/hub/document-pro` | **PARTIAL** | Template library, docx, e-sign |
-| Quantum Academy | `/academy`, `/learn/*`, `/academy/labs/*` | **PARTIAL** (8 lessons + labs) | 14/22 Sirraya titles still MISSING/PARTIAL (E017) |
+| Quantum Academy | `/academy`, `/learn/*`, `/academy/labs/*` | **PARTIAL** (13 lessons + labs) | Full QFT/Shor runs, Characterization campaigns, superdense coding |
 
 ---
 

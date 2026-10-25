@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   RESERVOIR_DEFAULTS,
+  RESERVOIR_RIDGE_LAMBDA,
   runReservoirExperiment,
   type ReservoirParams,
 } from "@/lib/reservoirLab";
@@ -37,6 +38,7 @@ export function ReservoirComputingLab() {
             max={32}
             step={4}
             value={params.hiddenSize}
+            aria-label="Reservoir hidden size"
             data-testid="reservoir-hidden"
             onChange={(e) => setParams((p) => ({ ...p, hiddenSize: Number(e.target.value) }))}
           />
@@ -83,12 +85,14 @@ export function ReservoirComputingLab() {
         <section className="content-card" aria-labelledby="reservoir-results-title">
           <h2 id="reservoir-results-title">Results</h2>
           <p data-testid="reservoir-mse">
-            Train MSE: {result.trainMse.toFixed(4)} · Test MSE: {result.testMse.toFixed(4)} · Mean baseline train MSE:{" "}
-            {result.baselineMse.toFixed(4)}
+            Train MSE: {result.trainMse.toFixed(4)} · Test MSE: {result.testMse.toFixed(4)} · Test baseline MSE (train
+            mean): {result.testBaselineMse.toFixed(4)}
           </p>
           <p className="explorer-note">
-            Lower test MSE means the reservoir features helped the linear readout predict the next sine sample better than
-            guessing the training mean.
+            Hidden size sets feature dimension; spectral radius scales recurrent weights for stable dynamics; input scale
+            sets drive strength; leak rate mixes old and new state; ridge λ={RESERVOIR_RIDGE_LAMBDA} regularizes the
+            readout. Lower{" "}
+            <strong>test</strong> MSE vs the baseline means the reservoir helped on held-out steps.
           </p>
           <table>
             <caption>Sample test predictions</caption>

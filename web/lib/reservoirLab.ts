@@ -22,11 +22,15 @@ export const RESERVOIR_DEFAULTS: ReservoirParams = {
   seed: 42,
 };
 
+/** Ridge penalty λ in readout fit (educational default). */
+export const RESERVOIR_RIDGE_LAMBDA = 1e-4;
+
 export type ReservoirRunResult = {
   ok: true;
   trainMse: number;
   testMse: number;
-  baselineMse: number;
+  /** MSE on test targets predicting the training-set mean (same split as testMse). */
+  testBaselineMse: number;
   samplePredictions: { target: number; predicted: number }[];
   limitation: string;
 };
@@ -133,6 +137,14 @@ export function validateReservoirParams(p: Partial<ReservoirParams>): ReservoirR
   if (leak <= 0 || leak > 1) return { ok: false, message: "Leak rate must be in (0, 1]." };
   if (inScale <= 0 || inScale > 3) return { ok: false, message: "Input scale must be in (0, 3]." };
   if (spec <= 0 || spec > 1.5) return { ok: false, message: "Spectral radius must be in (0, 1.5]." };
+  const trainSteps = p.trainSteps ?? RESERVOIR_DEFAULTS.trainSteps;
+  const seed = p.seed ?? RESERVOIR_DEFAULTS.seed;
+  if (!Number.isInteger(trainSteps) || trainSteps < 20 || trainSteps > 500) {
+    return { ok: false, message: "Training steps must be an integer from 20 to 500." };
+  }
+  if (!Number.isInteger(seed) || seed < 0) {
+    return { ok: false, message: "Seed must be a non-negative integer." };
+  }
   return null;
 }
 
@@ -162,13 +174,20 @@ export function runReservoirExperiment(params: ReservoirParams): ReservoirRunRes
     }
   }
 
-  const weights = ridgeFit(featureRows, trainTargets, 1e-4);
+  if (featureRows.length === 0 || testFeatures.length === 0) {
+    return { ok: false, message: "Not enough data after washout; increase training steps." };
+  }
+
+  const weights = ridgeFit(featureRows, trainTargets, RESERVOIR_RIDGE_LAMBDA);
   const predict = (row: number[]) => row.reduce((acc, v, i) => acc + v * weights[i], 0);
 
   const trainPred = featureRows.map(predict);
   const testPred = testFeatures.map(predict);
-  const baseline = trainTargets.reduce((a, y) => a + y, 0) / trainTargets.length;
-  const baselineMse = mse(trainTargets, trainTargets.map(() => baseline));
+  const trainMean = trainTargets.reduce((a, y) => a + y, 0) / trainTargets.length;
+  const testBaselineMse = mse(
+    testTargets,
+    testTargets.map(() => trainMean),
+  );
 
   const samplePredictions = testTargets.slice(0, 5).map((target, i) => ({
     target,
@@ -179,7 +198,7 @@ export function runReservoirExperiment(params: ReservoirParams): ReservoirRunRes
     ok: true,
     trainMse: mse(trainTargets, trainPred),
     testMse: mse(testTargets, testPred),
-    baselineMse,
+    testBaselineMse,
     samplePredictions,
     limitation:
       "Classical echo-state simulation with fixed random weights — not a quantum device or advantage claim.",

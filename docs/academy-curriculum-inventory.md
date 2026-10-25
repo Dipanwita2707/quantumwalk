@@ -7,7 +7,7 @@
 | # | Sirraya title (evidence) | QW route / surface | Content | Quiz | Lab | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Welcome: What Quantum Computing Is (and Isn't) | `/academy`, `/academy/foundations` | Overview prose | — | — | **PARTIAL** |
-| 2 | Complex Numbers & Vectors | `/academy/foundations` | Reader spine | — | — | **PARTIAL** |
+| 2 | Complex Numbers & Vectors | `/learn/math-amplitudes`, `/academy/foundations` | Lesson + reader | Yes | `/workspace` | **PARTIAL** (QW original) |
 | 3 | Matrices, Unitaries & Tensor Products | `/academy/foundations` | Reader spine | — | — | **PARTIAL** |
 | 4 | The Physics: Waves, Photons & Spin | `/academy/foundations` | Reader spine | — | — | **PARTIAL** |
 | 5 | The Qubit & the Bloch Sphere | `/learn/first-qubit` | Lesson + circuit | Yes | `/workspace` | **IMPLEMENTED+TESTED** |
@@ -16,12 +16,12 @@
 | 8 | Entanglement, Bell States & CHSH | `/learn/entanglement` | Lesson + circuit | Yes | `/workspace` | **IMPLEMENTED+TESTED** |
 | 9 | Measurement, Mixed States and Noise | `/learn/pedagogy-noise` | Lesson + noise panel | Yes | Lab noise | **IMPLEMENTED+TESTED** |
 | 10 | The Circuit Model | `/workspace` | Virtual lab | — | Circuit sim | **IMPLEMENTED** |
-| 11 | Quantum Teleportation and Superdense Coding | — | — | — | — | **MISSING** (title only) |
+| 11 | Quantum Teleportation and Superdense Coding | `/learn/quantum-teleportation` | QW original lesson + circuit | Yes | 3-qubit demo | **IMPLEMENTED+TESTED** (teleport only; superdense not split) |
 | 12 | Deutsch–Jozsa & Bernstein–Vazirani | `/learn/deutsch-intro` | Lesson + circuit | Yes | Algorithm preset | **IMPLEMENTED+TESTED** |
 | 13 | Grover's Search | `/learn/grover-boost` | Lesson | Yes | `/academy/labs/grover`, `/explorer/grover` | **IMPLEMENTED+TESTED** |
-| 14 | QFT and Phase Estimation | — | — | — | — | **MISSING** (title only) |
-| 15 | Shor's Algorithm | — | — | — | — | **MISSING** (title only) |
-| 16 | VQE and QAOA | — | — | — | — | **MISSING** (title only) |
+| 14 | QFT and Phase Estimation | `/learn/qft-intro` | QW original conceptual lesson | Yes | H building block | **PARTIAL** (no full QFT circuit) |
+| 15 | Shor's Algorithm | `/learn/shor-intro` | QW original sketch | Yes | — | **PARTIAL** (no cryptoscale run) |
+| 16 | VQE and QAOA | `/learn/vqe-intro` | QW original conceptual | Yes | — | **PARTIAL** (QAOA not separate) |
 | 17 | Quantum Reservoir Computing & QML | `/learn/quantum-reservoir`, `/academy/reservoir` | Lesson + overview | Yes | `/academy/labs/reservoir` (sim) | **IMPLEMENTED+TESTED** (simulation) |
 | 18 | Error Correction & Fault Tolerance | `/learn/qec-bit-flip` | Lesson | Yes | `/academy/labs/qec` (sim) | **IMPLEMENTED+TESTED** (sim) |
 | 19 | Hardware Platforms and Quantum Cryptography | `/learn/hardware` | Architecture cards | — | No live device | **PARTIAL** |
