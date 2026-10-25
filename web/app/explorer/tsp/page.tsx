@@ -339,19 +339,29 @@ export default function TspExplorerPage() {
               </p>
             )}
             {solveResult && (
-              <div className="explorer-solve-results" aria-label="Backend solve results">
-                <p className="explorer-note">
+              <div
+                className="explorer-solve-results"
+                aria-label="Backend solve results"
+                data-testid="tsp-backend-solve-results"
+              >
+                <p className="explorer-note" data-testid="tsp-backend-solve-summary">
                   Classical optimal: {solveResult.quantum_advantage.classical_optimal_distance}; quantum best:{" "}
                   {solveResult.quantum_advantage.quantum_optimal_distance}
                   {solveResult.quantum_advantage.found_optimal ? " (matched optimal)" : ""} —{" "}
                   {solveResult.execution_details.algorithm}, {solveResult.execution_details.shots} shots,{" "}
                   {(solveResult.execution_time * 1000).toFixed(0)} ms
                 </p>
-                {solveResult.quantum_solutions.slice(0, 6).map((row) => (
-                  <div key={`${row.bitstring ?? row.route.join("-")}-${row.measurement_count}`} className="explorer-solve-row">
-                    <span>{formatRoute(row.route)}</span>
-                    <span>cost {row.distance}</span>
-                    <span>{(row.probability * 100).toFixed(1)}%</span>
+                {solveResult.quantum_solutions.slice(0, 6).map((row, index) => (
+                  <div
+                    key={`${row.bitstring ?? row.route.join("-")}-${row.measurement_count}`}
+                    className="explorer-solve-row"
+                    data-testid={`tsp-backend-solve-row-${index}`}
+                  >
+                    <span data-testid={`tsp-backend-solve-route-${index}`}>{formatRoute(row.route)}</span>
+                    <span data-testid={`tsp-backend-solve-distance-${index}`}>cost {row.distance}</span>
+                    <span data-testid={`tsp-backend-solve-probability-${index}`}>
+                      {(row.probability * 100).toFixed(1)}%
+                    </span>
                   </div>
                 ))}
               </div>

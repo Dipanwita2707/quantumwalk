@@ -73,8 +73,10 @@ test("TSP explorer online health and mocked solve results", async ({ page }) => 
   const solveBtn = page.getByRole("button", { name: "Run backend Grover solve" });
   await expect(solveBtn).toBeEnabled();
   await solveBtn.click();
-  await expect(page.getByText(/cost 6/i)).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/42\.0%/)).toBeVisible();
+  const results = page.getByTestId("tsp-backend-solve-results");
+  await expect(results).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByTestId("tsp-backend-solve-distance-0")).toHaveText("cost 6");
+  await expect(page.getByTestId("tsp-backend-solve-probability-0")).toHaveText("42.0%");
 });
 
 test("TSP health non-200 shows offline", async ({ page }) => {
