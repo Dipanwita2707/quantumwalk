@@ -10,7 +10,7 @@ import { StartHeroStage } from "@/components/start/StartHeroStage";
 import { PathPickerSection } from "@/components/start/PathPickerSection";
 import { useSiteAtmosphere } from "@/lib/site-atmosphere";
 import "./experience.css";
-import { useSession } from "@/lib/api";
+import { api, useSession } from "@/lib/api";
 import { discoveryTracks, type Experience } from "@/lib/onboarding";
 
 const slideNames = ["Your level", "First discovery", "Go a little deeper", "Try one question", "One more discovery"];
@@ -72,6 +72,17 @@ export default function StartPage() {
 
   function next() {
     if (step < 4) { setStep(step + 1); return; }
+    const exploredCount = discoveries;
+    if (profile?.authenticated) {
+      void api("/api/discovery/progress", {
+        method: "POST",
+        body: JSON.stringify({ explored: Math.min(exploredCount, 4) }),
+      }, profile.csrf_token).catch(() => undefined);
+    } else {
+      try {
+        localStorage.setItem("qw_discovery_explored", String(Math.min(exploredCount, 4)));
+      } catch {}
+    }
     router.push(profile?.authenticated ? starterDestination : `/login?level=${level}&return_to=${encodeURIComponent(starterDestination)}`);
   }
 

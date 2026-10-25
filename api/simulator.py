@@ -2,90 +2,58 @@
 
 from __future__ import annotations
 
-from typing import Literal
-
-from circuit_bridge import apply_operation
+from circuit_bridge import apply_operation, build_qiskit_circuit
 from circuit_schema import CircuitRequest, Operation  # noqa: F401 — re-export for API imports
-from pydantic import BaseModel
 from qiskit import ClassicalRegister, QuantumCircuit
 from qiskit.quantum_info import Statevector
 from qiskit_aer import AerSimulator
+from qiskit_aer.noise import NoiseModel, depolarizing_error
+
+from simulation_types import Amplitude, BlochVector, Probability, SimulationResponse, StepSnapshot, snapshot_from_statevector
+
+# Re-export response types for existing imports.
+__all__ = [
+    "Amplitude",
+    "BlochVector",
+    "CircuitRequest",
+    "Operation",
+    "Probability",
+    "SimulationResponse",
+    "StepSnapshot",
+    "simulate",
+    "snapshot_from_statevector",
+]
 
 
-class Amplitude(BaseModel):
-    basis: str
-    real: float
-    imag: float
+def _noisy_counts(request: CircuitRequest, measurement_targets: list[int]) -> dict[str, int] | None:
+    if not measurement_targets or request.noise_strength is None or request.noise_strength <= 0:
+        return None
+    strength = request.noise_strength
+    noise_model = NoiseModel()
+    error = depolarizing_error(strength, 1)
+    for name in ("h", "x", "y", "z", "s", "t", "rx", "ry", "rz", "cx", "cz", "swap"):
+        noise_model.add_all_qubit_quantum_error(error, [name])
+    sampled = build_qiskit_circuit(
+        CircuitRequest(qubits=request.qubits, operations=[op for op in request.operations if op.gate != "measure"], shots=request.shots)
+    )
+    sampled.add_register(ClassicalRegister(request.qubits))
+    for qubit in measurement_targets:
+        sampled.measure(qubit, qubit)
+    backend = AerSimulator(noise_model=noise_model, method="automatic", max_parallel_threads=1, max_memory_mb=256)
+    result = backend.run(sampled, shots=request.shots).result()
+    return dict(sorted(result.get_counts().items()))
 
 
-class Probability(BaseModel):
-    basis: str
-    probability: float
-
-
-class BlochVector(BaseModel):
-    qubit: int
-    x: float
-    y: float
-    z: float
-    purity: float
-
-
-class StepSnapshot(BaseModel):
-    index: int
-    amplitudes: list[Amplitude]
-    probabilities: list[Probability]
-    bloch: list[BlochVector]
-
-
-class SimulationResponse(BaseModel):
-    qubits: int
-    shots: int
-    steps: list[StepSnapshot]
-    counts: dict[str, int] | None
-    basis_order: str
-    mode: Literal["ideal_simulator"]
-
-
-def _snapshot(state: Statevector, qubits: int, index: int) -> StepSnapshot:
-    amplitudes = []
-    probabilities = []
-    for basis, value in enumerate(state.data):
-        label = format(basis, f"0{qubits}b")
-        real = float(value.real)
-        imag = float(value.imag)
-        probability = float(abs(value) ** 2)
-        amplitudes.append({"basis": label, "real": real, "imag": imag})
-        probabilities.append({"basis": label, "probability": probability})
-
-    bloch = []
-    for qubit in range(qubits):
-        coherence = 0j
-        z = 0.0
-        for basis, amplitude in enumerate(state.data):
-            if basis & (1 << qubit):
-                z -= float(abs(amplitude) ** 2)
-            else:
-                z += float(abs(amplitude) ** 2)
-                coherence += amplitude.conjugate() * state.data[basis | (1 << qubit)]
-        x = 2 * float(coherence.real)
-        y = 2 * float(coherence.imag)
-        purity = (1 + x * x + y * y + z * z) / 2
-        bloch.append({"qubit": qubit, "x": x, "y": y, "z": z, "purity": purity})
-
-    return StepSnapshot(index=index, amplitudes=amplitudes, probabilities=probabilities, bloch=bloch)
-
-
-def simulate(request: CircuitRequest) -> SimulationResponse:
+def simulate_qiskit(request: CircuitRequest) -> SimulationResponse:
     circuit = QuantumCircuit(request.qubits)
-    snapshots = [_snapshot(Statevector.from_int(0, 2**request.qubits), request.qubits, 0)]
+    snapshots = [snapshot_from_statevector(Statevector.from_int(0, 2**request.qubits), request.qubits, 0)]
     measurement_targets: list[int] = []
 
     for index, op in enumerate(request.operations, start=1):
         if apply_operation(circuit, op):
             measurement_targets.append(op.target)
         state = Statevector.from_instruction(circuit)
-        snapshots.append(_snapshot(state, request.qubits, index))
+        snapshots.append(snapshot_from_statevector(state, request.qubits, index))
 
     counts: dict[str, int] | None = None
     if measurement_targets:
@@ -96,11 +64,30 @@ def simulate(request: CircuitRequest) -> SimulationResponse:
         result = AerSimulator(method="statevector", max_parallel_threads=1, max_memory_mb=256).run(sampled, shots=request.shots).result()
         counts = dict(sorted(result.get_counts().items()))
 
+    noisy = _noisy_counts(request, measurement_targets)
+    mode = "pedagogical_noise" if noisy is not None else "ideal_simulator"
+
     return SimulationResponse(
         qubits=request.qubits,
         shots=request.shots,
         steps=snapshots,
         counts=counts,
         basis_order="Qubit 0 is the rightmost bit in each basis label",
-        mode="ideal_simulator",
+        mode=mode,
+        engine="qiskit",
+        noisy_counts=noisy,
     )
+
+
+def simulate(request: CircuitRequest) -> SimulationResponse:
+    if request.engine == "cirq":
+        from cirq_engine import simulate_cirq
+
+        response = simulate_cirq(request)
+        if request.noise_strength and request.noise_strength > 0:
+            measurement_targets = [op.target for op in request.operations if op.gate == "measure"]
+            noisy = _noisy_counts(request, measurement_targets)
+            if noisy is not None:
+                response = response.model_copy(update={"noisy_counts": noisy, "mode": "pedagogical_noise"})
+        return response
+    return simulate_qiskit(request)

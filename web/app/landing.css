@@ -182,5 +182,17 @@
   .ql-welcome { display:none; }
   .ql-universe { min-height:380px; margin-top:18px; }
 }
+.ql-engine-chip {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: rgba(140, 245, 226, 0.85);
+  margin: 0 0 18px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  display: inline-block;
+  background: rgba(8, 16, 32, 0.5);
+}
+
 @media(prefers-reduced-motion:reduce) { .quantum-landing *,.quantum-landing *::after { animation:none!important; } .ql-reveal { opacity:1; transform:none; transition:none!important; } .ql-hero-grid,.ql-universe { transform:none!important; } html:has(.quantum-landing) { scroll-behavior:auto; } }
 @media(forced-colors:active) { .ql-hero h1>span { background:none; -webkit-text-fill-color:CanvasText; } .ql-primary,.ql-probability-track { border:1px solid ButtonText; } }

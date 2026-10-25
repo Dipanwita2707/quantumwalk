@@ -9,6 +9,10 @@ import { EntanglementLab } from "@/components/EntanglementLab";
 import { QuantumMissions } from "@/components/QuantumMissions";
 import { QuantumToolbox } from "@/components/QuantumToolbox";
 import { QuantumEquationWhiteboard } from "@/components/QuantumEquationWhiteboard";
+import { LabGlossaryDrawer } from "@/components/LabGlossaryDrawer";
+import { LabEnginePanel } from "@/components/LabEnginePanel";
+import { CIRCUIT_PRESETS } from "@/lib/circuitPresets";
+import { stepButtonLabel, stepNarrator } from "@/lib/stepNarrator";
 import "./lab.css";
 
 type Gate = "h" | "x" | "y" | "z" | "s" | "t" | "rx" | "ry" | "rz" | "cx" | "cz" | "swap" | "measure";
@@ -18,7 +22,16 @@ type Amplitude = { basis: string; real: number; imag: number };
 type Probability = { basis: string; probability: number };
 type Bloch = { qubit: number; x: number; y: number; z: number; purity: number };
 type Snapshot = { index: number; amplitudes: Amplitude[]; probabilities: Probability[]; bloch: Bloch[] };
-type Simulation = { qubits: number; shots: number; steps: Snapshot[]; counts: Record<string, number> | null; basis_order: string; mode: string };
+type Simulation = {
+  qubits: number;
+  shots: number;
+  steps: Snapshot[];
+  counts: Record<string, number> | null;
+  noisy_counts?: Record<string, number> | null;
+  basis_order: string;
+  mode: string;
+  engine?: string;
+};
 type CircuitResource = { id: string; name: string; qubits: number; operations: Operation[] };
 type AlgorithmResource = { title: string; qubits: number; operations: Operation[] };
 type ChallengeResource = { slug: string; title: string; summary: string; qubits: number };
@@ -128,6 +141,9 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<GateCategory>("all");
   const [labMode, setLabMode] = useState<"circuit" | "whiteboard">("circuit");
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
+  const [engineCaption, setEngineCaption] = useState("");
+  const [noiseOn, setNoiseOn] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const hydratedOwnerRef = useRef<string | null>(null);
 
@@ -195,9 +211,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (accountLoading || !profile?.authenticated) return;
-    if (hydratedOwnerRef.current === profile.id) return;
-    hydratedOwnerRef.current = profile.id;
+    if (accountLoading) return;
+    const ownerKey = profile?.authenticated ? profile.id : "guest";
+    if (hydratedOwnerRef.current === ownerKey) return;
+    hydratedOwnerRef.current = ownerKey;
     isHydratedRef.current = false;
     setQubits(1);
     setOperations([]);
@@ -207,6 +224,7 @@ export default function Home() {
     const params = new URLSearchParams(window.location.search);
     const algorithm = params.get("algorithm");
     const slug = params.get("challenge");
+    const preset = params.get("preset");
     const mode = params.get("mode");
     const savedMode = typeof window !== "undefined" ? localStorage.getItem("qw_lab_mode") : null;
 
@@ -218,7 +236,14 @@ export default function Home() {
       setLabMode(savedMode);
     }
 
-    if (algorithm) {
+    if (preset && CIRCUIT_PRESETS[preset]) {
+      const item = CIRCUIT_PRESETS[preset];
+      changeCircuit(item.operations, item.qubits);
+      setResult(null);
+      setName(item.name);
+      setLoadedId(null);
+      isHydratedRef.current = true;
+    } else if (algorithm) {
       void api<AlgorithmResource>(`/api/algorithms/${encodeURIComponent(algorithm)}`)
         .then((item) => {
           changeCircuit(item.operations, item.qubits);
@@ -246,7 +271,7 @@ export default function Home() {
           setError(cause instanceof Error ? cause.message : "Could not load challenge.");
           isHydratedRef.current = true;
         });
-    } else if (!params.get("circuit")) {
+    } else if (!params.get("circuit") && profile?.authenticated) {
       // Rehydrate persisted draft and simulation cache
       try {
         const saved = localStorage.getItem(`qw_circuit_draft_${profile.id}`);
@@ -378,7 +403,16 @@ export default function Home() {
     try {
       const data = await api<Simulation>(
         "/api/simulate",
-        { method: "POST", body: JSON.stringify({ qubits, operations, shots: 1024 }) },
+        {
+          method: "POST",
+          body: JSON.stringify({
+            qubits,
+            operations,
+            shots: 1024,
+            engine: "qiskit",
+            ...(noiseOn ? { noise_strength: 0.08 } : {}),
+          }),
+        },
         profile?.authenticated ? profile.csrf_token : undefined
       );
       setResult({ revision: submittedRevision, operations, data });
@@ -415,15 +449,15 @@ export default function Home() {
     setBusy(true);
     setError("");
     try {
-      const outcome = await api<{ solved: boolean; saved: boolean }>(
+      const outcome = await api<{ solved: boolean; saved: boolean; tier?: string; xp_awarded?: number }>(
         `/api/challenges/${challenge.slug}/submit`,
         { method: "POST", body: JSON.stringify({ circuit: { qubits, operations } }) },
         profile?.authenticated ? profile.csrf_token : undefined
       );
       setChallengeNotice(
         outcome.solved
-          ? `Solved!${outcome.saved ? " Progress saved." : " Sign in to save progress."}`
-          : "Not quite yet. Run the circuit and compare its exact probabilities with the goal."
+          ? `Mission complete${outcome.tier ? ` (${outcome.tier})` : ""}.${outcome.saved ? " Progress saved." : " Sign in to save progress."}`
+          : "Not yet. Your top chances do not match this mission yet — adjust gates and run again."
       );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Could not check challenge.");
@@ -454,14 +488,15 @@ export default function Home() {
     }
   }
 
-  async function exportCircuit(format: "qasm" | "qiskit") {
+  async function exportCircuit(format: "qasm" | "qiskit" | "cirq") {
     setError("");
     try {
       const result = await api<{ code: string }>(`/api/export/${format}`, { method: "POST", body: JSON.stringify({ qubits, operations }) });
       const url = URL.createObjectURL(new Blob([result.code], { type: "text/plain" }));
       const link = document.createElement("a");
       link.href = url;
-      link.download = format === "qasm" ? "quantumwalk-circuit.qasm" : "quantumwalk-circuit.py";
+      link.download =
+        format === "qasm" ? "quantumwalk-circuit.qasm" : format === "cirq" ? "quantumwalk-cirq.py" : "quantumwalk-circuit.py";
       link.click();
       URL.revokeObjectURL(url);
     } catch (cause) {
@@ -472,6 +507,10 @@ export default function Home() {
   const hilbertDim = 1 << qubits;
   const isEntangled = Boolean(vector && vector.purity < 0.985);
   const filteredGates = categoryFilter === "all" ? gateOptions : gateOptions.filter((g) => gateCategoryMap[g] === categoryFilter);
+  const stepGate = step > 0 && result ? result.operations[step - 1]?.gate : null;
+  const narrator = stepNarrator(step, stepGate ?? null);
+  const displayCounts =
+    result?.data.mode === "pedagogical_noise" && result.data.noisy_counts ? result.data.noisy_counts : result?.data.counts;
 
   return (
     <div className={`app-shell lab-shell nextlevel-system ${labMode === "whiteboard" ? "whiteboard-mode" : ""}`}>
@@ -679,7 +718,7 @@ export default function Home() {
             <>
               <QuantumMissions />
               {/* Top Quantum HUD Banner */}
-              <section id="circuit-workbench" className="hero nextlevel-hero" aria-labelledby="page-title">
+              <section id="circuit" className="hero nextlevel-hero" aria-labelledby="page-title">
             <div className="hero-quantum-content">
               <div className="eyebrow">
                 <span className="lab-status-dot" />
@@ -714,6 +753,19 @@ export default function Home() {
                 <span>·</span>
                 <span>1,024 Shots</span>
               </div>
+              {engineCaption && (
+                <p className="engine-agree-caption" role="status">
+                  {engineCaption}
+                </p>
+              )}
+              <LabEnginePanel
+                qubits={qubits}
+                operations={operations}
+                csrf={profile?.authenticated ? profile.csrf_token : undefined}
+                noiseOn={noiseOn}
+                onNoiseChange={setNoiseOn}
+                onCompare={(_agree, caption) => setEngineCaption(caption)}
+              />
             </div>
           </section>
 
@@ -1096,9 +1148,15 @@ export default function Home() {
                     OpenQASM
                   </button>
                   <button type="button" onClick={() => void exportCircuit("qiskit")} title="Export executable Qiskit Python script">
-                    Python
+                    Qiskit
+                  </button>
+                  <button type="button" onClick={() => void exportCircuit("cirq")} title="Export Cirq Python script">
+                    Cirq
                   </button>
                 </div>
+                <button type="button" className="glossary-open-btn" onClick={() => setGlossaryOpen(true)}>
+                  Glossary
+                </button>
               </div>
 
               {saveNotice && <p className="success-note" role="status">{saveNotice}</p>}
@@ -1110,7 +1168,7 @@ export default function Home() {
             </section>
 
             {/* Panel 02: 3D Bloch Sphere */}
-            <section className="panel bloch-panel" aria-labelledby="bloch-title">
+            <section id="bloch" className="panel bloch-panel" aria-labelledby="bloch-title">
               <div className="panel-head">
                 <div>
                   <span className="panel-kicker">02 / VISUALIZE</span>
@@ -1240,7 +1298,7 @@ export default function Home() {
             </section>
 
             {/* Panel 03: State Vector & Wavefunction */}
-            <section className="panel state-panel" aria-labelledby="state-title">
+            <section id="probabilities" className="panel state-panel" aria-labelledby="state-title">
               <div className="panel-head">
                 <div>
                   <span className="panel-kicker">03 / WAVEFUNCTION</span>
@@ -1356,19 +1414,19 @@ export default function Home() {
                           setStep(snapshot.index);
                         }}
                       >
-                        {snapshot.index === 0 ? "Ground" : `T${snapshot.index}`}
+                        {stepButtonLabel(snapshot.index, snapshot.index === 0 ? null : result.operations[snapshot.index - 1]?.gate ?? null)}
                       </button>
                     ))}
                   </div>
                   <div className="step-explanation-box">
-                    <strong>
-                      {step === 0 ? "Initial ground state |0...0⟩" : gateNames[result.operations[step - 1].gate]}
-                    </strong>
-                    <p>
-                      {step === 0
-                        ? "All qubits are initialized in the standard basis ground state |0⟩ with zero phase."
-                        : gateHints[result.operations[step - 1].gate]}
-                    </p>
+                    <strong>{narrator.headline}</strong>
+                    <p>{narrator.body}</p>
+                    {stepGate && (
+                      <details>
+                        <summary>Technical detail</summary>
+                        <p>{gateHints[stepGate]}</p>
+                      </details>
+                    )}
                   </div>
                   <div className="step-nav">
                     <button
@@ -1401,7 +1459,7 @@ export default function Home() {
             </section>
 
             {/* 05: Measurement Counts (Shot sampling) */}
-            <section className="panel measurement-panel" aria-labelledby="measurement-title">
+            <section id="counts" className="panel measurement-panel" aria-labelledby="measurement-title">
               <div className="panel-head">
                 <div>
                   <span className="panel-kicker">05 / READOUT</span>
@@ -1410,13 +1468,15 @@ export default function Home() {
                 <span className="meta">1,024 shots</span>
               </div>
 
-              {result?.data.counts ? (
+              {result && displayCounts ? (
                 <>
                   <p className="panel-description">
-                    Empirical collapse statistics over 1,024 shots. Notice quantum shot noise compared to exact probabilities.
+                    {result.data.noisy_counts
+                      ? "Pedagogical noise sample — not live hardware. Compare to ideal chances in the step view."
+                      : "Empirical collapse statistics over 1,024 shots. Notice quantum shot noise compared to exact probabilities."}
                   </p>
                   <div className="count-list">
-                    {Object.entries(result.data.counts).map(([basis, count]) => {
+                    {Object.entries(displayCounts).map(([basis, count]) => {
                       const pct = ((count / (result.data.shots || 1024)) * 100).toFixed(1);
                       return (
                         <div key={basis} className="count-row">
@@ -1508,6 +1568,7 @@ export default function Home() {
           </footer>
         </div>
       </main>
+      <LabGlossaryDrawer open={glossaryOpen} onClose={() => setGlossaryOpen(false)} />
     </div>
   );
 }

@@ -103,6 +103,11 @@ LESSONS = [
 
 LESSON_ANSWERS = {"first-qubit": 1, "entanglement": 0}
 
+CHALLENGE_TIERS = {
+    "make-superposition": {"max_gates": 2, "reference_ops": 1},
+    "make-bell-pair": {"max_gates": 3, "reference_ops": 2},
+}
+
 CHALLENGES = [
     {
         "slug": "make-superposition",

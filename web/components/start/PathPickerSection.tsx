@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { discoveryTracks, type Experience } from "@/lib/onboarding";
 
 const order: Experience[] = ["beginner", "intermediate", "advanced"];
@@ -42,6 +43,12 @@ export function PathPickerSection({ onSelect, paused = false }: { onSelect: (lev
           ))}
         </svg>
       </div>
+      <nav className="path-tool-hub" aria-label="QuantumWalk tools">
+        <Link href="/workspace?mode=circuit">Lab</Link>
+        <Link href="/learn">Path</Link>
+        <Link href="/explorer/grover">Explorer</Link>
+        <Link href="/learn/hardware">Hardware story</Link>
+      </nav>
       <header className="path-picker-head">
         <p className="path-kicker">
           <span className="path-kicker-beacon" aria-hidden="true" />

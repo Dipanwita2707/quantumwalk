@@ -212,6 +212,22 @@
   .discovery-shell .discovery-animation h2 { font-size:20px; }
   .discovery-shell .discovery-note { font-size:8px; line-height:1.9; }
 }
+.path-tool-hub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+.path-tool-hub a {
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(140, 245, 226, 0.25);
+  text-decoration: none;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+}
+
 @media(prefers-reduced-motion:reduce) {
   .portal-orbit,.portal-entangle,.portal-entangle path,.portal-entangle circle,.atmosphere-grid,.atmosphere-light,.start-nebula,.start-bg-aurora,.start-bg-thread,.start-bg-drift,.start-hero-aurora,.start-hero-scan,.start-frame-ring,.experiment-stage-glow,.discovery-visual,.path-branch-flow,.path-origin-pulse,.path-branch-node,.path-kicker-beacon,.path-picker-head h2 span,.path-stream-node { animation:none; }
   .path-stream { opacity:1; transform:none; }

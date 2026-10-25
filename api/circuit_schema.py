@@ -5,6 +5,9 @@ from __future__ import annotations
 from math import pi
 from typing import Literal
 
+SimulationEngine = Literal["qiskit", "cirq"]
+SimulationMode = Literal["ideal_simulator", "pedagogical_noise"]
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Gate = Literal["h", "x", "y", "z", "s", "t", "rx", "ry", "rz", "cx", "cz", "swap", "measure"]
@@ -27,6 +30,8 @@ class CircuitRequest(BaseModel):
     qubits: int = Field(ge=1, le=5)
     operations: list[Operation] = Field(default_factory=list, max_length=64)
     shots: int = Field(default=1024, ge=1, le=4096)
+    engine: Literal["qiskit", "cirq"] = "qiskit"
+    noise_strength: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False)
 
     @model_validator(mode="after")
     def validate_circuit(self) -> "CircuitRequest":

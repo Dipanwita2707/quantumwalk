@@ -51,6 +51,7 @@ export default function LandingPage() {
           <p className="ql-eyebrow ql-reveal"><span className="ql-status-dot" /> A PLAYGROUND FOR THE QUANTUM CURIOUS</p>
           <h1 id="landing-title" className="ql-reveal ql-reveal-delay-1 qw-heading-gradient">Small qubits.<br />Extraordinary<br /><span>possibilities.</span></h1>
           <p className="ql-hero-description ql-reveal ql-reveal-delay-2">Step inside the science that changes how we think about computing. Build it. See it. Make it click.</p>
+          <p className="ql-engine-chip ql-reveal ql-reveal-delay-2" role="note">One circuit · Qiskit &amp; Cirq · same chances in the lab</p>
           <div className="ql-actions ql-reveal ql-reveal-delay-3"><Link className="ql-primary" href={destination}>{profile?.authenticated ? "Enter your quantum lab" : "Begin your discovery"}<span aria-hidden="true">↗</span></Link><a className="ql-text-link" href="#first-discovery"><span className="ql-play" aria-hidden="true">▷</span> Try a little quantum</a></div>
           <div className="ql-welcome ql-reveal ql-reveal-delay-4"><span className="ql-welcome-icon" aria-hidden="true">✳</span><p>No physics degree required.<br /><strong>Just bring your curiosity.</strong></p></div>
         </div>

@@ -27,7 +27,7 @@ export default function AchievementsPage() {
     {error && <div className="content-error" role="alert">{error} <button type="button" onClick={() => void load()}>Retry</button></div>}
     {!progress && !error && <p role="status">Loading milestones…</p>}
     {progress && <><p role="status">{earned} of {milestones.length} milestones earned</p><div className="content-cards">
-      {milestones.map((item) => <article key={item.id} className="content-card">
+      {milestones.map((item) => <article key={item.id} className={`content-card ${completed.has(item.activity) ? "achievement-earned" : ""}`}>
         <span className="panel-kicker">{completed.has(item.activity) ? "✦ EARNED" : "UP NEXT"}</span>
         <h2>{item.title}</h2><p>{item.description}</p>
         {!completed.has(item.activity) && <Link className="card-action" href={item.href}>Start activity →</Link>}

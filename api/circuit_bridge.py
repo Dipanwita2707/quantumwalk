@@ -38,12 +38,15 @@ def apply_operation(circuit: QuantumCircuit, op: Operation) -> bool:
     return False
 
 
-def to_qiskit(request: CircuitRequest) -> QuantumCircuit:
+def build_qiskit_circuit(request: CircuitRequest) -> QuantumCircuit:
     circuit = QuantumCircuit(request.qubits)
     for op in request.operations:
-        if not apply_operation(circuit, op):
-            continue
+        apply_operation(circuit, op)
     return circuit
+
+
+def to_qiskit(request: CircuitRequest) -> QuantumCircuit:
+    return build_qiskit_circuit(request)
 
 
 def export_qiskit_python(request: CircuitRequest) -> str:

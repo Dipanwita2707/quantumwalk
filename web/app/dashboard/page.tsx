@@ -5,6 +5,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { api, useSession } from "@/lib/api";
 import { milestones } from "@/lib/milestones";
+import { nextSkillNode } from "@/lib/skillTree";
 import { DashboardBloch } from "@/components/DashboardBloch";
 import { CircuitAtmosphere } from "@/components/CircuitAtmosphere";
 import "./dashboard.css";
@@ -52,6 +53,7 @@ export default function DashboardPage() {
   const recent = circuits.data?.slice().sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at)).slice(0, 3);
   const earnedMilestones = milestones.filter((item) => completed.has(item.activity)).length;
   const nextMilestone = milestones.find((item) => !completed.has(item.activity));
+  const skillNext = progress.data ? nextSkillNode(completed) : undefined;
   const displayName = profile?.authenticated ? profile.display_name : "Explorer";
 
   function status(error: string, pending: boolean) {
@@ -90,6 +92,9 @@ export default function DashboardPage() {
       </section>
 
       <section className="db-card db-path">
+        <span className="db-eyebrow">SKILL PATH</span><h2>{skillNext ? skillNext.title : "Foundations"}</h2>
+        {skillNext && <p>{skillNext.plain}</p>}
+        {skillNext && <Link className="db-action" href={skillNext.href}>Go →</Link>}
         <span className="db-eyebrow">YOUR LEARNING PATH</span><h2>Foundations</h2>
         {lessons.data && progress.data ? <><p>{lessonCount} of {totalLessons} lessons complete</p><progress value={lessonCount} max={Math.max(1, totalLessons)} aria-label="Foundations lessons completed" />
           <ol>{lessons.data.slice(0, 4).map((item) => <li key={item.slug}><span aria-hidden="true">{completed.has(`lesson:${item.slug}`) ? "✓" : "○"}</span><Link href={`/learn/${encodeURIComponent(item.slug)}`}>{item.title}</Link></li>)}</ol>

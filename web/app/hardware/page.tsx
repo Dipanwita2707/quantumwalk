@@ -12,5 +12,6 @@ export default function HardwarePage() {
       .then((status) => setMessage(status.message))
       .catch(() => setMessage("Hardware status is unavailable. No physical device is connected in this release."));
   }, []);
-  return <><SiteHeader /><main className="content-shell narrow"><p className="eyebrow">OPTIONAL FUTURE INTEGRATION</p><h1>Real quantum hardware</h1><div className="content-card"><h2>Simulator first</h2><p role="status">{message}</p><p>Every current result is produced by a bounded classical simulator and labeled as such. A real-device option will appear only after a provider, job quotas, user confirmation, and result-status handling are configured and tested.</p><Link className="card-action" href="/">Use the ideal simulator →</Link></div></main></>;
+  return <><SiteHeader /><main className="content-shell narrow"><p className="eyebrow">OPTIONAL FUTURE INTEGRATION</p><h1>Real quantum hardware</h1><div className="content-card"><h2>Simulator first</h2><p role="status">{message}</p><p>Every current result is produced by a bounded classical simulator and labeled as such. A real-device option will appear only after a provider, job quotas, user confirmation, and result-status handling are configured and tested.</p><Link className="card-action" href="/learn/hardware">Explore architecture cards →</Link>
+<Link className="card-action" href="/workspace">Use the ideal simulator →</Link></div></main></>;
 }

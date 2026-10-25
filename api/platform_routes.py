@@ -22,11 +22,12 @@ from auth import (
     optional_auth,
     require_csrf,
 )
-from content import ALGORITHMS, CHALLENGES, LESSONS, LESSON_ANSWERS
+from content import ALGORITHMS, CHALLENGES, CHALLENGE_TIERS, LESSONS, LESSON_ANSWERS
 from database import Circuit, Progress, User
 from limits import enforce_rate, simulation_slot
 from settings import ai_api_base_url, ai_api_style, google_enabled, openai_api_key, openai_model
-from circuit_bridge import export_cirq_python, export_qiskit_python
+from circuit_bridge import build_qiskit_circuit, export_cirq_python, export_qiskit_python
+from qiskit import transpile
 from simulator import CircuitRequest, simulate
 
 def require_platform_session(request: Request, auth: AuthContext | None = Depends(optional_auth)) -> None:
@@ -205,10 +206,67 @@ def submit_challenge(
         solved = abs(probabilities["0"] - 0.5) < 1e-6 and abs(probabilities["1"] - 0.5) < 1e-6
     else:
         solved = all(abs(probabilities[basis] - expected) < 1e-6 for basis, expected in {"00": 0.5, "01": 0, "10": 0, "11": 0.5}.items())
-    score = 100 if solved else 0
+    tier = "none"
+    gate_ops = [op for op in submission.circuit.operations if op.gate != "measure"]
+    limits = CHALLENGE_TIERS.get(slug, {"max_gates": 99, "reference_ops": 99})
+    if solved:
+        tier = "bronze"
+        if len(gate_ops) <= limits["max_gates"]:
+            tier = "silver"
+        if len(gate_ops) <= limits["reference_ops"]:
+            tier = "gold"
+    score = {"none": 0, "bronze": 60, "silver": 80, "gold": 100}[tier]
+    xp_awarded = score
     if auth:
         save_progress(db, auth.user.id, f"challenge:{slug}", score)
-    return {"solved": solved, "score": score, "saved": auth is not None}
+    return {
+        "solved": solved,
+        "score": score,
+        "tier": tier,
+        "xp_awarded": xp_awarded,
+        "saved": auth is not None,
+        "hint": None if solved else "Run the circuit and match the goal probabilities shown in the mission.",
+    }
+
+
+class DiscoveryProgressBody(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    explored: int = Field(ge=0, le=4)
+
+
+@router.post("/discovery/progress")
+def save_discovery_progress(
+    body: DiscoveryProgressBody,
+    request: Request,
+    auth: AuthContext | None = Depends(optional_auth),
+    db: Session = Depends(get_db),
+) -> dict:
+    enforce_rate(request, "discovery", 20)
+    if auth:
+        check_csrf(request, auth)
+    score = min(body.explored * 25, 100)
+    if auth:
+        save_progress(db, auth.user.id, "discovery:introduction", score)
+    return {"explored": body.explored, "score": score, "saved": auth is not None}
+
+
+@router.post("/transpile-preview")
+def transpile_preview(circuit: CircuitRequest, request: Request) -> dict:
+    enforce_rate(request, "transpile", 30)
+    try:
+        built = build_qiskit_circuit(
+            CircuitRequest(qubits=circuit.qubits, operations=[op for op in circuit.operations if op.gate != "measure"], shots=1)
+        )
+        lowered = transpile(built, basis_gates=["cx", "h", "rz"], optimization_level=1)
+        return {
+            "depth": lowered.depth(),
+            "size": lowered.size(),
+            "basis_gates": sorted({instruction.operation.name for instruction in lowered.data}),
+            "note": "Educational preview using a common gate set. Not a hardware calibration.",
+        }
+    except Exception as exc:  # noqa: BLE001 — return safe client message
+        raise HTTPException(status_code=422, detail=f"Transpile preview unavailable: {exc}") from exc
 
 
 @router.get("/progress")

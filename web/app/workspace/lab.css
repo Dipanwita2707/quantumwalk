@@ -1826,3 +1826,59 @@
   border-bottom: 1px solid rgba(8, 17, 36, 0.98);
   box-shadow: 0 -4px 16px rgba(56, 189, 248, 0.15);
 }
+
+.lab-glossary-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 8, 18, 0.65);
+  z-index: 120;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lab-glossary-drawer {
+  width: min(420px, 92vw);
+  height: 100%;
+  background: rgba(8, 16, 32, 0.98);
+  border-left: 1px solid rgba(140, 245, 226, 0.2);
+  padding: 1.25rem 1.5rem;
+  overflow: auto;
+}
+
+.lab-engine-panel {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.engine-agree-caption {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #8cf5e2;
+}
+
+.glossary-open-btn {
+  margin-top: 0.5rem;
+}
+
+.achievement-earned {
+  animation: achievement-pulse 0.45s ease;
+}
+
+@keyframes achievement-pulse {
+  from {
+    box-shadow: 0 0 0 rgba(167, 139, 250, 0);
+  }
+  to {
+    box-shadow: 0 0 24px rgba(167, 139, 250, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .achievement-earned {
+    animation: none;
+  }
+}
