@@ -5,6 +5,7 @@ import {
   QFT_CUSTOM_MAX_QUBITS,
   QFT_MAX_QUBITS,
   QFT_MIN_QUBITS,
+  QFT_NUMERIC_TOLERANCE,
   amplitudePhase,
   amplitudeProbability,
   applyForwardQft,
@@ -23,6 +24,7 @@ import {
   type QftStateVector,
 } from "@/lib/qftSimulator";
 import {
+  applyQftGateSequence,
   buildForwardQftGateSteps,
   buildInverseQftGateSteps,
   gateSequenceVsDirectFidelity,
@@ -130,9 +132,14 @@ export function QftSimulatorLab() {
     [qubits, mode],
   );
 
-  const gateFidelity = useMemo(() => {
+  const gateComparison = useMemo(() => {
     if (!inputState || mode === "roundtrip") return null;
-    return gateSequenceVsDirectFidelity(inputState, mode === "inverse");
+    const inverse = mode === "inverse";
+    const gateState = applyQftGateSequence(inputState, inverse);
+    const fid = gateSequenceVsDirectFidelity(inputState, inverse);
+    const aligned =
+      fid !== null && fid >= 1 - QFT_NUMERIC_TOLERANCE;
+    return { gateState, fid, aligned };
   }, [inputState, mode]);
 
   const dim = 2 ** qubits;
@@ -166,9 +173,10 @@ export function QftSimulatorLab() {
   return (
     <div className="mapper-lab" data-testid="qft-lab">
       <p className="explorer-note" role="note">
-        Ideal state-vector simulation (QuantumWalk-original). q0 is the LSB; no swap layer. Multiplying every amplitude by
-        e^(iφ) (global phase) leaves measurement probabilities unchanged but is a different mathematical label for the
-        same physical state.
+        Ideal state-vector simulation (QuantumWalk-original). Direct QFT uses amplitude index k with q0 as LSB (no swap in
+        the matrix). The gate list applies H and controlled phases from the MSB wire down to q0, then SWAP wires so
+        circuit output uses the same k ordering as the direct transform. Fidelity compares those aligned vectors (equal
+        up to global phase when fidelity is 1).
       </p>
       <section className="content-card" aria-labelledby="qft-controls-title">
         <h2 id="qft-controls-title">Experiment controls</h2>
@@ -342,24 +350,33 @@ export function QftSimulatorLab() {
       <section className="content-card" aria-labelledby="qft-circuit-title">
         <h2 id="qft-circuit-title">Gate decomposition (same convention)</h2>
         <p className="explorer-note">
-          Order: q0 is wire index 0 (LSB). Controlled phases use control q, target j with angle pi divided by 2 to the
-          power (j minus q). No swap gates.
-          The lab verifies this decomposition against the direct DFT for n = 1; for n ≥ 2 check fidelity below when you
-          run an experiment.
+          Nielsen-Chuang-style order: H and CP from the MSB wire toward q0; CP(pi/2^(q minus j)) has control j and target q.
+          Trailing SWAP pairs align gate output with the direct DFT index k (see docs/qft-simulator-conventions.md).
         </p>
         <ol data-testid="qft-gate-list">
           {gateSteps.map((step, i) => (
             <li key={i}>
               {step.kind === "H"
                 ? `H on q${step.qubit}`
-                : `${step.label} control q${step.control} → target q${step.target}`}
+                : step.kind === "SWAP"
+                  ? `SWAP q${step.qubitA} ↔ q${step.qubitB}`
+                  : `${step.label} control q${step.control} → target q${step.target}`}
             </li>
           ))}
         </ol>
-        {gateFidelity !== null && (
-          <p data-testid="qft-gate-fidelity">
-            Gate-sequence vs direct DFT fidelity: {gateFidelity.toFixed(6)} (1 = match up to global phase)
-          </p>
+        {gateComparison !== null && gateComparison.fid !== null && (
+          <>
+            <p data-testid="qft-gate-fidelity">
+              Gate-sequence vs direct DFT fidelity (same output index k): {gateComparison.fid.toFixed(6)} (1 = match up to
+              global phase)
+            </p>
+            {!gateComparison.aligned && (
+              <p className="content-error" role="alert" data-testid="qft-gate-mismatch">
+                Gate decomposition diverged from the direct transform beyond tolerance {QFT_NUMERIC_TOLERANCE}. Report if
+                reproducible.
+              </p>
+            )}
+          </>
         )}
       </section>
 
@@ -387,7 +404,13 @@ export function QftSimulatorLab() {
           <section className="content-card" aria-labelledby="qft-output-title">
             <h2 id="qft-output-title">{result.label}</h2>
             {result.note && <p className="explorer-note">{result.note}</p>}
-            <AmplitudeTable state={result.state} caption="Output after transform" />
+            <AmplitudeTable state={result.state} caption="Direct transform output (same k index as input)" />
+            {gateComparison !== null && mode !== "roundtrip" && (
+              <AmplitudeTable
+                state={gateComparison.gateState}
+                caption="Gate-sequence output (after swap layer; same k index for comparison)"
+              />
+            )}
             <p className="explorer-note" data-testid="qft-norm">
               Total probability: {totalProbability(result.state).toFixed(6)} (ideal unitary preserves norm).
             </p>

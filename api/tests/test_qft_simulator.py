@@ -1,8 +1,13 @@
 import math
+import random
 
 import pytest
 
-from qft_gates import apply_qft_gates, gate_vs_direct_fidelity
+from qft_gates import (
+    apply_qft_gates,
+    build_forward_qft_gate_steps,
+    gate_vs_direct_fidelity,
+)
 from qft_simulator import (
     QFT_NUMERIC_TOLERANCE,
     apply_qft,
@@ -13,6 +18,8 @@ from qft_simulator import (
     validate_qubit_count,
     validate_state,
 )
+
+FidelityFloor = 1 - QFT_NUMERIC_TOLERANCE
 
 
 def test_validate_qubit_bounds():
@@ -47,21 +54,89 @@ def test_one_qubit_qft_matches_hadamard():
         assert states_equal_up_to_global_phase(qft_out, h_out)
 
 
-def test_gate_sequence_matches_direct_for_one_qubit():
-    for idx in (0, 1):
-        amps = basis_state(1, idx)
+@pytest.mark.parametrize("n_qubits", [1, 2, 3])
+def test_gate_sequence_matches_direct_every_basis_forward(n_qubits: int):
+    dim = 2**n_qubits
+    for idx in range(dim):
+        amps = basis_state(n_qubits, idx)
         gated = apply_qft_gates(amps, inverse=False)
-        assert states_equal_up_to_global_phase(gated, apply_qft(amps, inverse=False))
-        assert gate_vs_direct_fidelity(amps) > 1 - 1e-10
+        direct = apply_qft(amps, inverse=False)
+        assert states_equal_up_to_global_phase(gated, direct)
+        assert gate_vs_direct_fidelity(amps, inverse=False) >= FidelityFloor
 
 
-def test_norm_preserved():
+@pytest.mark.parametrize("n_qubits", [1, 2, 3])
+def test_gate_sequence_matches_direct_every_basis_inverse(n_qubits: int):
+    dim = 2**n_qubits
+    for idx in range(dim):
+        amps = basis_state(n_qubits, idx)
+        gated = apply_qft_gates(amps, inverse=True)
+        direct = apply_qft(amps, inverse=True)
+        assert states_equal_up_to_global_phase(gated, direct)
+        assert gate_vs_direct_fidelity(amps, inverse=True) >= FidelityFloor
+
+
+@pytest.mark.parametrize("n_qubits", [1, 2, 3, 4, 5])
+def test_gate_sequence_matches_direct_spot_basis_forward(n_qubits: int):
+    for idx in (0, 1, 2**n_qubits - 1):
+        amps = basis_state(n_qubits, idx)
+        assert states_equal_up_to_global_phase(apply_qft_gates(amps), apply_qft(amps))
+
+
+def _deterministic_arbitrary_states():
+    samples: list[tuple[int, list[complex]]] = []
+    for n in (1, 2, 3):
+        dim = 2**n
+        rng = random.Random(100 + n)
+        for _ in range(4):
+            vec = [complex(rng.gauss(0, 1), rng.gauss(0, 1)) for _ in range(dim)]
+            norm = math.sqrt(sum(abs(z) ** 2 for z in vec))
+            samples.append((n, [z / norm for z in vec]))
+    samples.extend(
+        [
+            (2, [0.6 + 0j, 0.8 + 0j, 0j, 0j]),
+            (2, [0.5 + 0j, 0.5 + 0j, 0.5 + 0j, 0.5 + 0j]),
+            (3, [1 / math.sqrt(3) + 0j, 1 / math.sqrt(3) + 0j, 1 / math.sqrt(3) + 0j, 0j, 0j, 0j, 0j, 0j]),
+        ]
+    )
+    return samples
+
+
+@pytest.mark.parametrize("n_qubits, amps", _deterministic_arbitrary_states())
+def test_gate_sequence_matches_direct_arbitrary(n_qubits: int, amps: list[complex]):
+    assert validate_state(n_qubits, amps) is None
+    for inverse in (False, True):
+        gated = apply_qft_gates(amps, inverse=inverse)
+        direct = apply_qft(amps, inverse=inverse)
+        assert states_equal_up_to_global_phase(gated, direct)
+        assert gate_vs_direct_fidelity(amps, inverse=inverse) >= FidelityFloor
+
+
+@pytest.mark.parametrize("n_qubits", [1, 2, 3, 4, 5])
+def test_gate_forward_inverse_roundtrip(n_qubits: int):
+    dim = 2**n_qubits
+    rng = random.Random(n_qubits)
+    for _ in range(3):
+        vec = [complex(rng.gauss(0, 1), rng.gauss(0, 1)) for _ in range(dim)]
+        norm = math.sqrt(sum(abs(z) ** 2 for z in vec))
+        amps = [z / norm for z in vec]
+        fwd = apply_qft_gates(amps, inverse=False)
+        back = apply_qft_gates(fwd, inverse=True)
+        assert states_equal_up_to_global_phase(back, amps)
+
+
+def test_forward_gate_steps_include_swap_for_two_qubits():
+    steps = build_forward_qft_gate_steps(2)
+    assert any(s[0] == "SWAP" for s in steps)
+
+
+def test_norm_preserved_direct_and_gates():
     for n in (1, 2, 3, 4):
         for idx in range(2**n):
             amps = basis_state(n, idx)
-            out = apply_qft(amps, inverse=False)
-            total = sum(abs(z) ** 2 for z in out)
-            assert abs(total - 1.0) < QFT_NUMERIC_TOLERANCE
+            for out in (apply_qft(amps, inverse=False), apply_qft_gates(amps, inverse=False)):
+                total = sum(abs(z) ** 2 for z in out)
+                assert abs(total - 1.0) < QFT_NUMERIC_TOLERANCE
 
 
 def test_basis_two_qubit_known_phase():

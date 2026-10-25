@@ -21,6 +21,14 @@ test("QFT lab preserves norm and round-trips", async ({ page }) => {
   await expect(page.getByText(/Recovered original state/i)).toBeVisible();
 });
 
+test("Gate decomposition matches direct DFT for two qubits", async ({ page }) => {
+  await page.goto("/academy/labs/qft");
+  await page.getByTestId("qft-run").click();
+  await expect(page.getByTestId("qft-gate-fidelity")).toContainText(/1\.000000/);
+  await expect(page.getByTestId("qft-gate-mismatch")).toHaveCount(0);
+  await expect(page.getByTestId("qft-gate-list")).toContainText(/SWAP/);
+});
+
 test("QFT lesson page renders expanded title", async ({ page }) => {
   await page.route("**/api/me", async (route) => {
     await route.fulfill({
