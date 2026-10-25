@@ -286,6 +286,115 @@ def build_post_iqft_joint_amplitudes(
     return plan, amps, probs, cycle_len
 
 
+SHOR_SIMULATION_PATHS = ("closed_direct", "closed_gate", "gate_e2e")
+
+
+def simulate_counting_for_path(n: int, a: int, path: str) -> dict[str, object] | str:
+    from shor_modexp import build_pre_iqft_via_gates
+
+    err = validate_shor_input(n, a)
+    if err:
+        return err
+    plan = plan_quantum_simulation(n, a)
+    if plan is None:
+        return "Quantum register plan exceeds the 5-qubit educational simulator budget."
+    t = plan["counting_qubits"]
+    m = plan["work_dimension"]
+    if path not in SHOR_SIMULATION_PATHS:
+        return f"Unknown simulation path: {path}"
+    if path != "closed_direct" and not gate_iqft_supported(t):
+        return (
+            f'Simulation path "{path}" requires gate IQFT; counting width t={t} '
+            f"is outside the gate simulator ({QFT_MIN_QUBITS}–{QFT_MAX_QUBITS})."
+        )
+    cycle_len: int
+    if path == "gate_e2e":
+        built = build_pre_iqft_via_gates(n, a)
+        if isinstance(built, str):
+            return built
+        _plan, pre_amps, cycle_len = built
+        iqft_mode = "gate"
+    else:
+        built = build_pre_iqft_joint_amplitudes(n, a)
+        if isinstance(built, str):
+            return built
+        _plan, pre_amps, cycle_len = built
+        iqft_mode = "direct" if path == "closed_direct" else "gate"
+    pre_norm = _joint_total_probability(pre_amps)
+    post_amps = _apply_iqft_on_joint(pre_amps[:], t, m, iqft_mode)
+    post_norm = _joint_total_probability(post_amps)
+    if abs(post_norm - 1.0) > SHOR_NUMERIC_TOLERANCE:
+        return f'Path "{path}" did not preserve unit norm after inverse QFT.'
+    probs = _marginal_counting_probabilities(post_amps, t, m)
+    if abs(sum(probs) - 1.0) > SHOR_NUMERIC_TOLERANCE:
+        return f'Path "{path}" counting marginals do not sum to 1.'
+    return {
+        "ok": True,
+        "plan": plan,
+        "path": path,
+        "pre_iqft_norm": pre_norm,
+        "post_iqft_norm": post_norm,
+        "probabilities": probs,
+        "cycle_length": cycle_len,
+    }
+
+
+def simulate_three_path_comparison(n: int, a: int) -> dict[str, object] | str:
+    direct = simulate_counting_for_path(n, a, "closed_direct")
+    if isinstance(direct, str):
+        return direct
+    plan = direct["plan"]
+    assert isinstance(plan, dict)
+    supported = gate_iqft_supported(plan["counting_qubits"])
+    closed_gate: list[float] | None = None
+    gate_e2e: list[float] | None = None
+    m1 = m2 = m3 = None
+    if supported:
+        g1 = simulate_counting_for_path(n, a, "closed_gate")
+        if isinstance(g1, str):
+            return g1
+        closed_gate = g1["probabilities"]  # type: ignore[assignment]
+        m1 = compare_counting_probabilities(direct["probabilities"], closed_gate)  # type: ignore[arg-type]
+        g2 = simulate_counting_for_path(n, a, "gate_e2e")
+        if isinstance(g2, str):
+            return g2
+        gate_e2e = g2["probabilities"]  # type: ignore[assignment]
+        m2 = compare_counting_probabilities(direct["probabilities"], gate_e2e)  # type: ignore[arg-type]
+        m3 = compare_counting_probabilities(closed_gate, gate_e2e)  # type: ignore[arg-type]
+    return {
+        "gate_iqft_supported": supported,
+        "gate_e2e_supported": supported,
+        "closed_direct_probabilities": direct["probabilities"],
+        "closed_gate_probabilities": closed_gate,
+        "gate_e2e_probabilities": gate_e2e,
+        "closed_direct_vs_closed_gate": m1,
+        "closed_direct_vs_gate_e2e": m2,
+        "closed_gate_vs_gate_e2e": m3,
+        "comparison_note": (
+            "Full joint-state overlap is reported separately (closed-form vs gate mod-exp pre-IQFT). "
+            "All three paths compare counting-register marginals P(c) after IQFT."
+        ),
+    }
+
+
+def _mulberry32(seed: int) -> float:
+    state = (seed + 0x6D2B79F5) & 0xFFFFFFFF
+    t = state
+    t = ((t ^ (t >> 15)) * (t | 1)) & 0xFFFFFFFF
+    t = (t ^ ((t + ((t ^ (t >> 7)) * (t | 61))) & 0xFFFFFFFF)) & 0xFFFFFFFF
+    return ((t ^ (t >> 14)) & 0xFFFFFFFF) / 4294967296.0
+
+
+def sample_counting_from_distribution(probabilities: list[float], seed: int) -> int:
+    rnd = _mulberry32(seed)
+    cum = 0.0
+    for c, p in enumerate(probabilities):
+        cum += p
+        if rnd < cum:
+            return c
+    return len(probabilities) - 1
+
+
 def simulate_iqft_comparison(n: int, a: int) -> dict[str, object] | str:
     """Direct (reference) vs gate IQFT counting marginals on the same pre-IQFT state."""
     built = build_pre_iqft_joint_amplitudes(n, a)
@@ -320,10 +429,13 @@ def simulate_iqft_comparison(n: int, a: int) -> dict[str, object] | str:
 
 
 def simulate_quantum_counting_distribution(n: int, a: int) -> tuple[dict[str, int], list[float], int] | str:
-    built = build_post_iqft_joint_amplitudes(n, a)
-    if isinstance(built, str):
-        return built
-    plan, _amps, probs, cycle_len = built
+    sim = simulate_counting_for_path(n, a, "closed_direct")
+    if isinstance(sim, str):
+        return sim
+    plan = sim["plan"]
+    probs = sim["probabilities"]
+    cycle_len = sim["cycle_length"]
+    assert isinstance(plan, dict) and isinstance(probs, list) and isinstance(cycle_len, int)
     return plan, probs, cycle_len
 
 

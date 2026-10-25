@@ -48,6 +48,7 @@ export type ShorStepKind =
   | "quantum_plan"
   | "quantum_evolve"
   | "modexp_comparison"
+  | "path_comparison"
   | "iqft_comparison"
   | "measurement"
   | "continued_fraction"
@@ -66,10 +67,52 @@ export type ShorFactorResult =
   | { ok: true; p: number; q: number; via: "gcd" | "order" }
   | { ok: false; reason: string };
 
+/** Ideal simulation pipeline for counting-register Born probabilities. */
+export type ShorSimulationPath = "closed_direct" | "closed_gate" | "gate_e2e";
+
+export type ShorMeasurementPolicy = "deterministic_peak" | "seeded_sample";
+
+export const SHOR_SIMULATION_PATH_LABELS: Record<ShorSimulationPath, string> = {
+  closed_direct: "Closed-form state + direct IQFT (reference)",
+  closed_gate: "Closed-form state + gate IQFT",
+  gate_e2e: "Orbit-compact gates + gate IQFT (end-to-end)",
+};
+
+export type ShorPathDistributionMetrics = {
+  l1Distance: number;
+  bhattacharyyaFidelity: number;
+  maxAbsoluteDifference: number;
+};
+
+export type ShorThreePathComparison = {
+  gateIqftSupported: boolean;
+  gateE2eSupported: boolean;
+  closedDirectProbabilities: number[];
+  closedGateProbabilities: number[] | null;
+  gateE2eProbabilities: number[] | null;
+  closedDirectVsClosedGate: ShorPathDistributionMetrics | null;
+  closedDirectVsGateE2e: ShorPathDistributionMetrics | null;
+  closedGateVsGateE2e: ShorPathDistributionMetrics | null;
+  /** Full joint-state fidelity is meaningful for closed vs gate pre-IQFT; marginals compare all three paths. */
+  comparisonNote: string;
+};
+
+export type ShorWorkflowOptions = {
+  simulationPath?: ShorSimulationPath;
+  measurementPolicy?: ShorMeasurementPolicy;
+  /** Used when measurementPolicy is seeded_sample (deterministic PRNG). */
+  sampleSeed?: number;
+};
+
 export type ShorRunResult = {
   N: number;
   a: number;
   steps: ShorWorkflowStep[];
+  simulationPath: ShorSimulationPath | null;
+  measurementPolicy: ShorMeasurementPolicy | null;
+  measurementSeed: number | null;
+  /** Human-readable: deterministic peak pick vs seeded Born sample. */
+  measurementSemantics: string | null;
   quantumPlan: ShorQuantumPlan | null;
   /** Marginal probabilities P(c) on counting register after simulated IQFT. */
   countingProbabilities: number[] | null;
@@ -83,6 +126,7 @@ export type ShorRunResult = {
   classicalReferenceOrder: number | null;
   iqftComparison: ShorIqftComparison | null;
   modexpComparison: ShorModExpComparison | null;
+  pathComparison: ShorThreePathComparison | null;
 };
 
 export type ShorModExpComparison = {
@@ -105,7 +149,6 @@ export type ShorIqftMode = "direct" | "gate";
 
 export type ShorIqftComparison = {
   gateIqftSupported: boolean;
-  /** Measurement and phase post-processing use direct IQFT (reference). */
   referenceMode: "direct";
   gateModeLabel: string;
   preIqftNorm: number;
@@ -139,6 +182,14 @@ export function compareCountingProbabilities(
     maxAbs = Math.max(maxAbs, Math.abs(d - g));
   }
   return { l1, bhattacharyyaFidelity: bc * bc, maxAbsDiff: maxAbs };
+}
+
+function toPathMetrics(m: ReturnType<typeof compareCountingProbabilities>): ShorPathDistributionMetrics {
+  return {
+    l1Distance: m.l1,
+    bhattacharyyaFidelity: m.bhattacharyyaFidelity,
+    maxAbsoluteDifference: m.maxAbsDiff,
+  };
 }
 
 export function gcd(a: number, b: number): number {
@@ -515,13 +566,33 @@ export function simulateIqftComparison(N: number, a: number): ShorIqftComparison
 export type ShorQuantumSimulationResult = {
   ok: true;
   plan: ShorQuantumPlan;
+  path: ShorSimulationPath;
+  preIqftNorm: number;
+  postIqftNorm: number;
   probabilities: number[];
   cycleLength: number;
 };
 
-export function simulateQuantumCountingDistribution(
+function buildPreIqftForPath(
   N: number,
   a: number,
+  plan: ShorQuantumPlan,
+  path: ShorSimulationPath,
+): Complex[] | ShorValidationError {
+  if (path === "gate_e2e") {
+    return buildPreIqftViaGates(N, a, plan);
+  }
+  return buildPreIqftJointAmplitudes(N, a, plan);
+}
+
+function iqftModeForPath(path: ShorSimulationPath): ShorIqftMode {
+  return path === "closed_direct" ? "direct" : "gate";
+}
+
+export function simulateCountingForPath(
+  N: number,
+  a: number,
+  path: ShorSimulationPath,
 ): ShorQuantumSimulationResult | ShorValidationError {
   const err = validateShorInput(N, a);
   if (err) return err;
@@ -529,13 +600,125 @@ export function simulateQuantumCountingDistribution(
   if (!plan) {
     return { ok: false, message: "Quantum register plan exceeds the 5-qubit educational simulator budget." };
   }
-  const pre = buildPreIqftJointAmplitudes(N, a, plan);
+  const t = plan.countingQubits;
+  if (path !== "closed_direct" && !gateIqftSupported(t)) {
+    return {
+      ok: false,
+      message: `Simulation path "${path}" requires gate IQFT; counting width t=${t} is outside the gate simulator (1–${QFT_MAX_QUBITS}).`,
+    };
+  }
+  const pre = buildPreIqftForPath(N, a, plan, path);
   if (isShorValidationError(pre)) return pre;
-  const { countingQubits: t, workDimension: M } = plan;
-  const afterQft = applyIqftOnJoint(pre.slice(), t, M, "direct");
+  const preNorm = jointTotalProbability(pre);
+  const { workDimension: M } = plan;
+  const mode = iqftModeForPath(path);
+  const afterQft = applyIqftOnJoint(pre.slice(), t, M, mode);
   if (isShorValidationError(afterQft)) return afterQft;
+  const postNorm = jointTotalProbability(afterQft);
+  if (Math.abs(postNorm - 1) > QFT_NUMERIC_TOLERANCE) {
+    return { ok: false, message: `Path "${path}" did not preserve unit norm after inverse QFT.` };
+  }
   const probs = marginalCountingProbabilities(afterQft, t, M);
-  return { ok: true, plan, probabilities: probs, cycleLength: multiplicativeCycleValues(a, N).length };
+  const probSum = probs.reduce((s, p) => s + p, 0);
+  if (Math.abs(probSum - 1) > QFT_NUMERIC_TOLERANCE) {
+    return { ok: false, message: `Path "${path}" counting marginals do not sum to 1.` };
+  }
+  return {
+    ok: true,
+    plan,
+    path,
+    preIqftNorm: preNorm,
+    postIqftNorm: postNorm,
+    probabilities: probs,
+    cycleLength: multiplicativeCycleValues(a, N).length,
+  };
+}
+
+export function simulateQuantumCountingDistribution(
+  N: number,
+  a: number,
+): ShorQuantumSimulationResult | ShorValidationError {
+  return simulateCountingForPath(N, a, "closed_direct");
+}
+
+export function simulateThreePathComparison(N: number, a: number): ShorThreePathComparison | ShorValidationError {
+  const err = validateShorInput(N, a);
+  if (err) return err;
+  const plan = planQuantumSimulation(N, a);
+  if (!plan) {
+    return { ok: false, message: "Quantum register plan exceeds the 5-qubit educational simulator budget." };
+  }
+  const supported = gateIqftSupported(plan.countingQubits);
+  const directSim = simulateCountingForPath(N, a, "closed_direct");
+  if (isShorValidationError(directSim)) return directSim;
+  let closedGate: number[] | null = null;
+  let gateE2e: number[] | null = null;
+  let m1: ShorPathDistributionMetrics | null = null;
+  let m2: ShorPathDistributionMetrics | null = null;
+  let m3: ShorPathDistributionMetrics | null = null;
+  if (supported) {
+    const g1 = simulateCountingForPath(N, a, "closed_gate");
+    if (isShorValidationError(g1)) return g1;
+    closedGate = g1.probabilities;
+    m1 = toPathMetrics(compareCountingProbabilities(directSim.probabilities, closedGate));
+    const g2 = simulateCountingForPath(N, a, "gate_e2e");
+    if (isShorValidationError(g2)) return g2;
+    gateE2e = g2.probabilities;
+    m2 = toPathMetrics(compareCountingProbabilities(directSim.probabilities, gateE2e));
+    m3 = toPathMetrics(compareCountingProbabilities(closedGate, gateE2e));
+  }
+  return {
+    gateIqftSupported: supported,
+    gateE2eSupported: supported,
+    closedDirectProbabilities: directSim.probabilities,
+    closedGateProbabilities: closedGate,
+    gateE2eProbabilities: gateE2e,
+    closedDirectVsClosedGate: m1,
+    closedDirectVsGateE2e: m2,
+    closedGateVsGateE2e: m3,
+    comparisonNote:
+      "Full joint-state overlap is reported separately (closed-form vs gate mod-exp pre-IQFT). All three paths compare counting-register marginals P(c) after IQFT; orbit_compact padding makes work slices the right object for marginal comparison.",
+  };
+}
+
+/** Deterministic PRNG for reproducible Born sampling (not hardware noise). */
+export function mulberry32(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function sampleCountingFromDistribution(probabilities: number[], seed: number): number {
+  const rnd = mulberry32(seed)();
+  let cum = 0;
+  for (let c = 0; c < probabilities.length; c += 1) {
+    cum += probabilities[c];
+    if (rnd < cum) return c;
+  }
+  return probabilities.length - 1;
+}
+
+export function resolveOrderFromSingleCount(
+  N: number,
+  a: number,
+  countingBits: number,
+  measured: number,
+): { order: number | null; factors: ShorFactorResult | null } {
+  const cf = orderCandidatesFromPhase(measured, countingBits, a, N);
+  for (const candidate of cf.orders) {
+    const attempt = tryExtractFactors(N, candidate, a);
+    if (attempt.ok) return { order: candidate, factors: attempt };
+  }
+  const order = cf.orders[0] ?? null;
+  return {
+    order,
+    factors: order !== null ? tryExtractFactors(N, order, a) : null,
+  };
 }
 
 export function pickDeterministicMeasurement(probabilities: number[]): number {
@@ -582,7 +765,14 @@ export function resolveMeasurementAndOrder(
   };
 }
 
-export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult | ShorValidationError {
+export function runShorEducationalWorkflow(
+  N: number,
+  a: number,
+  options: ShorWorkflowOptions = {},
+): ShorRunResult | ShorValidationError {
+  const simulationPath: ShorSimulationPath = options.simulationPath ?? "closed_direct";
+  const measurementPolicy: ShorMeasurementPolicy = options.measurementPolicy ?? "deterministic_peak";
+  const sampleSeed = options.sampleSeed ?? 1;
   const steps: ShorWorkflowStep[] = [];
   const err = validateShorInput(N, a);
   if (err) return err;
@@ -608,6 +798,10 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
       N,
       a,
       steps,
+      simulationPath: null,
+      measurementPolicy: null,
+      measurementSeed: null,
+      measurementSemantics: null,
       quantumPlan: null,
       countingProbabilities: null,
       measuredCounting: null,
@@ -618,6 +812,7 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
       classicalReferenceOrder: null,
       iqftComparison: null,
       modexpComparison: null,
+      pathComparison: null,
     };
   }
 
@@ -654,6 +849,10 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
       N,
       a,
       steps,
+      simulationPath: null,
+      measurementPolicy: null,
+      measurementSeed: null,
+      measurementSemantics: null,
       quantumPlan: null,
       countingProbabilities: null,
       measuredCounting: null,
@@ -664,6 +863,7 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
       classicalReferenceOrder,
       iqftComparison: null,
       modexpComparison: null,
+      pathComparison: null,
     };
   }
 
@@ -674,9 +874,20 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
     status: "info",
   });
 
-  const simResult = simulateQuantumCountingDistribution(N, a);
+  const pathCmpResult = simulateThreePathComparison(N, a);
+  if (isShorValidationError(pathCmpResult)) return pathCmpResult;
+  const pathComparison = pathCmpResult;
+
+  const simResult = simulateCountingForPath(N, a, simulationPath);
   if (isShorValidationError(simResult)) return simResult;
   const sim = simResult;
+
+  steps.push({
+    kind: "quantum_evolve",
+    title: "Selected ideal simulation path",
+    detail: `${SHOR_SIMULATION_PATH_LABELS[simulationPath]} — ${plan.countingQubits} counting qubits (q0 LSB, NC+swap IQFT when gate path), ${plan.workQubits} work qubits (${SHOR_WORK_ENCODING}). Pre-IQFT norm ${sim.preIqftNorm.toFixed(6)}, post-IQFT norm ${sim.postIqftNorm.toFixed(6)}. Not hardware.`,
+    status: "info",
+  });
 
   const modexpCmpResult = simulateModExpComparison(N, a);
   const modexpComparison = isShorValidationError(modexpCmpResult) ? null : modexpCmpResult;
@@ -696,31 +907,48 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
   if (iqftComparison) {
     steps.push({
       kind: "iqft_comparison",
-      title: "IQFT path comparison (ideal simulation)",
+      title: "IQFT path comparison (closed-form prep only)",
       detail: iqftComparison.gateIqftSupported
-        ? `Reference: direct inverse DFT on counting (index k, q0 = LSB). Gate path: documented NC IQFT + swap layer. Bhattacharyya fidelity ${iqftComparison.bhattacharyyaFidelity?.toFixed(6) ?? "—"} (1 = identical distributions), L1 = ${iqftComparison.l1Distance?.toExponential(2) ?? "—"}. Phase post-processing uses direct reference probabilities only.`
+        ? `Same pre-IQFT state: direct vs gate IQFT marginals — Bhattacharyya ${iqftComparison.bhattacharyyaFidelity?.toFixed(6) ?? "—"}, L1 ${iqftComparison.l1Distance?.toExponential(2) ?? "—"}. Three-path table compares closed+direct, closed+gate, and gate mod-exp+gate IQFT.`
         : `Gate-level IQFT not shown: ${iqftComparison.gateModeLabel}.`,
       status: iqftComparison.distributionsAligned ? "success" : "warning",
     });
   }
 
-  steps.push({
-    kind: "quantum_evolve",
-    title: "Ideal state-vector simulation",
-    detail:
-      "Ideal state-vector simulation: measurement uses closed-form pre-IQFT + direct inverse QFT (reference). Gate mod-exp prep is compared separately; neither path uses classical period to fabricate amplitudes. Not live hardware.",
-    status: "info",
-  });
+  if (pathComparison.gateIqftSupported && pathComparison.closedDirectVsGateE2e) {
+    const m = pathComparison.closedDirectVsGateE2e;
+    steps.push({
+      kind: "path_comparison",
+      title: "Three-path counting distributions",
+      detail: `Reference vs end-to-end gate path: Bhattacharyya ${m.bhattacharyyaFidelity.toFixed(6)}, L1 ${m.l1Distance.toExponential(2)}, max |ΔP| ${m.maxAbsoluteDifference.toExponential(2)}. ${pathComparison.comparisonNote}`,
+      status: m.bhattacharyyaFidelity >= 1 - QFT_NUMERIC_TOLERANCE ? "success" : "warning",
+    });
+  }
 
-  const resolved = resolveMeasurementAndOrder(N, a, plan.countingQubits, sim.probabilities);
-  const measuredCounting = resolved.measured;
-  const orderFromMeasurement = resolved.order;
-  const factors = resolved.factors;
+  let measuredCounting: number;
+  let orderFromMeasurement: number | null;
+  let factors: ShorFactorResult | null;
+  let measurementSemantics: string;
+
+  if (measurementPolicy === "seeded_sample") {
+    measuredCounting = sampleCountingFromDistribution(sim.probabilities, sampleSeed);
+    const single = resolveOrderFromSingleCount(N, a, plan.countingQubits, measuredCounting);
+    orderFromMeasurement = single.order;
+    factors = single.factors;
+    measurementSemantics = `Seeded Born sample (seed=${sampleSeed}) — one draw from P(c) of the selected path; not a hardware shot.`;
+  } else {
+    const resolved = resolveMeasurementAndOrder(N, a, plan.countingQubits, sim.probabilities);
+    measuredCounting = resolved.measured;
+    orderFromMeasurement = resolved.order;
+    factors = resolved.factors;
+    measurementSemantics =
+      "Deterministic peak pick (ties → smallest c, then try tied peaks for factor extraction) — teaching default, not random hardware sampling.";
+  }
 
   steps.push({
     kind: "measurement",
     title: "Counting-register outcome (simulated)",
-    detail: `Demo selects c = ${measuredCounting} from Born probabilities (peak tie-break toward smaller c). This value is not from classical order search.`,
+    detail: `${measurementSemantics} Selected c = ${measuredCounting} from path "${SHOR_SIMULATION_PATH_LABELS[simulationPath]}". Not from classical order search.`,
     status: "success",
   });
 
@@ -758,7 +986,7 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
   steps.push({
     kind: "limitation",
     title: "Educational scope",
-    detail: `Small N (${SHOR_N_MIN}–${SHOR_N_MAX}), ≤${SHOR_MAX_TOTAL_QUBITS} qubits, deterministic peak measurement. Real Shor needs many trials, error correction, and large circuits.`,
+    detail: `Small N (${SHOR_N_MIN}–${SHOR_N_MAX}), ≤${SHOR_MAX_TOTAL_QUBITS} qubits, orbit_compact work register (not a general value mod-mult). Real Shor needs many trials, error correction, and large circuits.`,
     status: "info",
   });
 
@@ -766,6 +994,10 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
     N,
     a,
     steps,
+    simulationPath,
+    measurementPolicy,
+    measurementSeed: measurementPolicy === "seeded_sample" ? sampleSeed : null,
+    measurementSemantics,
     quantumPlan: plan,
     countingProbabilities: sim.probabilities,
     measuredCounting,
@@ -776,6 +1008,7 @@ export function runShorEducationalWorkflow(N: number, a: number): ShorRunResult 
     classicalReferenceOrder,
     iqftComparison,
     modexpComparison,
+    pathComparison,
   };
 }
 

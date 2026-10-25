@@ -20,7 +20,7 @@
 | 12 | Deutsch–Jozsa & Bernstein–Vazirani | `/learn/deutsch-intro` | Lesson + circuit | Yes | Algorithm preset | **IMPLEMENTED+TESTED** |
 | 13 | Grover's Search | `/learn/grover-boost` | Lesson | Yes | `/academy/labs/grover`, `/explorer/grover` | **IMPLEMENTED+TESTED** |
 | 14 | QFT and Phase Estimation | `/learn/qft-intro`, `/academy/labs/qft` | QW original lesson + direct QFT sim (basis 1–5, custom 1–3) + gate list | Yes | Ideal sim | **IMPLEMENTED+TESTED** (not Sirraya body) |
-| 15 | Shor's Algorithm | `/learn/shor-intro`, `/academy/labs/shor` | QW lesson + closed-form QPE, gate mod-exp prep, dual IQFT (pytest) | Yes | Ideal sim | **PARTIAL** (educational; not cryptoscale) |
+| 15 | Shor's Algorithm | `/learn/shor-intro`, `/academy/labs/shor` | Three selectable ideal paths + deterministic/seeded measurement (pytest) | Yes | Ideal sim | **PARTIAL** (educational; not cryptoscale) |
 | 16 | VQE and QAOA | `/learn/vqe-intro` | QW original conceptual | Yes | — | **PARTIAL** (QAOA not separate) |
 | 17 | Quantum Reservoir Computing & QML | `/learn/quantum-reservoir`, `/academy/reservoir` | Lesson + overview | Yes | `/academy/labs/reservoir` (sim) | **IMPLEMENTED+TESTED** (simulation) |
 | 18 | Error Correction & Fault Tolerance | `/learn/qec-bit-flip` | Lesson | Yes | `/academy/labs/qec` (sim) | **IMPLEMENTED+TESTED** (sim) |

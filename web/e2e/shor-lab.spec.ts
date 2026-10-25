@@ -10,9 +10,18 @@ test("Shor lab factors 15 with base 7", async ({ page }) => {
   await expect(page.getByTestId("shor-factors")).toContainText(/3.*5.*=.*15|5.*3.*=.*15/);
   await expect(page.getByTestId("shor-measurement")).toContainText(/c =/);
   await expect(page.getByTestId("shor-classical-ref")).toContainText(/verification only/i);
-  await expect(page.getByTestId("shor-simulation-mode")).toContainText(/ideal quantum-state simulation/i);
-  await expect(page.getByTestId("shor-modexp-comparison")).toContainText(/Pre-IQFT state fidelity/i);
+  await expect(page.getByTestId("shor-simulation-mode")).toContainText(/Closed-form state \+ direct IQFT/i);
+  await expect(page.getByTestId("shor-path-comparison")).toContainText(/Three-path comparison/i);
+  await expect(page.getByTestId("shor-modexp-comparison")).toContainText(/state fidelity/i);
   await expect(page.getByTestId("shor-iqft-comparison")).toContainText(/Bhattacharyya fidelity/i);
+});
+
+test("Shor lab end-to-end gate path runs measurement", async ({ page }) => {
+  await page.goto("/academy/labs/shor");
+  await page.getByTestId("shor-simulation-path").selectOption("gate_e2e");
+  await page.getByTestId("shor-run").click();
+  await expect(page.getByTestId("shor-simulation-mode")).toContainText(/Orbit-compact gates/i);
+  await expect(page.getByTestId("shor-measurement")).toContainText(/c =/);
 });
 
 test("Shor lesson links QFT prerequisite", async ({ page }) => {

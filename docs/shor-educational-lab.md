@@ -47,11 +47,30 @@ Among outcomes with probability within **1e−9** of the maximum, pick the **sma
 | 21 | 2 | 6 | 3 × 7 |
 | 8 | 3 | 2 | 2 × 4 |
 
+## Selectable ideal simulation paths (UI + `simulateCountingForPath`)
+| Path id | Pipeline |
+|---------|----------|
+| **closed_direct** | Closed-form pre-IQFT + **direct** inverse QFT (default reference). |
+| **closed_gate** | Closed-form pre-IQFT + **gate** IQFT (NC + swap layer). |
+| **gate_e2e** | Hadamard counting, orbit index \|1⟩, controlled orbit mod-exp, then **gate** IQFT. |
+
+Measurement uses **only** the selected path’s Born probabilities. Gate paths **error** if IQFT is unsupported — no silent fallback to closed-form. Classical reference period is never used for amplitudes or P(c).
+
+**Three-path comparison** (`simulateThreePathComparison`): pairwise Bhattacharyya, L1, max \|ΔP\| on counting marginals. **Full joint-state** fidelity is separate (`simulate_modexp_comparison` pre-IQFT overlap); marginals are the right metric across IQFT variants.
+
+## Measurement policies
+| Policy | Meaning |
+|--------|---------|
+| **deterministic_peak** | Teaching default: try high-probability c (tie → smallest c) for factor extraction. |
+| **seeded_sample** | One reproducible draw from P(c) via mulberry32 seed — labeled as demo sampling, not hardware shots. |
+
+Continued-fraction / gcd post-processing is classical and separate from state preparation.
+
 ## QFT integration (dual IQFT paths)
 | Path | Role |
 |------|------|
-| **Direct inverse DFT** | Reference for measurement / phase post-processing (`applyInverseQft` / `apply_qft(inverse=True)`). |
-| **Gate IQFT** | Same pre-IQFT joint state; counting slices transformed with `applyQftGateSequence` / `apply_qft_gates` (NC order + **swap layer** — see `docs/qft-simulator-conventions.md`). |
+| **Direct inverse DFT** | Reference IQFT (`applyInverseQft` / `apply_qft(inverse=True)`). |
+| **Gate IQFT** | `applyQftGateSequence` / `apply_qft_gates` (NC order + **swap layer** — see `docs/qft-simulator-conventions.md`). |
 
 **Comparison metrics** (ideal simulation, not hardware):
 - **Bhattacharyya fidelity** on counting marginals: \((\sum_c \sqrt{P_{\text{direct}}(c)\,P_{\text{gate}}(c)})^2\) — 1 means identical distributions.
@@ -68,9 +87,9 @@ Norm checks: pre-IQFT joint, post-IQFT (direct and gate), and marginal **Σ P(c)
 
 ## Limitations
 - Work register is **orbit_compact**, not a full modular multiplier on ⌈log₂ N⌉ value bits; larger N need more qubits than the 5-qubit educational budget.
-- Measurement workflow still uses **closed-form pre-IQFT + direct IQFT**; gate mod-exp is validated side-by-side, not yet the sole production path for factor demos.
+- Ideal **state-vector** simulation only — no shot noise, decoherence, or cryptoscale registers.
 - Some (N, a) pairs fail factor extraction (e.g. N = 9, a = 2); the lab reports why instead of inventing factors.
 - Sirraya parity: **PARTIAL** — see `sirraya/docs/references/sirraya-captures/quantumwalk-parity-matrix.md`.
 
 ## Next milestone
-Optional end-to-end demo using **gate pre-IQFT + gate IQFT** for measurement; value-register mod-mult when budget allows (with explicit fallback).
+Value-register modular multiplication when qubit budget allows; optional hardware-style many-shot sampling UI.
