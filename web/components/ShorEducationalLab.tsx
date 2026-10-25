@@ -4,6 +4,9 @@ import { useMemo, useState } from "react";
 import {
   SHOR_N_MAX,
   SHOR_N_MIN,
+  SHOR_DEFAULT_SHOTS,
+  SHOR_MAX_SHOTS,
+  SHOR_MIN_SHOTS,
   SHOR_SIMULATION_PATH_LABELS,
   gcd,
   isComposite,
@@ -33,6 +36,7 @@ export function ShorEducationalLab() {
   const [simulationPath, setSimulationPath] = useState<ShorSimulationPath>("closed_direct");
   const [measurementPolicy, setMeasurementPolicy] = useState<ShorMeasurementPolicy>("deterministic_peak");
   const [sampleSeed, setSampleSeed] = useState(1);
+  const [shotCount, setShotCount] = useState(SHOR_DEFAULT_SHOTS);
   const [runId, setRunId] = useState(0);
 
   const result = useMemo((): ShorRunResult | { ok: false; message: string } | null => {
@@ -41,8 +45,9 @@ export function ShorEducationalLab() {
       simulationPath,
       measurementPolicy,
       sampleSeed,
+      shotCount,
     });
-  }, [N, a, runId, simulationPath, measurementPolicy, sampleSeed]);
+  }, [N, a, runId, simulationPath, measurementPolicy, sampleSeed, shotCount]);
 
   const validationMessage = result && isShorValidationError(result) ? result.message : null;
 
@@ -110,21 +115,35 @@ export function ShorEducationalLab() {
             onChange={(e) => setMeasurementPolicy(e.target.value as ShorMeasurementPolicy)}
           >
             <option value="deterministic_peak">Deterministic peak (teaching default)</option>
-            <option value="seeded_sample">Seeded Born sample (demo)</option>
+            <option value="multi_shot">Multi-shot Born sampling (ideal simulator)</option>
           </select>
         </label>
-        {measurementPolicy === "seeded_sample" && (
-          <label>
-            Sample seed
-            <input
-              type="number"
-              min={0}
-              value={sampleSeed}
-              data-testid="shor-sample-seed"
-              aria-label="Sample seed"
-              onChange={(e) => setSampleSeed(Number(e.target.value))}
-            />
-          </label>
+        {measurementPolicy === "multi_shot" && (
+          <>
+            <label>
+              Shot count ({SHOR_MIN_SHOTS}–{SHOR_MAX_SHOTS})
+              <input
+                type="number"
+                min={SHOR_MIN_SHOTS}
+                max={SHOR_MAX_SHOTS}
+                value={shotCount}
+                data-testid="shor-shot-count"
+                aria-label="Shot count"
+                onChange={(e) => setShotCount(Number(e.target.value))}
+              />
+            </label>
+            <label>
+              Sample seed (uint32)
+              <input
+                type="number"
+                min={0}
+                value={sampleSeed}
+                data-testid="shor-sample-seed"
+                aria-label="Sample seed"
+                onChange={(e) => setSampleSeed(Number(e.target.value))}
+              />
+            </label>
+          </>
         )}
         <div className="explorer-steps">
           <button type="button" data-testid="shor-run" aria-label="Run Shor educational workflow" onClick={() => setRunId((x) => x + 1)}>
@@ -139,6 +158,7 @@ export function ShorEducationalLab() {
               setSimulationPath("closed_direct");
               setMeasurementPolicy("deterministic_peak");
               setSampleSeed(1);
+              setShotCount(SHOR_DEFAULT_SHOTS);
               setRunId((x) => x + 1);
             }}
           >
@@ -182,10 +202,41 @@ export function ShorEducationalLab() {
               </p>
               {result.countingProbabilities && (
                 <p data-testid="shor-measurement">
-                  Simulated c = {result.measuredCounting ?? "—"}; order from measurement post-processing r ={" "}
-                  {result.orderFromMeasurement ?? "—"}. Probabilities from selected simulation path (ideal state-vector,
-                  not hardware).
+                  Primary c = {result.measuredCounting ?? "—"}; order from post-processing r ={" "}
+                  {result.orderFromMeasurement ?? "—"}.
+                  {result.shotCount !== null ? ` ${result.shotCount} ideal Born samples (seed ${result.measurementSeed ?? "—"}).` : ""}{" "}
+                  Theoretical P(c) from selected path — not hardware shots.
                 </p>
+              )}
+              {result.multiShot && (
+                <div data-testid="shor-multishot-histogram">
+                  <h3>Observed vs theoretical counting outcomes</h3>
+                  <p className="explorer-note">
+                    Ideal state-vector Born sampling (mulberry32). Max |freq − P| ={" "}
+                    {result.multiShot.maxAbsFrequencyDelta.toFixed(4)}; successful factor shots in sample:{" "}
+                    {result.multiShot.shotsWithSuccessfulFactors} / {result.multiShot.shots}.
+                  </p>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">c</th>
+                        <th scope="col">Observed count</th>
+                        <th scope="col">Empirical freq</th>
+                        <th scope="col">P(c) theory</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.multiShot.histogram.map((row) => (
+                        <tr key={row.outcome}>
+                          <td>{row.outcome}</td>
+                          <td>{row.observedCount}</td>
+                          <td>{row.observedFrequency.toFixed(4)}</td>
+                          <td>{row.theoreticalProbability.toFixed(4)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
               {result.pathComparison && (
                 <div className="explorer-note" data-testid="shor-path-comparison">

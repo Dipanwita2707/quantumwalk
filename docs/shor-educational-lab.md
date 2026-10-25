@@ -62,7 +62,9 @@ Measurement uses **only** the selected path’s Born probabilities. Gate paths *
 | Policy | Meaning |
 |--------|---------|
 | **deterministic_peak** | Teaching default: try high-probability c (tie → smallest c) for factor extraction. |
-| **seeded_sample** | One reproducible draw from P(c) via mulberry32 seed — labeled as demo sampling, not hardware shots. |
+| **multi_shot** | **1–5000** reproducible Born samples (default **256**) from the selected path’s P(c) via **mulberry32** seed; histogram vs theory; primary c = first successful factor shot in sequence or histogram mode. Not hardware noise. |
+
+Invalid seeds, shot counts, or non-normalized P(c) return explicit errors (no path fallback).
 
 Continued-fraction / gcd post-processing is classical and separate from state preparation.
 

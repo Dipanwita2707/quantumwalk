@@ -23,6 +23,30 @@ import {
   SHOR_WORK_ENCODING,
   stateOverlapFidelity,
 } from "@/lib/shorModExp";
+import {
+  buildShotHistogram,
+  mulberry32,
+  sampleCountingWithRng,
+  sampleShorShotSequence,
+  summarizeHistogramMetrics,
+  SHOR_DEFAULT_SHOTS,
+  SHOR_MAX_SHOTS,
+  SHOR_MIN_SHOTS,
+  validateCountingProbabilities,
+  validateShorSampleSeed,
+  validateShorShotCount,
+  type ShorMultiShotHistogram,
+} from "@/lib/shorMultiShot";
+
+export {
+  mulberry32,
+  SHOR_DEFAULT_SHOTS,
+  SHOR_MAX_SHOTS,
+  SHOR_MIN_SHOTS,
+  validateCountingProbabilities,
+  validateShorSampleSeed,
+  validateShorShotCount,
+} from "@/lib/shorMultiShot";
 
 export const SHOR_N_MIN = 4;
 export const SHOR_N_MAX = 21;
@@ -50,6 +74,7 @@ export type ShorStepKind =
   | "modexp_comparison"
   | "path_comparison"
   | "iqft_comparison"
+  | "multi_shot"
   | "measurement"
   | "continued_fraction"
   | "factor_attempt"
@@ -70,7 +95,7 @@ export type ShorFactorResult =
 /** Ideal simulation pipeline for counting-register Born probabilities. */
 export type ShorSimulationPath = "closed_direct" | "closed_gate" | "gate_e2e";
 
-export type ShorMeasurementPolicy = "deterministic_peak" | "seeded_sample";
+export type ShorMeasurementPolicy = "deterministic_peak" | "multi_shot";
 
 export const SHOR_SIMULATION_PATH_LABELS: Record<ShorSimulationPath, string> = {
   closed_direct: "Closed-form state + direct IQFT (reference)",
@@ -100,8 +125,30 @@ export type ShorThreePathComparison = {
 export type ShorWorkflowOptions = {
   simulationPath?: ShorSimulationPath;
   measurementPolicy?: ShorMeasurementPolicy;
-  /** Used when measurementPolicy is seeded_sample (deterministic PRNG). */
   sampleSeed?: number;
+  shotCount?: number;
+};
+
+export type ShorShotOutcomeCategory =
+  | "success"
+  | "failed_phase"
+  | "odd_order"
+  | "minus_one"
+  | "trivial_factor"
+  | "no_candidates";
+
+export type ShorShotOutcomeAnalysis = {
+  measured: number;
+  phaseCandidates: number[];
+  factorResult: ShorFactorResult | null;
+  category: ShorShotOutcomeCategory;
+  detail: string;
+};
+
+export type ShorMultiShotSummary = ShorMultiShotHistogram & {
+  uniqueOutcomeAnalyses: ShorShotOutcomeAnalysis[];
+  shotsWithPhaseCandidates: number;
+  shotsWithSuccessfulFactors: number;
 };
 
 export type ShorRunResult = {
@@ -127,6 +174,8 @@ export type ShorRunResult = {
   iqftComparison: ShorIqftComparison | null;
   modexpComparison: ShorModExpComparison | null;
   pathComparison: ShorThreePathComparison | null;
+  shotCount: number | null;
+  multiShot: ShorMultiShotSummary | null;
 };
 
 export type ShorModExpComparison = {
@@ -681,26 +730,131 @@ export function simulateThreePathComparison(N: number, a: number): ShorThreePath
   };
 }
 
-/** Deterministic PRNG for reproducible Born sampling (not hardware noise). */
-export function mulberry32(seed: number): () => number {
-  let state = seed >>> 0;
-  return () => {
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+export function sampleCountingFromDistribution(probabilities: number[], seed: number): number | ShorValidationError {
+  const err = validateCountingProbabilities(probabilities);
+  if (err) return err;
+  const seedErr = validateShorSampleSeed(seed);
+  if (seedErr) return seedErr;
+  return sampleCountingWithRng(probabilities, mulberry32(seed));
+}
+
+function classifyShotOutcome(N: number, a: number, countingBits: number, measured: number): ShorShotOutcomeAnalysis {
+  const cf = orderCandidatesFromPhase(measured, countingBits, a, N);
+  if (cf.orders.length === 0) {
+    return {
+      measured,
+      phaseCandidates: [],
+      factorResult: null,
+      category: "no_candidates",
+      detail: "Continued-fraction / phase scan found no valid period candidates.",
+    };
+  }
+  for (const candidate of cf.orders) {
+    const attempt = tryExtractFactors(N, candidate, a);
+    if (attempt.ok) {
+      return {
+        measured,
+        phaseCandidates: cf.orders,
+        factorResult: attempt,
+        category: "success",
+        detail: `Nontrivial factors from r = ${candidate}.`,
+      };
+    }
+  }
+  const probe = tryExtractFactors(N, cf.orders[0], a);
+  if (!probe.ok && probe.reason.includes("odd")) {
+    return {
+      measured,
+      phaseCandidates: cf.orders,
+      factorResult: probe,
+      category: "odd_order",
+      detail: probe.reason,
+    };
+  }
+  if (!probe.ok && (probe.reason.includes("−1") || probe.reason.includes("-1"))) {
+    return {
+      measured,
+      phaseCandidates: cf.orders,
+      factorResult: probe,
+      category: "minus_one",
+      detail: probe.reason,
+    };
+  }
+  if (!probe.ok && (probe.reason.includes("trivial") || probe.reason.includes("gcd"))) {
+    return {
+      measured,
+      phaseCandidates: cf.orders,
+      factorResult: probe,
+      category: "trivial_factor",
+      detail: probe.reason,
+    };
+  }
+  return {
+    measured,
+    phaseCandidates: cf.orders,
+    factorResult: probe.ok ? probe : probe,
+    category: "failed_phase",
+    detail: probe.ok ? "Factor extraction succeeded on fallback." : probe.reason,
   };
 }
 
-export function sampleCountingFromDistribution(probabilities: number[], seed: number): number {
-  const rnd = mulberry32(seed)();
-  let cum = 0;
-  for (let c = 0; c < probabilities.length; c += 1) {
-    cum += probabilities[c];
-    if (rnd < cum) return c;
+export function buildMultiShotSummary(
+  N: number,
+  a: number,
+  countingBits: number,
+  probabilities: number[],
+  seed: number,
+  shots: number,
+): ShorMultiShotSummary | ShorValidationError {
+  const sequence = sampleShorShotSequence(probabilities, seed, shots);
+  if (!Array.isArray(sequence)) return sequence;
+  const histogram = buildShotHistogram(probabilities, sequence, shots);
+  const metrics = summarizeHistogramMetrics(probabilities, sequence, shots);
+  const uniqueOutcomes = [...new Set(sequence)].sort((x, y) => x - y);
+  const uniqueOutcomeAnalyses = uniqueOutcomes.map((c) => classifyShotOutcome(N, a, countingBits, c));
+  let shotsWithPhaseCandidates = 0;
+  let shotsWithSuccessfulFactors = 0;
+  for (const c of sequence) {
+    const analysis = uniqueOutcomeAnalyses.find((u) => u.measured === c);
+    if (analysis && analysis.phaseCandidates.length > 0) shotsWithPhaseCandidates += 1;
+    if (analysis?.category === "success") shotsWithSuccessfulFactors += 1;
   }
-  return probabilities.length - 1;
+  return {
+    shots,
+    seed,
+    sequence,
+    histogram,
+    ...metrics,
+    uniqueOutcomeAnalyses,
+    shotsWithPhaseCandidates,
+    shotsWithSuccessfulFactors,
+  };
+}
+
+export function pickPrimaryFromMultiShot(
+  N: number,
+  a: number,
+  summary: ShorMultiShotSummary,
+): { measured: number; order: number | null; factors: ShorFactorResult | null } {
+  for (const c of summary.sequence) {
+    const analysis = summary.uniqueOutcomeAnalyses.find((u) => u.measured === c);
+    if (analysis?.category === "success" && analysis.factorResult?.ok) {
+      for (const candidate of analysis.phaseCandidates) {
+        const attempt = tryExtractFactors(N, candidate, a);
+        if (attempt.ok) {
+          return { measured: c, order: candidate, factors: attempt };
+        }
+      }
+    }
+  }
+  const top = summary.histogram[0];
+  const measured = top?.outcome ?? 0;
+  const analysis = summary.uniqueOutcomeAnalyses.find((u) => u.measured === measured);
+  return {
+    measured,
+    order: analysis?.phaseCandidates[0] ?? null,
+    factors: analysis?.factorResult?.ok ? analysis.factorResult : null,
+  };
 }
 
 export function resolveOrderFromSingleCount(
@@ -773,6 +927,13 @@ export function runShorEducationalWorkflow(
   const simulationPath: ShorSimulationPath = options.simulationPath ?? "closed_direct";
   const measurementPolicy: ShorMeasurementPolicy = options.measurementPolicy ?? "deterministic_peak";
   const sampleSeed = options.sampleSeed ?? 1;
+  const shotCount = options.shotCount ?? SHOR_DEFAULT_SHOTS;
+  if (measurementPolicy === "multi_shot") {
+    const seedErr = validateShorSampleSeed(sampleSeed);
+    if (seedErr) return seedErr;
+    const shotErr = validateShorShotCount(shotCount);
+    if (shotErr) return shotErr;
+  }
   const steps: ShorWorkflowStep[] = [];
   const err = validateShorInput(N, a);
   if (err) return err;
@@ -813,6 +974,8 @@ export function runShorEducationalWorkflow(
       iqftComparison: null,
       modexpComparison: null,
       pathComparison: null,
+      shotCount: null,
+      multiShot: null,
     };
   }
 
@@ -864,6 +1027,8 @@ export function runShorEducationalWorkflow(
       iqftComparison: null,
       modexpComparison: null,
       pathComparison: null,
+      shotCount: null,
+      multiShot: null,
     };
   }
 
@@ -929,13 +1094,40 @@ export function runShorEducationalWorkflow(
   let orderFromMeasurement: number | null;
   let factors: ShorFactorResult | null;
   let measurementSemantics: string;
+  let multiShot: ShorMultiShotSummary | null = null;
 
-  if (measurementPolicy === "seeded_sample") {
-    measuredCounting = sampleCountingFromDistribution(sim.probabilities, sampleSeed);
-    const single = resolveOrderFromSingleCount(N, a, plan.countingQubits, measuredCounting);
-    orderFromMeasurement = single.order;
-    factors = single.factors;
-    measurementSemantics = `Seeded Born sample (seed=${sampleSeed}) — one draw from P(c) of the selected path; not a hardware shot.`;
+  if (measurementPolicy === "multi_shot") {
+    const probErr = validateCountingProbabilities(sim.probabilities);
+    if (probErr) return probErr;
+    const built = buildMultiShotSummary(N, a, plan.countingQubits, sim.probabilities, sampleSeed, shotCount);
+    if (isShorValidationError(built)) return built;
+    multiShot = built;
+    const primary = pickPrimaryFromMultiShot(N, a, multiShot);
+    measuredCounting = primary.measured;
+    orderFromMeasurement = primary.order;
+    factors = primary.factors;
+    measurementSemantics = `Multi-shot ideal Born sampling (${shotCount} shots, seed=${sampleSeed}) from path "${SHOR_SIMULATION_PATH_LABELS[simulationPath]}" — not noisy hardware.`;
+    const useful = multiShot.uniqueOutcomeAnalyses.filter((u) => u.phaseCandidates.length > 0);
+    const successes = multiShot.uniqueOutcomeAnalyses.filter((u) => u.category === "success");
+    steps.push({
+      kind: "multi_shot",
+      title: "Multi-shot histogram vs theory",
+      detail: `${shotCount} samples: L1(|empirical−P|)=${multiShot.l1EmpiricalVsTheory.toFixed(4)}, max |Δ|=${multiShot.maxAbsFrequencyDelta.toFixed(4)}. ${successes.length} distinct outcomes factor N nontrivially; ${useful.length} distinct outcomes yield phase candidates. Most shots are not successful factorizations — real Shor repeats many times.`,
+      status: "info",
+    });
+    const outcomeLines = multiShot.uniqueOutcomeAnalyses
+      .slice(0, 6)
+      .map((u) => `c=${u.measured} (${u.category}): ${u.detail}`)
+      .join(" · ");
+    steps.push({
+      kind: "continued_fraction",
+      title: "Phase recovery across distinct outcomes",
+      detail:
+        outcomeLines.length > 0
+          ? outcomeLines
+          : "No phase candidates from observed outcomes in this sample.",
+      status: useful.length > 0 ? "success" : "warning",
+    });
   } else {
     const resolved = resolveMeasurementAndOrder(N, a, plan.countingQubits, sim.probabilities);
     measuredCounting = resolved.measured;
@@ -948,20 +1140,22 @@ export function runShorEducationalWorkflow(
   steps.push({
     kind: "measurement",
     title: "Counting-register outcome (simulated)",
-    detail: `${measurementSemantics} Selected c = ${measuredCounting} from path "${SHOR_SIMULATION_PATH_LABELS[simulationPath]}". Not from classical order search.`,
+    detail: `${measurementSemantics} Primary c = ${measuredCounting} for summary post-processing. Not from classical order search.`,
     status: "success",
   });
 
   const cf = orderCandidatesFromPhase(measuredCounting, plan.countingQubits, a, N);
-  steps.push({
-    kind: "continued_fraction",
-    title: "Continued-fraction post-processing",
-    detail:
-      cf.orders.length > 0
-        ? `Phase estimate c/2^t ≈ ${cf.phaseNumerator}/${cf.phaseDenominator} → period candidates ${cf.orders.join(", ")} (including divisors of CF denominators).`
-        : `No valid period from c = ${measuredCounting}; retry with another measurement or base.`,
-    status: cf.orders.length > 0 ? "success" : "warning",
-  });
+  if (measurementPolicy !== "multi_shot") {
+    steps.push({
+      kind: "continued_fraction",
+      title: "Continued-fraction post-processing",
+      detail:
+        cf.orders.length > 0
+          ? `Phase estimate c/2^t ≈ ${cf.phaseNumerator}/${cf.phaseDenominator} → period candidates ${cf.orders.join(", ")} (including divisors of CF denominators).`
+          : `No valid period from c = ${measuredCounting}; retry with another measurement or base.`,
+      status: cf.orders.length > 0 ? "success" : "warning",
+    });
+  }
 
   if (orderFromMeasurement !== null) {
     steps.push({
@@ -996,7 +1190,7 @@ export function runShorEducationalWorkflow(
     steps,
     simulationPath,
     measurementPolicy,
-    measurementSeed: measurementPolicy === "seeded_sample" ? sampleSeed : null,
+    measurementSeed: measurementPolicy === "multi_shot" ? sampleSeed : null,
     measurementSemantics,
     quantumPlan: plan,
     countingProbabilities: sim.probabilities,
@@ -1009,6 +1203,8 @@ export function runShorEducationalWorkflow(
     iqftComparison,
     modexpComparison,
     pathComparison,
+    shotCount: measurementPolicy === "multi_shot" ? shotCount : null,
+    multiShot,
   };
 }
 

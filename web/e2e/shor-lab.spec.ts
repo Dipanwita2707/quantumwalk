@@ -60,6 +60,14 @@ test("Shor lesson links QFT prerequisite", async ({ page }) => {
   );
 });
 
+test("Shor lab multi-shot histogram", async ({ page }) => {
+  await page.goto("/academy/labs/shor");
+  await page.getByTestId("shor-measurement-policy").selectOption("multi_shot");
+  await page.getByTestId("shor-shot-count").fill("128");
+  await page.getByTestId("shor-run").click();
+  await expect(page.getByTestId("shor-multishot-histogram")).toContainText(/Observed vs theoretical/i);
+});
+
 test("Shor lab rejects non-coprime base", async ({ page }) => {
   await page.goto("/academy/labs/shor");
   await page.getByTestId("shor-n").selectOption("15");
