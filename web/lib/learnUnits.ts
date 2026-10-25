@@ -34,6 +34,7 @@ export const LEARN_UNITS: LearnUnit[] = [
       { label: "Grover explorer", href: "/explorer/grover" },
       { label: "Grover lab", href: "/academy/labs/grover" },
       { label: "QFT lab (simulator)", href: "/academy/labs/qft" },
+      { label: "Shor lab (educational)", href: "/academy/labs/shor" },
       { label: "TSP explorer", href: "/explorer/tsp" },
     ],
   },

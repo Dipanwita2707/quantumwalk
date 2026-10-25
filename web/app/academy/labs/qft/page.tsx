@@ -24,8 +24,11 @@ export default function QftLabPage() {
           <Link className="card-action" href="/learn/qft-intro">
             QFT lesson →
           </Link>
+          <Link className="card-action" href="/academy/labs/shor">
+            Shor lab →
+          </Link>
           <Link className="card-action" href="/learn/shor-intro">
-            Shor sketch →
+            Shor lesson →
           </Link>
           <Link className="card-action" href="/academy">
             Academy hub →
