@@ -1,6 +1,6 @@
 # Run QuantumWalk locally
 
-QuantumWalk opens on a public landing page with a local interactive 3D qubit concept preview. **Get started** opens `/start`: a five-slide introduction with an experience-level choice, two matching short articles, and two questions with immediate feedback. It then opens Google login, carrying a tailored starter circuit into the private workspace. Introduction answers stay in page memory and are not saved. Google sign-in is required for the private workspace, circuit simulation, algorithms, lessons, challenges, and tutor. Circuits and progress remain private to their owner. Profile controls, data export, and account deletion are available after sign-in.
+QuantumWalk opens on a public landing page with a local interactive 3D qubit concept preview. **Get started** opens `/start`: a five-slide introduction with an experience-level choice, two matching short articles, and two questions with immediate feedback. Guests can also open **Home** (`/dashboard`), **Learn**, **Lab** (`/workspace`), **Explore**, and **Tools** (`/hub`) without signing in — with demo/preview limits and local-only lesson progress where noted in the UI. **Get started** may route through Google login to sync circuits, XP, and challenges. Introduction answers on `/start` stay in page memory and are not saved. Sign-in is **required** for saved circuits (`/circuits`), achievements, profile settings, server-synced progress on some flows, and full challenge grading. Circuits and progress remain private to their owner. Profile controls, data export, and account deletion are available after sign-in. Public route policy is defined in `web/lib/publicRoutes.ts` (keep in sync with this paragraph).
 
 ## Requirements
 
@@ -24,6 +24,8 @@ Copy `.env.example` to `.env` and fill in the Supabase password, session secret,
 Run the migration before the API. The default local database is `api/quantumwalk-dev.db`, which is ignored by Git. For PostgreSQL, set `DATABASE_URL` to a `postgresql://...` or `postgresql+psycopg://...` URL before migration and API startup; the app normalizes the standard Supabase form to psycopg 3. Use a database account with only the permissions required by the app; run migrations through a separate controlled role when deploying.
 
 The health endpoint is `http://localhost:8000/health`; interactive API docs are at `/docs` in development.
+
+In dev, the web app proxies `/api/*` and `/auth/*` to the API. Open **http://localhost:3000** (not `127.0.0.1`) so cookies and Google OAuth stay on one origin. Set `GOOGLE_REDIRECT_URI=http://localhost:3000/auth/google/callback` in `.env` and add the same URI in Google Cloud Console. If your Postgres password contains `@`, URL-encode it as `%40` in `DATABASE_URL`.
 
 ## Start the web app
 
