@@ -61,6 +61,19 @@
   font-size: 0.85rem;
 }
 
+.explorer-catalog-search input,
+.hub-catalog-search input {
+  width: 100%;
+  max-width: 28rem;
+  margin: 0.75rem 0 1rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(140, 245, 226, 0.28);
+  background: rgba(8, 16, 32, 0.75);
+  color: inherit;
+  font: inherit;
+}
+
 .explorer-workflow-strip {
   display: flex;
   flex-wrap: wrap;
@@ -84,7 +97,7 @@
 }
 
 @media (min-width: 900px) {
-  .explorer-hub-layout .explorer-hub-cards {
+  .explorer-hub-layout .explorer-hub-cards:not(.explorer-hub-cards-filtered) {
     display: none;
   }
 }

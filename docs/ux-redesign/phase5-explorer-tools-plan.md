@@ -12,8 +12,8 @@
 | Area | Change |
 |------|--------|
 | Explorer | `EXPLORER_DEMOS` registry + sticky **Explorer demos** sidebar on hub and TSP/Grover/Mapper |
-| Explorer hub | Workflow strip + mobile-only demo cards (desktop uses sidebar) |
-| Tools | **Tools directory** sidebar on hub + tool pages; **Start here** primary row for featured tools |
+| Explorer hub | Workflow strip + **searchable catalog** + mobile-only demo cards (desktop uses sidebar) |
+| Tools | **Tools directory** sidebar; **Start here** primary row; **search** on catalog grid |
 | Registry | Quantum Academy tool → `/learn` |
 
 ## Files

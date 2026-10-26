@@ -26,6 +26,7 @@ export function recordRecentTool(id: string) {
 
 export function HubHome() {
   const [category, setCategory] = useState<(typeof HUB_CATEGORIES)[number]>("All");
+  const [toolQuery, setToolQuery] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
 
   useEffect(() => {
@@ -33,12 +34,23 @@ export function HubHome() {
   }, []);
 
   const tools = useMemo(() => {
-    if (category === "All") {
+    const q = toolQuery.trim().toLowerCase();
+    let list: HubTool[];
+    if (q) {
+      list = HUB_TOOLS.filter(
+        (t) =>
+          t.name.toLowerCase().includes(q) ||
+          t.description.toLowerCase().includes(q) ||
+          t.category.toLowerCase().includes(q),
+      );
+    } else if (category === "All") {
       const featuredIds = new Set(HUB_TOOLS.filter((t) => t.featured).map((t) => t.id));
-      return HUB_TOOLS.filter((t) => !featuredIds.has(t.id));
+      list = HUB_TOOLS.filter((t) => !featuredIds.has(t.id));
+    } else {
+      list = HUB_TOOLS.filter((t) => t.category === category);
     }
-    return HUB_TOOLS.filter((t) => t.category === category);
-  }, [category]);
+    return list;
+  }, [category, toolQuery]);
 
   const featured = HUB_TOOLS.filter((t) => t.featured);
   const recentTools = recent
@@ -100,11 +112,27 @@ export function HubHome() {
               ))}
             </div>
           </div>
-          <div className="qw-hub-grid">
-            {tools.map((tool) => (
-              <ToolCard key={tool.id} tool={tool} />
-            ))}
-          </div>
+          <label className="hub-catalog-search">
+            <span className="visually-hidden">Search tools</span>
+            <input
+              type="search"
+              aria-label="Search tools"
+              placeholder="Search documents, quantum, research…"
+              value={toolQuery}
+              onChange={(event) => setToolQuery(event.target.value)}
+            />
+          </label>
+          {tools.length === 0 ? (
+            <p className="explorer-note" role="status">
+              No tools match your search. Try another keyword or clear the filter.
+            </p>
+          ) : (
+            <div className="qw-hub-grid">
+              {tools.map((tool) => (
+                <ToolCard key={tool.id} tool={tool} />
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </main>
