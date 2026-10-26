@@ -1,84 +1,114 @@
 "use client";
 
+import "./app-shell-nav.css";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/api";
+import { PRIMARY_NAV, isPrimaryNavActive } from "@/lib/primaryNav";
+import { PageBreadcrumbs } from "@/components/PageBreadcrumbs";
+
+function PrimaryNavLink({ href, title, active }: { href: string; title: string; active: boolean }) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={`header-nav-pill${active ? " active" : ""}`}
+    >
+      {title}
+    </Link>
+  );
+}
 
 export function SiteHeader() {
   const { profile } = useSession();
   const pathname = usePathname();
-
-  const navLinks = [
-    ...(profile?.authenticated ? [{ title: "Dashboard", href: "/dashboard", id: "dashboard" }] : []),
-    { title: "Lab", href: "/workspace?mode=circuit", id: "lab" },
-    { title: "Learn", href: "/learn", id: "learn" },
-    { title: "Challenges", href: "/challenges", id: "challenges" },
-    { title: "Library", href: "/algorithms", id: "algorithms" },
-  ];
-
-  function checkIsActive(id: string): boolean {
-    if (id === "dashboard") return pathname === "/dashboard";
-    if (id === "lab") return pathname.startsWith("/workspace") || pathname === "/studio";
-    if (id === "algorithms") return pathname.startsWith("/algorithms");
-    if (id === "learn") return pathname.startsWith("/learn");
-    if (id === "challenges") return pathname.startsWith("/challenges");
-    return false;
-  }
+  const session = profile?.authenticated ? profile : null;
 
   return (
-    <header className={`topbar site-topbar ${profile?.authenticated ? "private-topbar" : ""}`}>
-      <Link className="brand" href={profile?.authenticated ? "/dashboard" : "/workspace"}>
-        <span className="brand-mark">◈</span>
-        <span>
-          <strong>QuantumWalk</strong>
-          <small>See inside a quantum algorithm</small>
-        </span>
-      </Link>
+    <div className="site-topbar-shell">
+      <header className={`topbar site-topbar ${session ? "private-topbar" : ""}`}>
+        <Link className="brand" href="/dashboard">
+          <span className="brand-mark">◈</span>
+          <span>
+            <strong>QuantumWalk</strong>
+            <small>See inside a quantum algorithm</small>
+          </span>
+        </Link>
 
-      <nav aria-label="Primary navigation" className="header-nav-pills">
-        {navLinks.map((link) => {
-          const isActive = checkIsActive(link.id);
-          return link.id === "lab" ? <a key={link.id} href={link.href} aria-current={isActive ? "page" : undefined} className={`header-nav-pill ${isActive ? "active" : ""}`}>{link.title}</a> : (
-            <Link
-              key={link.id}
-              href={link.href}
-              aria-current={isActive ? "page" : undefined}
-              className={`header-nav-pill ${isActive ? "active" : ""}`}
-            >
-              {link.title}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <details className="header-mobile-nav">
-        <summary>Menu</summary>
-        <nav aria-label="Mobile navigation">
-          {navLinks.map((link) => link.id === "lab" ? <a key={link.id} href={link.href} aria-current={checkIsActive(link.id) ? "page" : undefined}>{link.title}</a> : <Link key={link.id} href={link.href} aria-current={checkIsActive(link.id) ? "page" : undefined}>{link.title}</Link>)}
-          <a href="/workspace?mode=whiteboard">Whiteboard</a>
-          <Link href="/coach" aria-current={pathname.startsWith("/coach") ? "page" : undefined}>Coach</Link>
-          {profile?.authenticated && <Link href="/circuits">Saved circuits</Link>}
-          {profile?.authenticated && <Link href="/achievements" aria-current={pathname === "/achievements" ? "page" : undefined}>Achievements</Link>}
-          {profile?.authenticated && <Link href="/settings/profile">Account</Link>}
+        <nav aria-label="Primary navigation" className="header-nav-pills">
+          {PRIMARY_NAV.map((item) => (
+            <PrimaryNavLink
+              key={item.id}
+              href={item.href}
+              title={item.title}
+              active={isPrimaryNavActive(item.id, pathname)}
+            />
+          ))}
         </nav>
-      </details>
 
-      <Link className="header-coach-link" href="/coach" aria-current={pathname.startsWith("/coach") ? "page" : undefined}>Coach</Link>
+        <details className="header-mobile-nav">
+          <summary>Menu</summary>
+          <nav aria-label="Mobile navigation">
+            {PRIMARY_NAV.map((item) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                aria-current={isPrimaryNavActive(item.id, pathname) ? "page" : undefined}
+              >
+                {item.title}
+              </Link>
+            ))}
+            <p className="header-menu-kicker">More</p>
+            <Link href="/coach" aria-current={pathname.startsWith("/coach") ? "page" : undefined}>
+              Coach
+            </Link>
+            <Link href="/algorithms" aria-current={pathname.startsWith("/algorithms") ? "page" : undefined}>
+              Algorithm library
+            </Link>
+            <Link href="/challenges" aria-current={pathname.startsWith("/challenges") ? "page" : undefined}>
+              Challenges
+            </Link>
+            <a href="/workspace?mode=whiteboard">Whiteboard</a>
+            {session && (
+              <>
+                <p className="header-menu-kicker">Account</p>
+                <Link href="/circuits">Saved circuits</Link>
+                <Link href="/achievements" aria-current={pathname === "/achievements" ? "page" : undefined}>
+                  Achievements
+                </Link>
+                <Link href="/settings/profile">Profile</Link>
+              </>
+            )}
+            {!session && (
+              <Link href="/login" className="header-menu-signin">
+                Sign in
+              </Link>
+            )}
+          </nav>
+        </details>
 
-      {profile?.authenticated ? (
-        <div className="header-user-badge">
-          <Link className="account-link" href="/settings/profile" title="View profile & settings">
-            <span className="user-dot" />
-            <span>{profile.display_name}</span>
-          </Link>
-        </div>
-      ) : (
-        <div className="header-user-badge">
-          <Link className="account-link" href="/login">
-            Sign In ↗
-          </Link>
-        </div>
-      )}
-    </header>
+        {session ? (
+          <details className="header-account-menu">
+            <summary>
+              <span className="user-dot" aria-hidden />
+              <span>{session.display_name}</span>
+            </summary>
+            <nav aria-label="Account menu">
+              <Link href="/settings/profile">Profile & settings</Link>
+              <Link href="/circuits">Saved circuits</Link>
+              <Link href="/achievements">Achievements</Link>
+              <Link href="/coach">Coach</Link>
+            </nav>
+          </details>
+        ) : (
+          <div className="header-user-badge">
+            <Link className="account-link" href="/login">
+              Sign In ↗
+            </Link>
+          </div>
+        )}
+      </header>
+      <PageBreadcrumbs />
+    </div>
   );
 }

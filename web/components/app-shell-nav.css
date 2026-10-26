@@ -1,0 +1,137 @@
+/* Phase 1 app shell — primary nav, breadcrumbs, account menu */
+
+.site-topbar-shell {
+  border-bottom: 1px solid rgba(48, 67, 99, 0.65);
+  background: rgba(8, 14, 27, 0.92);
+}
+
+.app-breadcrumb-bar {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 24px 14px;
+}
+
+.app-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.app-breadcrumbs li:not(:last-child)::after {
+  content: "›";
+  margin-left: 6px;
+  color: #64748b;
+}
+
+.app-breadcrumbs a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+.app-breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+.app-breadcrumbs span[aria-current="page"] {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.header-account-menu {
+  position: relative;
+  margin-left: auto;
+}
+
+.header-account-menu summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.header-account-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.header-account-menu summary:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+.header-account-menu nav {
+  display: grid;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  padding: 8px;
+  border: 1px solid #304363;
+  border-radius: 12px;
+  background: #101f39;
+  box-shadow: 0 15px 35px #0008;
+  z-index: 20;
+}
+
+.header-account-menu nav a {
+  display: block;
+  padding: 10px 12px;
+  color: #dce9fa;
+  text-decoration: none;
+  border-radius: 7px;
+  font-size: 13px;
+}
+
+.header-account-menu nav a:hover,
+.header-account-menu nav a:focus-visible {
+  background: rgba(87, 230, 234, 0.12);
+  color: var(--cyan);
+  outline: none;
+}
+
+.header-menu-kicker {
+  margin: 10px 12px 4px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.header-menu-signin {
+  font-weight: 700;
+  color: var(--cyan) !important;
+}
+
+@media (max-width: 800px) {
+  .header-account-menu {
+    display: none;
+  }
+  .site-topbar:not(.private-topbar) .header-user-badge {
+    margin-left: auto;
+  }
+}
