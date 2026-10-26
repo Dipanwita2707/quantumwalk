@@ -1,8 +1,8 @@
 .db-shell { position:relative; isolation:isolate; background:#080d1b; overflow:clip; }
 .db-shell>.site-topbar { position:relative; z-index:3; background:#080e1bea; border-bottom-color:#91a5c51c; }
-.db-atmosphere { position:absolute; inset:0 0 auto; height:1400px; pointer-events:none; z-index:-1; overflow:hidden; }
-.db-atmosphere svg { width:100%; height:100%; opacity:.58; }
-.db-background-aura { position:absolute; inset:0; background:radial-gradient(ellipse at 85% 18%,#613b702a,transparent 38%),radial-gradient(ellipse at 0 35%,#257f8920,transparent 45%); }
+.db-atmosphere { position:absolute; inset:0 0 auto; height:100%; min-height:100vh; pointer-events:none; z-index:-1; overflow:hidden; }
+.db-atmosphere-minimal .db-background-aura { opacity:1; }
+.db-background-aura { position:absolute; inset:0; background:radial-gradient(ellipse at 88% 12%,#4a356018 0,transparent 42%),radial-gradient(ellipse at 0 40%,#1a5a5a14 0,transparent 48%); }
 .db-background-wire { stroke:url(#dashboard-wire); stroke-width:1; fill:none; }
 .db-background-signal { stroke:#86e6dd; stroke-width:1.7; fill:none; stroke-dasharray:8 1600; animation:db-signal 11s linear infinite; opacity:.8; }
 .db-atmosphere rect { stroke:#a697d336; fill:#0c1428; }
@@ -98,5 +98,159 @@
 @media(max-width:1100px) { .db-hero { gap:4%; } .db-home h1 { font-size:46px; letter-spacing:-2px; } .db-bloch-demo { padding:16px; } .db-hero-actions { gap:10px; } .db-overview>div { padding:0 16px; gap:12px; } }
 @media(max-width:850px) { .db-hero { grid-template-columns:1fr; gap:5px; } .db-hero-copy { padding:25px 0; } .db-home h1 { font-size:53px; } .db-hero-copy>p:not(.db-greeting) { max-width:480px; } .db-bloch-demo { max-width:600px; width:100%; justify-self:center; } .db-bloch-demo .quantum-sphere.qs-hologram canvas { height:370px!important; } .db-hero-note { display:none; } .db-home-grid { grid-template-columns:1fr; } .db-home-header>div { font-size:8px; gap:7px; } .db-motion-control { font-size:8px; } }
 @media(max-width:550px) { .db-home { padding:22px 18px 50px; } .db-home-header { align-items:start; gap:8px; } .db-home-header>div { flex-wrap:wrap; max-width:150px; line-height:1.8; } .db-home-header>div>span:last-child,.db-header-divider { display:none; } .db-motion-control { max-width:145px; padding:8px 10px; min-height:44px; } .db-home h1 { font-size:43px; letter-spacing:-2px; } .db-hero-copy>p:not(.db-greeting) { font-size:13px; } .db-hero-actions { gap:16px; } .db-bloch-demo { padding:16px 12px; } .db-bloch-demo .quantum-sphere.qs-hologram canvas { height:305px!important; } .db-state-presets button { min-height:44px; } .db-overview { padding:20px 0; margin-bottom:30px; gap:7px; } .db-overview>div,.db-overview>div:first-child { padding:0 8px; gap:0; } .db-overview .db-stat-icon { display:none; } .db-overview strong { font-size:25px; } .db-overview small { font-size:8px; } .db-overview span:not(.db-stat-icon) { font-size:9px; } .db-section-intro { display:block; } .db-section-intro h2 { font-size:24px; } .db-card { padding:22px 18px; } .db-milestone { align-items:start; flex-wrap:wrap; padding:20px; gap:13px; } .db-milestone>div { flex-basis:75%; } .db-milestone>a { margin-left:43px; } }
+.skill-tree { list-style:none; padding:0; margin:18px 0; display:grid; gap:10px; }
+.skill-tree-node { display:grid; grid-template-columns:28px 1fr; gap:12px; padding:12px; border-radius:10px; border:1px solid #879ab529; background:#121c2e66; }
+.skill-tree-ready { border-color:#8cf5e244; }
+.skill-tree-done { opacity:.85; }
+.skill-tree-locked { opacity:.55; }
+.skill-tree-index { font-size:11px; color:#8cf5e2; font-family:monospace; padding-top:2px; }
+.skill-tree-node p { margin:4px 0 0; font-size:11px; color:#91a5bf; }
+.skill-tree-check { font-size:10px; color:#a6dcd5; }
+
+.db-intro-progress progress,
+.db-unit-rail progress {
+  display: block;
+  width: 100%;
+  height: 6px;
+  margin: 14px 0 8px;
+  accent-color: #8cf5e2;
+}
+
+.db-intro-progress small {
+  display: block;
+  color: #8395ae;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.db-unit-rail {
+  margin-bottom: 28px;
+}
+
+.db-unit-list {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 12px;
+  display: grid;
+  gap: 14px;
+}
+
+.db-unit-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.db-unit-head strong {
+  color: #c8d8ee;
+  font-weight: 500;
+}
+
+.db-unit-head span {
+  color: #8cf5e2;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+}
+
+/* Phase 2 — focused home dashboard */
+.db-continue-primary {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 5%;
+  align-items: center;
+  padding: 12px 0 28px;
+  border-bottom: 1px solid #95aac525;
+  margin-bottom: 8px;
+}
+
+.db-continue-copy h1 {
+  font-size: clamp(28px, 3.5vw, 40px);
+  letter-spacing: -1px;
+  margin: 0 0 8px;
+}
+
+.db-continue-lesson {
+  font-size: 20px !important;
+  margin: 0 0 10px !important;
+  color: #d8e4f8;
+}
+
+.db-action-primary {
+  min-width: 200px;
+}
+
+.db-overview-compact {
+  margin: 0 0 28px;
+  padding: 18px 0;
+}
+
+.db-overview-compact strong {
+  font-size: 24px;
+}
+
+.db-home-grid-v2 {
+  margin-bottom: 24px;
+}
+
+.db-rec-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.db-rec-list a {
+  color: #a2dfdc;
+  font-size: 12px;
+  text-decoration: none;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.db-rec-list a:hover {
+  color: #cafff0;
+}
+
+.db-progress-details {
+  margin: 8px 0 24px;
+  border: 1px solid #899cc52b;
+  border-radius: 12px;
+  background: #10192a66;
+  padding: 4px 18px 18px;
+}
+
+.db-progress-details summary {
+  cursor: pointer;
+  padding: 14px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #bfcce1;
+  list-style: none;
+}
+
+.db-progress-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.db-progress-details summary:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.db-progress-details .db-card {
+  margin-top: 16px;
+}
+
+@media (max-width: 850px) {
+  .db-continue-primary {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media(prefers-reduced-motion:reduce) { .db-shell *,.db-shell *::after { animation:none!important; transition:none!important; } }
 @media(forced-colors:active) { .db-home h1>span { background:none; -webkit-text-fill-color:CanvasText; } }
