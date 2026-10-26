@@ -3,6 +3,7 @@
 | Document | Description |
 |----------|-------------|
 | [IMPLEMENTATION-REPORT.md](./IMPLEMENTATION-REPORT.md) | **Complete report** — commits, features, tests, follow-ups |
+| [../ux-audit/10-feature-audit-report.md](../ux-audit/10-feature-audit-report.md) | **Feature audit** — present vs working, test evidence |
 | [phase1-navigation-plan.md](./phase1-navigation-plan.md) | Navigation shell |
 | [phase2-dashboard-plan.md](./phase2-dashboard-plan.md) | Dashboard |
 | [phase3-lab-plan.md](./phase3-lab-plan.md) | Circuit lab workflow |
