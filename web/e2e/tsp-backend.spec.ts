@@ -1,6 +1,16 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 const guestSession = { authenticated: false, google_enabled: true };
+
+/** Backend health + solve live on the Run phase after CRRE runbook (Phase 5b). */
+async function openTspRunPhase(page: Page) {
+  await page.getByRole("tablist", { name: "Explorer workflow" }).getByRole("tab", { name: "Run" }).click();
+}
+
+async function gotoTspRunPhase(page: Page) {
+  await page.goto("/explorer/tsp");
+  await openTspRunPhase(page);
+}
 
 const tspReference = {
   primary_bits: "001",
@@ -26,7 +36,7 @@ test("TSP explorer shows offline health and disables backend solve", async ({ pa
     await route.abort("failed");
   });
 
-  await page.goto("/explorer/tsp");
+  await gotoTspRunPhase(page);
   await expect(page.getByRole("status", { name: "Backend API status" })).toContainText(/API offline/i, {
     timeout: 20_000,
   });
@@ -38,7 +48,7 @@ test("TSP health non-200 shows offline", async ({ page }) => {
     await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ status: "down" }) });
   });
 
-  await page.goto("/explorer/tsp");
+  await gotoTspRunPhase(page);
   await expect(page.getByRole("status", { name: "Backend API status" })).toContainText(/API offline/i, {
     timeout: 20_000,
   });
@@ -53,6 +63,7 @@ test("TSP matrix validation rejects negative distance", async ({ page }) => {
   await page.getByTestId("tsp-matrix-cell-0-1").fill("-1");
   await page.getByTestId("tsp-matrix-cell-0-1").blur();
   await expect(page.getByTestId("tsp-matrix-validation")).toContainText(/cannot be negative/i);
+  await openTspRunPhase(page);
   await expect(page.getByTestId("tsp-run-backend-solve")).toBeDisabled();
 });
 
@@ -106,12 +117,14 @@ test("TSP sends edited matrix in solve request and renders mocked results", asyn
     });
   });
 
-  await page.goto("/explorer/tsp");
+  await gotoTspRunPhase(page);
   await expect(page.getByRole("status", { name: "Backend API status" })).toContainText(/API online/i, {
     timeout: 20_000,
   });
+  await page.getByRole("tab", { name: "Configure" }).click();
   await page.getByTestId("tsp-matrix-cell-0-1").fill("5");
   await page.getByTestId("tsp-matrix-cell-0-1").blur();
+  await openTspRunPhase(page);
 
   const solveBtn = page.getByTestId("tsp-run-backend-solve");
   await expect(solveBtn).toBeEnabled();
@@ -148,7 +161,7 @@ test("TSP duplicate submit prevented while loading", async ({ page }) => {
     });
   });
 
-  await page.goto("/explorer/tsp");
+  await gotoTspRunPhase(page);
   await expect(page.getByRole("status", { name: "Backend API status" })).toContainText(/API online/i, {
     timeout: 20_000,
   });
@@ -172,7 +185,7 @@ test("TSP backend validation error surfaces message", async ({ page }) => {
     });
   });
 
-  await page.goto("/explorer/tsp");
+  await gotoTspRunPhase(page);
   await expect(page.getByRole("status", { name: "Backend API status" })).toContainText(/API online/i, {
     timeout: 20_000,
   });

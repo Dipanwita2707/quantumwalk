@@ -25,7 +25,7 @@
 | API core | `pytest api/tests/test_simulator.py test_public_demo.py test_explorer_health_solve.py test_tsp_grover.py test_e2e_smoke.py -q` | **31 passed** |
 | Web types | `npm run typecheck` (web) | **Pass** (prior UX close-out) |
 | Playwright UX bundle | 34 tests (nav, smoke, learn, lab, explorer hubs, runbook) | **34/34 pass** (prior run) |
-| Playwright extended | smoke + academy-core + mapper + tsp-backend | **25 pass, 6 fail** (see TSP backend UI) |
+| Playwright extended | smoke + academy-core + mapper + tsp-backend | Re-run after tsp-backend CRRE fix (see §6) |
 | Playwright catalog | 72 tests in 13 files | **Not all executed** in this audit |
 
 **Content counts (API):** `13` lessons, `4` challenges (`api/content.py`).
@@ -124,9 +124,9 @@
 | TSP explorer (charts, oracle callout) | Yes | **Working** | smoke WHY ONE MARKED ROUTE |
 | TSP preset API reference | Yes | **Working** | `GET /api/explorer/tsp` in pytest |
 | TSP backend Grover solve | Yes | **Partial** | API: `test_explorer_health_solve`, `test_tsp_grover` **pass** |
-| TSP backend UI (health + solve button) | Yes | **Regression** | `tsp-backend.spec.ts` **6 fail**: health/solve live on **Run/Results** tab only after CRRE; tests expect controls on default view |
+| TSP backend UI (health + solve button) | Yes | **Working** | `tsp-backend.spec.ts` opens **Run** tab (CRRE); re-verify after `6155b9d` |
 
-**Remediation (regression):** Update `tsp-backend.spec.ts` to open **Run** tab before asserting `Backend API status` / `tsp-run-backend-solve`, or show status on Configure.
+**Note:** Backend health and solve controls appear on the **Run** phase, not the default Configure tab.
 
 ---
 
@@ -195,7 +195,7 @@
 | Dashboard | Yes | Guest path | Auth data loads manual |
 | Learn / Academy | Yes | Lessons, quiz, labs, glossary | 13 vs 6 doc count |
 | Lab | Yes | Presets, workflow tabs | Full signed-in lab manual |
-| Explorer | Yes | Mapper, TSP charts, Grover | TSP backend **e2e regression** |
+| Explorer | Yes | Mapper, TSP charts, Grover, TSP backend UI e2e | — |
 | Tools | Yes | Hub, doc editor | Document Pro manual |
 | API / sim | Yes | 31-test subset green | Full pytest suite not counted here |
 
@@ -203,8 +203,7 @@
 
 ## 12. Recommended next checks
 
-1. Fix **`tsp-backend.spec.ts`** for CRRE Run tab (restore CI signal for backend solve UI).  
-2. Run **full** `pytest api/tests -q` and **`npm run test:e2e`** (72 Playwright tests).  
+1. Run **full** `pytest api/tests -q` and **`npm run test:e2e`** (72 Playwright tests).  
 3. Reconcile **`FEATURE_STATUS.md`** lesson count with API (`13`).  
 4. Manual pass: Google sign-in, save circuit, challenge submit, Document Pro export.
 
