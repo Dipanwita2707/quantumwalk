@@ -61,6 +61,37 @@
   font-size: 0.85rem;
 }
 
+.explorer-runbook-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 1rem 0 1.25rem;
+}
+
+.explorer-runbook-tabs button {
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  background: rgba(8, 16, 32, 0.55);
+  color: #cbd5e1;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.explorer-runbook-tabs button.active {
+  border-color: rgba(140, 245, 226, 0.55);
+  color: #57e6ea;
+  box-shadow: 0 0 16px rgba(140, 245, 226, 0.12);
+}
+
+.explorer-runbook-panel {
+  margin-bottom: 1.25rem;
+}
+
+.explorer-runbook-panel .explorer-steps {
+  margin-top: 0.75rem;
+}
+
 .explorer-catalog-search input,
 .hub-catalog-search input {
   width: 100%;

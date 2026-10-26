@@ -30,7 +30,7 @@ This document maps the five-phase UX redesign brief to shipped code. Use with `d
 |------|--------|
 | UX-AUTH-01 / UX-AUTH-02 | Guest dashboard/lab by design; align DEVELOPMENT.md copy in a docs-only PR |
 | UX-NAV-02 | Coach in account/mobile menu, not primary five |
-| Explorer CRRE layout | Brief asked Configure / Run / Results / Explanation — TSP uses Encode→Compare stages; formal CRRE regions optional follow-up |
+| Explorer CRRE layout | **Done** — `ExplorerRunbookTabs` on Grover, TSP, Mapper (`web/e2e/explorer-runbook.spec.ts`) |
 | Full Playwright matrix | Run all e2e before release; this status doc cites targeted suites only |
 | `docs/ux-audit/02-navigation-map.md` | Pre-redesign mermaid — see **Primary nav (post-redesign)** below |
 

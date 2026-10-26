@@ -9,6 +9,8 @@ import { CIRCUIT_PRESETS } from "@/lib/circuitPresets";
 import { ApiError } from "@/lib/api";
 import { GuestExperienceBanner } from "@/components/GuestExperienceBanner";
 import { ExplorerHubNav } from "@/components/ExplorerHubNav";
+import { ExplorerRunbookPanel, ExplorerRunbookTabs } from "@/components/ExplorerRunbookTabs";
+import type { ExplorerRunbookPhase } from "@/lib/explorerRunbook";
 import { buildGroverSolveRequest, postSolveTsp, resolveServicePath, type SolveTspResponse } from "@/lib/explorerBackend";
 import { useExplorerBackendHealth } from "@/lib/useExplorerBackendHealth";
 import { CITY_NAMES, TSP_ROUTES, routesWithin } from "@/lib/tspExplorer";
@@ -62,7 +64,14 @@ function isDefaultThreeMatrix(inputs: string[][]): boolean {
 }
 
 export default function TspExplorerPage() {
+  const [runbook, setRunbook] = useState<ExplorerRunbookPhase>("configure");
   const [stage, setStage] = useState(0);
+
+  function selectRunbook(phase: ExplorerRunbookPhase) {
+    setRunbook(phase);
+    if (phase === "results") setStage(4);
+    if (phase === "run" && stage >= 4) setStage(3);
+  }
   const [cityCount, setCityCount] = useState(3);
   const [matrixInputs, setMatrixInputs] = useState<string[][]>(() => matrixToInputStrings(DEFAULT_TSP_MATRIX));
   const [matrixValidation, setMatrixValidation] = useState<MatrixValidationResult | null>(null);
@@ -160,6 +169,7 @@ export default function TspExplorerPage() {
           {cityCount} cities · {displayRoutes.length.toLocaleString()} routes
         </h1>
         <GuestExperienceBanner context="explorer" />
+        {(runbook === "run" || runbook === "results") && (
         <div
           className="explorer-backend-status"
           data-state={healthState}
@@ -178,11 +188,14 @@ export default function TspExplorerPage() {
             </button>
           </div>
         </div>
+        )}
         <p className="content-intro">
           Edit the directed distance matrix and city count (3–6), then run Grover sampling on the QuantumWalk API. Education
           presets and charts below stay separate from live backend results.
         </p>
+        <ExplorerRunbookTabs value={runbook} onChange={selectRunbook} />
 
+        <ExplorerRunbookPanel phase="configure" activePhase={runbook} title="Configure">
         <TspMatrixEditor
           cityCount={cityCount}
           inputs={matrixInputs}
@@ -231,7 +244,27 @@ export default function TspExplorerPage() {
             your edited matrix; ideal preset bars remain the fixed education reference.
           </p>
         )}
+        </ExplorerRunbookPanel>
 
+        <ExplorerRunbookPanel phase="explanation" activePhase={runbook} title="Explanation">
+          <ol>
+            {stages.map((item) => (
+              <li key={item.title}>
+                <strong>{item.title}.</strong> {item.body}
+              </li>
+            ))}
+          </ol>
+          {useLegacyThreeCharts && (
+            <p className="explorer-note">
+              The education preset marks one near-optimal route so the Grover circuit stays within the gate budget — see
+              Configure for the oracle table on the default matrix.
+            </p>
+          )}
+        </ExplorerRunbookPanel>
+
+        {(runbook === "run" || runbook === "results") && (
+        <>
+        {runbook === "run" && (
         <div className="explorer-steps" aria-label="Explorer stages">
           {stages.map((item, index) => (
             <button
@@ -245,8 +278,12 @@ export default function TspExplorerPage() {
             </button>
           ))}
         </div>
+        )}
 
-        <article className="content-card">
+        <article
+          className="content-card"
+          data-testid={runbook === "results" ? "explorer-tsp-results" : undefined}
+        >
           <h2>{stages[stage].title}</h2>
           <p>{stages[stage].body}</p>
 
@@ -262,7 +299,7 @@ export default function TspExplorerPage() {
             </p>
           )}
 
-          {stage >= 4 ? (
+          {(runbook === "results" || stage >= 4) ? (
             <div className="explorer-dual-chart">
               <section aria-labelledby="classical-chart-title">
                 <h3 id="classical-chart-title">Classical brute force (your matrix)</h3>
@@ -343,6 +380,7 @@ export default function TspExplorerPage() {
             )
           )}
 
+          {runbook === "run" && (
           <section className="explorer-solve-panel" aria-labelledby="backend-solve-title">
             <span className="panel-kicker">LIVE BACKEND (FASTAPI)</span>
             <h3 id="backend-solve-title">Grover TSP sampling</h3>
@@ -403,9 +441,10 @@ export default function TspExplorerPage() {
               </div>
             )}
           </section>
+          )}
         </article>
 
-        {useLegacyThreeCharts && stage >= 1 && stage < 3 && (
+        {runbook === "run" && useLegacyThreeCharts && stage >= 1 && stage < 3 && (
           <section className="content-card" aria-labelledby="tsp-encode-title">
             <span className="panel-kicker">EDUCATION PRESET (NOT BACKEND SOLVE)</span>
             <h2 id="tsp-encode-title">Equal superposition (encode)</h2>
@@ -421,7 +460,7 @@ export default function TspExplorerPage() {
           </section>
         )}
 
-        {useLegacyThreeCharts && stage >= 2 && (
+        {runbook === "run" && useLegacyThreeCharts && stage >= 2 && (
           <section className="content-card" aria-labelledby="tsp-grover-title">
             <span className="panel-kicker">LAB PRESET · SIGN IN TO SIMULATE IN WORKSPACE</span>
             <h2 id="tsp-grover-title">Grover search preset</h2>
@@ -441,6 +480,7 @@ export default function TspExplorerPage() {
           </section>
         )}
 
+        {runbook === "run" && (
         <div className="explorer-nav">
           <button type="button" disabled={stage === 0} onClick={() => setStage((s) => s - 1)}>
             ← Back
@@ -455,6 +495,9 @@ export default function TspExplorerPage() {
             Grover explorer →
           </Link>
         </div>
+        )}
+        </>
+        )}
         </div>
       </main>
     </>
