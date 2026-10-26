@@ -28,7 +28,7 @@ export default function ShorLabPage() {
           <Link className="card-action" href="/academy/labs/qft">
             QFT lab →
           </Link>
-          <Link className="card-action" href="/academy">
+          <Link className="card-action" href="/learn">
             Academy hub →
           </Link>
         </div>

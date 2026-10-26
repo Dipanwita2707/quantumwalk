@@ -100,7 +100,7 @@ export default function QecLabPage() {
           <Link className="card-action" href="/learn/qec-bit-flip">
             QEC lesson →
           </Link>
-          <Link className="card-action" href="/academy">
+          <Link className="card-action" href="/learn">
             Academy hub →
           </Link>
         </div>

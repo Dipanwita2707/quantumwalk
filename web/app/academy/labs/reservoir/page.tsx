@@ -25,7 +25,7 @@ export default function ReservoirLabPage() {
           <Link className="card-action" href="/learn/quantum-reservoir">
             Reservoir lesson →
           </Link>
-          <Link className="card-action" href="/academy">
+          <Link className="card-action" href="/learn">
             Academy hub →
           </Link>
         </div>

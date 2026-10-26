@@ -49,7 +49,7 @@ export default function AcademyReservoirPage() {
             </Link>
           </article>
         </div>
-        <Link className="card-action" href="/academy">
+        <Link className="card-action" href="/learn">
           ← Academy hub
         </Link>
       </main>

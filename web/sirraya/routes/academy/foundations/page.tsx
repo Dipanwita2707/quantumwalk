@@ -47,7 +47,7 @@ export default function AcademyFoundationsPage() {
             </li>
           ))}
         </ol>
-        <Link className="card-action" href="/academy">
+        <Link className="card-action" href="/learn">
           ← Academy hub
         </Link>
       </main>

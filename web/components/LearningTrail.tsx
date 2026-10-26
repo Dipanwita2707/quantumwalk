@@ -11,7 +11,10 @@ import { LearnPathSidebar } from "@/components/LearnPathSidebar";
 import { AcademyUnitOverview } from "@/components/AcademyUnitOverview";
 import { GuestExperienceBanner } from "@/components/GuestExperienceBanner";
 import { LearnLoadingSkeleton } from "@/components/LearnLoadingSkeleton";
+import { LearnDiscoveryLanes } from "@/components/LearnDiscoveryLanes";
+import { LearnModuleIndex } from "@/components/LearnModuleIndex";
 import { loadGuestLessonProgress, recordGuestLessonAttempt } from "@/lib/guestLessonProgress";
+import "@/app/learn/learn.css";
 
 type Lesson = {
   slug: string;
@@ -158,7 +161,7 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
   return (
     <>
       <SiteHeader />
-      <main className="content-shell learn-trail-layout">
+      <main className={`content-shell learn-trail-layout${lessonSlug ? "" : " learn-trail-index"}`}>
         <LearnPathSidebar activeSlug={lessonSlug} />
         <div className="learn-trail-main">
         <GuestExperienceBanner context="learn" />
@@ -198,6 +201,8 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
         </p>
 
         {!lessonSlug && <AcademyUnitOverview />}
+        {!lessonSlug && <LearnDiscoveryLanes />}
+        {!lessonSlug && <LearnModuleIndex />}
 
         {items && items.length > 0 && !lessonSlug && (
           <section className="learning-scoreboard" aria-label="Saved learning progress">
@@ -251,7 +256,8 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
           </section>
         )}
 
-        {items && items.length > 0 && (
+        {items && items.length > 0 && (() => {
+          const missionList = (
           <div className="learning-list">
             {items.map((item, index) => {
               const lessonCircuit =
@@ -387,7 +393,15 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
               );
             })}
           </div>
-        )}
+          );
+          if (lessonSlug) return missionList;
+          return (
+            <details className="learn-mission-catalog">
+              <summary>All missions — expanded cards &amp; quizzes</summary>
+              {missionList}
+            </details>
+          );
+        })()}
         </div>
       </main>
     </>

@@ -30,7 +30,7 @@ export default function QftLabPage() {
           <Link className="card-action" href="/learn/shor-intro">
             Shor lesson →
           </Link>
-          <Link className="card-action" href="/academy">
+          <Link className="card-action" href="/learn">
             Academy hub →
           </Link>
         </div>

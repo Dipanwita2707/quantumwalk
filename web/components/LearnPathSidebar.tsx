@@ -87,7 +87,7 @@ export function LearnPathSidebar({ activeSlug }: { activeSlug?: string }) {
         </section>
       ))}
       <section className="learn-path-extras">
-        <Link href="/academy">Academy hub</Link>
+        <Link href="/learn">Learn home</Link>
         <Link href="/learn/reference">Glossary & cheat sheets</Link>
       </section>
     </nav>

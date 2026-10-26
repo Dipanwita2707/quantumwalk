@@ -66,9 +66,9 @@ test.describe("QuantumWalk smoke", () => {
 
   test("academy hub and reference", async ({ page }) => {
     await page.goto("/academy");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(/Learn the stack/i);
-    await expect(page.getByLabel("Curriculum units")).toBeVisible();
-    await expect(page.getByLabel("Sirraya-aligned modules")).toBeVisible();
+    await expect(page).toHaveURL(/\/learn\/?$/);
+    await expect(page.getByRole("heading", { level: 1, name: /Quantum Academy/i })).toBeVisible();
+    await expect(page.getByLabel("More learning resources")).toBeVisible();
     await page.goto("/learn/reference");
     await expect(page.getByRole("heading", { level: 1, name: /Glossary & cheat sheets/i })).toBeVisible();
     await expect(page.getByLabel("Search glossary")).toBeVisible();
