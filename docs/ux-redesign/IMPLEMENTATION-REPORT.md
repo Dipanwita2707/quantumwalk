@@ -26,7 +26,113 @@ Related (non-UI): `d9b48f8` TSP v3 API routes for explorer backend solve (simula
 
 ---
 
-## Features integrated (by destination)
+## Product features catalog (integrated in QuantumWalk)
+
+This section lists **user-facing product capabilities** in the repo (simulator-backed unless noted). UX redesign work **surfaces** these features; it does not replace them.
+
+### Platform & access
+
+| Feature | Description | Guest | Signed-in |
+|---------|-------------|-------|-----------|
+| Landing `/` | Hero, brand, entry to `/start` | Yes | Yes |
+| Onboarding `/start` | Path picker, intro questions (local memory only) | Yes | Yes |
+| Google OAuth | Sign-in, session cookies, CSRF on mutations | — | Yes |
+| **Home dashboard** `/dashboard` | Progress, continue learning, recommendations | Preview + intro card | Full API data |
+| Public route policy | `web/lib/publicRoutes.ts` | See file | AuthGate on `/circuits`, `/achievements`, `/settings/profile` |
+| Guest banners | Honest preview labels on learn, lab, explorer | Yes | Hidden where N/A |
+
+### Education — Learn & Academy
+
+| Feature | Route(s) | Notes |
+|---------|----------|--------|
+| **Learning trail** | `/learn`, `/learn/[slug]` | API-driven lessons; embedded **CircuitViewer** on lesson pages |
+| **Unit sidebar** | Learn layout | Progress % per unit; links to lab presets |
+| **Lesson quizzes** | Inline per lesson | Guest: localStorage; signed-in: `/api/progress` |
+| **Academy units map** | `/learn` (overview) | 6 curriculum units in `learnUnits.ts` (13 graded lesson slugs listed) |
+| **Foundations reader** | `/academy/foundations` | Math spine (reading) |
+| **Reservoir overview** | `/academy/reservoir` | Concept + link to lab |
+| **Glossary & cheat sheets** | `/learn/reference` | Searchable glossary |
+| **Hardware story** | `/learn/hardware` | Architecture cards; **no live device** |
+| **Educational labs** | `/academy/labs/*` | Grover, QFT, Shor, QEC bit-flip, reservoir — simulator toys |
+| **Algorithm library** | `/algorithms`, `/algorithms/[slug]` | Templates + narratives |
+| **Challenges arena** | `/challenges` | Missions visible to guests; **grading requires sign-in** |
+| **Skill tree** | Dashboard details | Milestones / next node |
+| **Achievements** | `/achievements` | Auth required |
+| **Discovery coach** | Lesson + lab hooks | Topic hints (beginner) |
+| **AI Coach** | `/coach` | Secondary nav / account menu |
+
+### Circuit lab (`/workspace`)
+
+| Feature | Description |
+|---------|-------------|
+| **Circuit composer** | Drag/drop gates, multi-qubit, presets via `?preset=` |
+| **Build / Simulate / Analyze** | UX workflow tabs (Phase 3); same underlying `run()` |
+| **Step playback** | Gate-by-step state evolution |
+| **Bloch sphere** | 3D qubit visualization tied to steps |
+| **State vector & measurements** | Amplitudes, shot histograms |
+| **Engines** | Qiskit Aer / Cirq comparison (signed-in full lab) |
+| **Noise models** | Pedagogical noise in advanced panel |
+| **Demo / guest lab** | Public demo simulate API; qubit limits labeled in UI |
+| **Save & export** | Circuits private to owner (auth) |
+| **Whiteboard / missions** | Workspace modes preserved |
+| **Lab glossary drawer** | In-context terms |
+
+### Explorers (`/explorer`)
+
+| Feature | Route | Description |
+|---------|-------|-------------|
+| **Explorer hub** | `/explorer` | Demo catalog + search |
+| **Quantum mapper** | `/explorer/mapper` | TSP index, binary register, Grover query calculator |
+| **TSP explorer** | `/explorer/tsp` | 3–6 city matrix, classical brute force vs preset reference |
+| **TSP backend solve** | TSP Run tab | `POST /api/v3/solve-tsp` when API online (Grover sampling) |
+| **Grover explorer** | `/explorer/grover` | 4-label search walkthrough + preset circuit |
+| **CRRE runbook** | All explorers | Configure · Run · Results · Explanation tabs |
+| **Honest oracle copy** | TSP default matrix | Single marked route for ≤64-gate education preset |
+
+### Tools hub (`/hub`)
+
+| Tool | Route | Description |
+|------|-------|-------------|
+| **Document Pro** | `/hub/document-pro` | Templates, clauses, print/PDF export (browser-local) |
+| **Doc Editor** | `/hub/doc-editor` | Markdown + live preview, drafts |
+| **ML Studio** | `/hub/ml-studio` | Small feed-forward network shape explorer |
+| **Shortcuts** | Hub registry | Links to Learn, TSP explorer, mapper |
+
+### Simulation & API (backend)
+
+| Capability | Endpoint / module | Notes |
+|------------|-------------------|--------|
+| Circuit simulation | `POST /api/simulate` | Bounded qubits/depth/shots |
+| Lessons catalog | `GET /api/lessons`, answer POST | Grading + XP |
+| Progress | `GET /api/progress` | Authenticated |
+| Circuits CRUD | `/api/circuits` | Owner-scoped |
+| Challenges | `/api/challenges` | Arena |
+| Explorer TSP preset | `GET /api/explorer/tsp` | Ideal reference bars |
+| TSP Grover solve v3 | `POST /api/v3/solve-tsp` | FastAPI + sirraya routes (`d9b48f8`) |
+| Health | `/health`, `/readyz` | Ops |
+
+### Gamification & persistence
+
+| Feature | Behavior |
+|---------|----------|
+| Lesson XP | 100 XP per completed mission (UI copy) |
+| Guest lesson progress | `guestLessonProgress` localStorage |
+| Challenge tiers | `challengeTiers.ts` |
+| Milestones / skill tree | `milestones.ts`, `skillTree.ts` |
+| Saved circuits | Up to 100 per account (see DEVELOPMENT.md) |
+
+### Explicitly not product features (honest bounds)
+
+- Live quantum hardware or cloud device execution  
+- Full Sirraya curriculum parity, public leaderboard, streaks  
+- Multi-route TSP oracle in one fixed gate-budget preset  
+- Arbitrary user Python/shell on server  
+
+See also: `FEATURE_STATUS.md`, `sirraya/docs/references/sirraya-captures/quantumwalk-parity-matrix.md`.
+
+---
+
+## UX redesign features (by destination)
 
 ### 1. Home (`/dashboard`)
 
