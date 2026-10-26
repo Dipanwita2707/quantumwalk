@@ -1,9 +1,15 @@
-"""QuantumWalk API entry point."""
+﻿"""QuantumWalk API entry point."""
 
 import json
 import logging
+import sys
+from pathlib import Path
 from time import perf_counter, time
 from uuid import uuid4
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,6 +23,7 @@ from auth import AuthContext, COOKIE_NAME, get_db, google_callback, google_redir
 from body_limit import BodyLimitMiddleware
 from database import User, UserSession
 from discovery_routes import router as discovery_router
+from sirraya.api.sirraya_v3_routes import router as sirraya_v3_router
 from limits import enforce_rate, simulation_slot, _simulation_slots
 from platform_routes import router
 from settings import cookie_secure, environment, frontend_origin, session_secret
@@ -34,6 +41,7 @@ app.add_middleware(
 app.add_middleware(BodyLimitMiddleware, max_bytes=65536)
 app.include_router(router)
 app.include_router(discovery_router)
+app.include_router(sirraya_v3_router)
 
 # Stable test hook for saturation behavior.
 simulation_slots = _simulation_slots
