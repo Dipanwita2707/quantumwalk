@@ -59,7 +59,9 @@ test.describe("QuantumWalk smoke", () => {
   test("tools hub and doc editor", async ({ page }) => {
     await page.goto("/hub");
     await expect(page.getByRole("heading", { level: 1 })).toContainText(/Research, documents/i);
-    await expect(page.getByRole("link", { name: /Document Pro/i })).toBeVisible();
+    await expect(
+      page.getByLabel("Primary tools").getByRole("heading", { name: /Document Pro/i }),
+    ).toBeVisible();
     await page.goto("/hub/doc-editor");
     await expect(page.getByLabel("Markdown source")).toBeVisible();
   });

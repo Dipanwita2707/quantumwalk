@@ -2,6 +2,93 @@
   max-width: 52rem;
 }
 
+.explorer-hub-layout {
+  display: grid;
+  gap: 2rem;
+  max-width: 72rem;
+}
+
+@media (min-width: 900px) {
+  .explorer-hub-layout {
+    grid-template-columns: 220px 1fr;
+    align-items: start;
+  }
+}
+
+.explorer-hub-main {
+  min-width: 0;
+}
+
+.explorer-hub-nav {
+  position: sticky;
+  top: 5.5rem;
+}
+
+.explorer-hub-nav-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: #8ce8dd;
+  margin: 0 0 0.65rem;
+}
+
+.explorer-hub-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.explorer-hub-nav li {
+  margin-bottom: 0.55rem;
+}
+
+.explorer-hub-nav a {
+  font-size: 0.92rem;
+  color: #cbd5e1;
+  text-decoration: none;
+}
+
+.explorer-hub-nav a:hover,
+.explorer-hub-nav a[aria-current="page"] {
+  color: #57e6ea;
+}
+
+.explorer-hub-nav-extras {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(137, 156, 197, 0.18);
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+}
+
+.explorer-workflow-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 1.25rem;
+}
+
+.explorer-workflow-strip span {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  color: #c4b5fd;
+}
+
+.explorer-hub-cards {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .explorer-hub-layout .explorer-hub-cards {
+    display: none;
+  }
+}
+
 .explorer-steps {
   display: flex;
   flex-wrap: wrap;

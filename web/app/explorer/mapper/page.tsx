@@ -4,13 +4,16 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { GuestExperienceBanner } from "@/components/GuestExperienceBanner";
 import { QuantumMapperLab } from "@/components/QuantumMapperLab";
+import { ExplorerHubNav } from "@/components/ExplorerHubNav";
 import "../explorer.css";
 
 export default function QuantumMapperPage() {
   return (
     <>
       <SiteHeader />
-      <main className="content-shell explorer-shell explorer-mapper">
+      <main className="content-shell explorer-hub-layout">
+        <ExplorerHubNav />
+        <div className="explorer-hub-main explorer-shell explorer-mapper">
         <p className="eyebrow">QUANTUM MAPPER</p>
         <h1>Classical ↔ quantum encoding</h1>
         <GuestExperienceBanner context="explorer" />
@@ -31,8 +34,9 @@ export default function QuantumMapperPage() {
             Open lab →
           </Link>
           <Link className="card-action" href="/explorer">
-            Explorer hub →
+            Explorer overview →
           </Link>
+        </div>
         </div>
       </main>
     </>

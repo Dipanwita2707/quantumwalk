@@ -8,6 +8,7 @@ import { TspMatrixEditor } from "@/components/TspMatrixEditor";
 import { CIRCUIT_PRESETS } from "@/lib/circuitPresets";
 import { ApiError } from "@/lib/api";
 import { GuestExperienceBanner } from "@/components/GuestExperienceBanner";
+import { ExplorerHubNav } from "@/components/ExplorerHubNav";
 import { buildGroverSolveRequest, postSolveTsp, resolveServicePath, type SolveTspResponse } from "@/lib/explorerBackend";
 import { useExplorerBackendHealth } from "@/lib/useExplorerBackendHealth";
 import { CITY_NAMES, TSP_ROUTES, routesWithin } from "@/lib/tspExplorer";
@@ -151,7 +152,9 @@ export default function TspExplorerPage() {
   return (
     <>
       <SiteHeader />
-      <main className="content-shell explorer-shell explorer-tsp">
+      <main className="content-shell explorer-hub-layout">
+        <ExplorerHubNav />
+        <div className="explorer-hub-main explorer-shell explorer-tsp">
         <p className="eyebrow">QUANTUM EXPLORER · TSP</p>
         <h1>
           {cityCount} cities · {displayRoutes.length.toLocaleString()} routes
@@ -451,6 +454,7 @@ export default function TspExplorerPage() {
           <Link className="card-action" href="/explorer/grover">
             Grover explorer →
           </Link>
+        </div>
         </div>
       </main>
     </>

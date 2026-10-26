@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { GuestExperienceBanner } from "@/components/GuestExperienceBanner";
 import { CIRCUIT_PRESETS } from "@/lib/circuitPresets";
+import { CircuitViewer } from "@/components/CircuitViewer";
+import { ExplorerHubNav } from "@/components/ExplorerHubNav";
 import "../explorer.css";
 
 const stages = [
@@ -39,9 +42,12 @@ export default function GroverExplorerPage() {
   return (
     <>
       <SiteHeader />
-      <main className="content-shell explorer-shell">
+      <main className="content-shell explorer-hub-layout">
+        <ExplorerHubNav />
+        <div className="explorer-hub-main explorer-shell">
         <p className="eyebrow">QUANTUM EXPLORER</p>
         <h1>Find the marked state</h1>
+        <GuestExperienceBanner context="explorer" />
         <p className="content-intro">A layman walk through search on four possibilities — then open the same circuit in your lab.</p>
         <div className="explorer-steps" aria-label="Explorer stages">
           {stages.map((item, index) => (
@@ -70,8 +76,28 @@ export default function GroverExplorerPage() {
               </div>
             ))}
           </div>
-          <p className="explorer-note">{stage >= 4 ? "Ideal simulator target for this teaching circuit." : "Before amplification — equal chances."}</p>
+          <p className="explorer-note">
+            {stage >= 4
+              ? "Classical brute force on 4 labels: 25% per random guess. After amplification, ideal simulator targets ~100% on |11⟩."
+              : "Before amplification — equal chances (25% each)."}
+          </p>
         </article>
+        {stage >= 2 && (
+          <section className="content-card" aria-labelledby="explorer-live-title">
+            <span className="panel-kicker">SIMULATOR-GROUNDED</span>
+            <h2 id="explorer-live-title">Run the teaching circuit</h2>
+            <p>Sign in to execute the same Grover preset the Lab uses. Probabilities come from the backend simulator, not this page’s static chart.</p>
+            <CircuitViewer
+              initialQubits={CIRCUIT_PRESETS.grover2.qubits}
+              initialOperations={CIRCUIT_PRESETS.grover2.operations}
+              demoPreset="grover2"
+              readonly
+              title="Grover search (2 qubits)"
+              subtitle="Step through gates, then compare shot counts to the stage chart above."
+              fullLabHref="/workspace?preset=grover2"
+            />
+          </section>
+        )}
         <div className="explorer-nav">
           <button type="button" disabled={stage === 0} onClick={() => setStage((s) => s - 1)}>
             ← Back
@@ -86,6 +112,7 @@ export default function GroverExplorerPage() {
         <p className="content-intro">
           Preset uses {CIRCUIT_PRESETS.grover2.operations.length} gates on {CIRCUIT_PRESETS.grover2.qubits} qubits.
         </p>
+        </div>
       </main>
     </>
   );

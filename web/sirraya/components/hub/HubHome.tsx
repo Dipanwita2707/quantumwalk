@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { HUB_CATEGORIES, HUB_TOOLS, type HubTool } from "../../lib/hubTools";
+import { HubToolsNav } from "@/components/HubToolsNav";
+import "@/app/hub/hub-home.css";
 
 const RECENT_KEY = "qw-hub-recent";
 
@@ -44,64 +46,67 @@ export function HubHome() {
     .filter((t): t is HubTool => !!t);
 
   return (
-    <main className="qw-hub-home">
-      <section className="qw-hub-hero">
-        <p className="eyebrow">TOOLS HUB</p>
-        <h1>Research, documents, and quantum — in one workspace</h1>
-        <p className="content-intro">
-          Independent Sirraya-style hub. Documents stay in your browser until you choose to sign in and save server-side
-          features elsewhere in QuantumWalk.
-        </p>
-      </section>
-
-      {recentTools.length > 0 && (
-        <section className="qw-hub-sec">
-          <h2>Jump back in</h2>
-          <ul className="qw-hub-jump">
-            {recentTools.map((tool) => (
-              <li key={tool.id}>
-                <Link href={tool.href} onClick={() => recordRecentTool(tool.id)}>
-                  {tool.name} →
-                </Link>
-              </li>
-            ))}
-          </ul>
+    <main className="content-shell hub-home-layout">
+      <HubToolsNav />
+      <div className="hub-home-main qw-hub-home" style={{ padding: 0, maxWidth: "none", margin: 0 }}>
+        <section className="qw-hub-hero">
+          <p className="eyebrow">TOOLS HUB</p>
+          <h1>Research, documents, and quantum — in one workspace</h1>
+          <p className="content-intro">
+            Independent Sirraya-style hub. Documents stay in your browser until you choose to sign in and save server-side
+            features elsewhere in QuantumWalk.
+          </p>
         </section>
-      )}
 
-      <section className="qw-hub-sec">
-        <h2>Featured</h2>
-        <div className="qw-hub-grid qw-hub-grid-lg">
-          {featured.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} />
-          ))}
-        </div>
-      </section>
-
-      <section className="qw-hub-sec">
-        <div className="qw-hub-sec-head">
-          <h2>All tools</h2>
-          <div className="qw-hub-tabs" role="tablist">
-            {HUB_CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                role="tab"
-                aria-selected={category === cat}
-                className={category === cat ? "on" : ""}
-                onClick={() => setCategory(cat)}
-              >
-                {cat}
-              </button>
+        <section className="qw-hub-sec" aria-label="Primary tools">
+          <span className="panel-kicker">START HERE</span>
+          <div className="hub-primary-tools qw-hub-grid-lg">
+            {featured.map((tool) => (
+              <ToolCard key={tool.id} tool={tool} />
             ))}
           </div>
-        </div>
-        <div className="qw-hub-grid">
-          {tools.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} />
-          ))}
-        </div>
-      </section>
+        </section>
+
+        {recentTools.length > 0 && (
+          <section className="qw-hub-sec">
+            <h2>Jump back in</h2>
+            <ul className="qw-hub-jump">
+              {recentTools.map((tool) => (
+                <li key={tool.id}>
+                  <Link href={tool.href} onClick={() => recordRecentTool(tool.id)}>
+                    {tool.name} →
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <section className="qw-hub-sec qw-hub-catalog">
+          <div className="qw-hub-sec-head">
+            <h2>All tools</h2>
+            <div className="qw-hub-tabs" role="tablist" aria-label="Tool categories">
+              {HUB_CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  role="tab"
+                  aria-selected={category === cat}
+                  className={category === cat ? "on" : ""}
+                  onClick={() => setCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="qw-hub-grid">
+            {tools.map((tool) => (
+              <ToolCard key={tool.id} tool={tool} />
+            ))}
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
