@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { GuestExperienceBanner } from "@/components/GuestExperienceBanner";
 import { api, useSession } from "@/lib/api";
 import { QuantumSphere } from "@/components/QuantumSphere";
 import { EntanglementLab } from "@/components/EntanglementLab";
@@ -10,7 +11,8 @@ import { QuantumMissions } from "@/components/QuantumMissions";
 import { QuantumToolbox } from "@/components/QuantumToolbox";
 import { QuantumEquationWhiteboard } from "@/components/QuantumEquationWhiteboard";
 import { LabGlossaryDrawer } from "@/components/LabGlossaryDrawer";
-import { LabEnginePanel } from "@/components/LabEnginePanel";
+import { LabEnginePanel, type EngineCompareResult } from "@/components/LabEnginePanel";
+import { demoPresetFromParam, demoSimulateCircuit, type DemoPreset } from "@/lib/demoSimulate";
 import { CIRCUIT_PRESETS } from "@/lib/circuitPresets";
 import { stepButtonLabel, stepNarrator } from "@/lib/stepNarrator";
 import "./lab.css";
@@ -115,7 +117,19 @@ function complexLabel(item: Amplitude) {
 }
 
 export default function Home() {
-  const { profile, loading: accountLoading } = useSession();
+  const { profile, loading: accountLoading, refresh: refreshSession } = useSession();
+
+  useEffect(() => {
+    const syncSession = () => {
+      if (profile?.authenticated) void refreshSession();
+    };
+    window.addEventListener("focus", syncSession);
+    document.addEventListener("visibilitychange", syncSession);
+    return () => {
+      window.removeEventListener("focus", syncSession);
+      document.removeEventListener("visibilitychange", syncSession);
+    };
+  }, [profile?.authenticated, refreshSession]);
   const [qubits, setQubits] = useState(1);
   const [operations, setOperations] = useState<Operation[]>([]);
   const [past, setPast] = useState<CircuitState[]>([]);
@@ -141,9 +155,12 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<GateCategory>("all");
   const [labMode, setLabMode] = useState<"circuit" | "whiteboard">("circuit");
+  const [workflowView, setWorkflowView] = useState<"build" | "simulate" | "analyze">("build");
   const [glossaryOpen, setGlossaryOpen] = useState(false);
-  const [engineCaption, setEngineCaption] = useState("");
+  const [engineCompare, setEngineCompare] = useState<EngineCompareResult | null>(null);
   const [noiseOn, setNoiseOn] = useState(false);
+  const [runEngine, setRunEngine] = useState<"qiskit" | "cirq">("qiskit");
+  const [demoPresetKey, setDemoPresetKey] = useState<DemoPreset | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const hydratedOwnerRef = useRef<string | null>(null);
 
@@ -238,7 +255,8 @@ export default function Home() {
 
     if (preset && CIRCUIT_PRESETS[preset]) {
       const item = CIRCUIT_PRESETS[preset];
-      changeCircuit(item.operations, item.qubits);
+      applyCircuit(item.operations, item.qubits);
+      setDemoPresetKey(demoPresetFromParam(preset));
       setResult(null);
       setName(item.name);
       setLoadedId(null);
@@ -327,6 +345,7 @@ export default function Home() {
   }
 
   function changeCircuit(next: Operation[], count = qubits) {
+    setDemoPresetKey(null);
     setPast((items) => [...items.slice(-49), { operations, qubits }]);
     setFuture([]);
     applyCircuit(next, count);
@@ -399,22 +418,37 @@ export default function Home() {
     if (busy) return;
     setBusy(true);
     setError("");
+    setEngineCompare(null);
     const submittedRevision = revision;
     try {
-      const data = await api<Simulation>(
-        "/api/simulate",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            qubits,
-            operations,
-            shots: 1024,
-            engine: "qiskit",
-            ...(noiseOn ? { noise_strength: 0.08 } : {}),
-          }),
-        },
-        profile?.authenticated ? profile.csrf_token : undefined
-      );
+      let data: Simulation;
+      if (!profile?.authenticated) {
+        data = (await demoSimulateCircuit({
+          qubits,
+          operations,
+          engine: runEngine,
+          shots: 1024,
+          ...(noiseOn ? { noise_strength: 0.08 } : {}),
+        })) as Simulation;
+      } else if (!profile.csrf_token) {
+        setError("Session incomplete — refresh the page or sign in again.");
+        return;
+      } else {
+        data = await api<Simulation>(
+          "/api/simulate",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              qubits,
+              operations,
+              shots: 1024,
+              engine: runEngine,
+              ...(noiseOn ? { noise_strength: 0.08 } : {}),
+            }),
+          },
+          profile.csrf_token
+        );
+      }
       setResult({ revision: submittedRevision, operations, data });
       setStep(data.steps.length - 1);
     } catch (cause) {
@@ -509,14 +543,30 @@ export default function Home() {
   const filteredGates = categoryFilter === "all" ? gateOptions : gateOptions.filter((g) => gateCategoryMap[g] === categoryFilter);
   const stepGate = step > 0 && result ? result.operations[step - 1]?.gate : null;
   const narrator = stepNarrator(step, stepGate ?? null);
-  const displayCounts =
-    result?.data.mode === "pedagogical_noise" && result.data.noisy_counts ? result.data.noisy_counts : result?.data.counts;
+  const shots = result?.data.shots || 1024;
+  const dualHistogram =
+    result?.data.mode === "pedagogical_noise" && result.data.counts && result.data.noisy_counts
+      ? { ideal: result.data.counts, noisy: result.data.noisy_counts }
+      : null;
+  const displayCounts = dualHistogram ? null : result?.data.counts;
+  const histogramLabels = dualHistogram
+    ? [...new Set([...Object.keys(dualHistogram.ideal), ...Object.keys(dualHistogram.noisy)])].sort()
+    : [];
 
   return (
-    <div className={`app-shell lab-shell nextlevel-system ${labMode === "whiteboard" ? "whiteboard-mode" : ""}`}>
+    <div
+      className={`app-shell lab-shell nextlevel-system ${labMode === "whiteboard" ? "whiteboard-mode" : ""} ${
+        labMode === "circuit" ? `lab-workflow-view-${workflowView}` : ""
+      }`}
+    >
       <SiteHeader />
 
       <main id="top" className="workspace">
+        {labMode === "circuit" && (
+          <div className="lab-guest-banner-wrap">
+            <GuestExperienceBanner context="lab" />
+          </div>
+        )}
         {/* Left Quantum Navigation & Gate Library */}
         <aside className="sidebar" aria-label="Gate library and quantum tools">
           <div className="lab-rail-heading">
@@ -710,15 +760,61 @@ export default function Home() {
             </button>
           </div>
 
+          {labMode === "circuit" && (
+            <div className="lab-workflow-tabs" role="tablist" aria-label="Lab workflow">
+              {(
+                [
+                  { id: "build" as const, label: "Build" },
+                  { id: "simulate" as const, label: "Simulate" },
+                  { id: "analyze" as const, label: "Analyze" },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={workflowView === tab.id}
+                  className={`lab-workflow-tab ${workflowView === tab.id ? "active" : ""}`}
+                  onClick={() => setWorkflowView(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {labMode === "circuit" && (
+            <div className="lab-sticky-runbar" role="region" aria-label="Run simulation">
+              <button
+                type="button"
+                className={`run-button ${busy ? "busy-glow" : ""}`}
+                disabled={busy || accountLoading}
+                onClick={run}
+              >
+                {busy ? "Running simulation…" : "Run simulation"}
+              </button>
+              <span className="lab-session-state">
+                {busy ? "Running" : stale ? "Results out of date" : result ? "Latest result loaded" : "Ready"}
+              </span>
+              {!profile?.authenticated && (
+                <span className="lab-guest-hint-inline" role="status">
+                  Guest demo · ≤5 qubits
+                </span>
+              )}
+            </div>
+          )}
+
           {labMode === "whiteboard" ? (
             <div style={{ padding: "0 28px 40px" }}>
               <QuantumEquationWhiteboard />
             </div>
           ) : (
             <>
-              <QuantumMissions />
+              <div className="lab-wf-build">
+                <QuantumMissions />
+              </div>
               {/* Top Quantum HUD Banner */}
-              <section id="circuit" className="hero nextlevel-hero" aria-labelledby="page-title">
+              <section id="circuit" className="hero nextlevel-hero lab-wf-simulate" aria-labelledby="page-title">
             <div className="hero-quantum-content">
               <div className="eyebrow">
                 <span className="lab-status-dot" />
@@ -740,37 +836,77 @@ export default function Home() {
                   {busy ? "Running simulation" : stale ? "Results out of date — run again" : result ? "Showing latest result" : "Ready to run"}
                 </span>
               </div>
-              <button
-                type="button"
-                className={`run-button ${busy ? "busy-glow" : ""}`}
-                disabled={busy || accountLoading}
-                onClick={run}
-              >
-                {busy ? "Running simulation…" : "Run simulation"}
-              </button>
               <div className="launch-specs">
                 <span>Exact Statevector</span>
                 <span>·</span>
                 <span>1,024 Shots</span>
               </div>
-              {engineCaption && (
-                <p className="engine-agree-caption" role="status">
-                  {engineCaption}
+              <details className="lab-advanced-engine" open={workflowView === "simulate"}>
+                <summary>Engine, noise & comparison</summary>
+                <label className="lab-engine-select">
+                  Engine{" "}
+                  <select value={runEngine} onChange={(e) => setRunEngine(e.target.value as "qiskit" | "cirq")}>
+                    <option value="qiskit">Qiskit</option>
+                    <option value="cirq">Cirq</option>
+                  </select>
+                </label>
+                <LabEnginePanel
+                  qubits={qubits}
+                  operations={operations}
+                  csrf={profile?.authenticated ? profile.csrf_token : undefined}
+                  noiseOn={noiseOn}
+                  onNoiseChange={setNoiseOn}
+                  onCompare={setEngineCompare}
+                />
+              </details>
+              {error && (
+                <p className="error lab-run-error" role="alert">
+                  {error}{" "}
+                  <button type="button" onClick={() => setError("")}>
+                    Dismiss
+                  </button>
                 </p>
               )}
-              <LabEnginePanel
-                qubits={qubits}
-                operations={operations}
-                csrf={profile?.authenticated ? profile.csrf_token : undefined}
-                noiseOn={noiseOn}
-                onNoiseChange={setNoiseOn}
-                onCompare={(_agree, caption) => setEngineCaption(caption)}
-              />
+              {!profile?.authenticated && (
+                <p className="lab-guest-hint lab-wf-simulate" role="status">
+                  Demo simulator (≤5 qubits). Sign in to save, export, and sync progress.
+                </p>
+              )}
+              {engineCompare && (
+                <div className="engine-compare-block" role="status">
+                  <p className="engine-agree-caption">{engineCompare.caption}</p>
+                  <div className="engine-compare-grid" aria-label="Qiskit versus Cirq ideal probabilities">
+                    <div>
+                      <span className="panel-kicker">Qiskit</span>
+                      {engineCompare.qiskit.map((row) => (
+                        <div key={row.basis} className="engine-compare-row">
+                          <span>|{row.basis}⟩</span>
+                          <span>{(row.probability * 100).toFixed(1)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <span className="panel-kicker">Cirq</span>
+                      {engineCompare.cirq.map((row) => (
+                        <div key={row.basis} className="engine-compare-row">
+                          <span>|{row.basis}⟩</span>
+                          <span>{(row.probability * 100).toFixed(1)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 
+          <section className="lab-build-intro lab-wf-build" aria-labelledby="lab-build-title">
+            <h1 id="lab-build-title">Circuit lab</h1>
+            <p>Add gates from the library, wire them on the canvas, then run simulation to inspect results.</p>
+          </section>
+
           {/* Precision Telemetry Bar */}
-          <div className="lab-telemetry quantum-hud-telemetry" aria-label="Current quantum experiment telemetry">
+          <div className="lab-telemetry quantum-hud-telemetry lab-wf-simulate" aria-label="Current quantum experiment telemetry">
             <div>
               <span>QUBITS</span>
               <strong>
@@ -802,7 +938,7 @@ export default function Home() {
           </div>
 
           {/* Quick preset chips */}
-          <div className="quantum-presets-bar" aria-label="Quantum algorithm quick presets">
+          <div className="quantum-presets-bar lab-wf-build" aria-label="Quantum algorithm quick presets">
             <span className="preset-label">PRESETS:</span>
             <button
               type="button"
@@ -885,7 +1021,7 @@ export default function Home() {
           {/* Main 2-column Workbench (Circuit Grid + 3D Bloch Sphere) */}
           <div className="panel-grid">
             {/* Panel 01: Circuit Builder */}
-            <section className="panel circuit-panel" aria-labelledby="circuit-title">
+            <section className="panel circuit-panel lab-wf-build" aria-labelledby="circuit-title">
               <div className="panel-head">
                 <div>
                   <span className="panel-kicker">01 / BUILD</span>
@@ -1144,13 +1280,13 @@ export default function Home() {
                   </Link>
                 )}
                 <div className="export-btn-group">
-                  <button type="button" onClick={() => void exportCircuit("qasm")} title="Export standard OpenQASM 2.0 file">
+                  <button type="button" disabled={!profile?.authenticated} onClick={() => void exportCircuit("qasm")} title="Export standard OpenQASM 2.0 file">
                     OpenQASM
                   </button>
-                  <button type="button" onClick={() => void exportCircuit("qiskit")} title="Export executable Qiskit Python script">
+                  <button type="button" disabled={!profile?.authenticated} onClick={() => void exportCircuit("qiskit")} title="Export executable Qiskit Python script">
                     Qiskit
                   </button>
-                  <button type="button" onClick={() => void exportCircuit("cirq")} title="Export Cirq Python script">
+                  <button type="button" disabled={!profile?.authenticated} onClick={() => void exportCircuit("cirq")} title="Export Cirq Python script">
                     Cirq
                   </button>
                 </div>
@@ -1168,7 +1304,7 @@ export default function Home() {
             </section>
 
             {/* Panel 02: 3D Bloch Sphere */}
-            <section id="bloch" className="panel bloch-panel" aria-labelledby="bloch-title">
+            <section id="bloch" className="panel bloch-panel lab-wf-analyze" aria-labelledby="bloch-title">
               <div className="panel-head">
                 <div>
                   <span className="panel-kicker">02 / VISUALIZE</span>
@@ -1298,7 +1434,7 @@ export default function Home() {
             </section>
 
             {/* Panel 03: State Vector & Wavefunction */}
-            <section id="probabilities" className="panel state-panel" aria-labelledby="state-title">
+            <section id="probabilities" className="panel state-panel lab-wf-analyze" aria-labelledby="state-title">
               <div className="panel-head">
                 <div>
                   <span className="panel-kicker">03 / WAVEFUNCTION</span>
@@ -1332,7 +1468,7 @@ export default function Home() {
                       const hue = Math.round(phaseDeg % 360);
 
                       return (
-                        <div className="state-row quantum-state-card" key={item.basis}>
+                        <div className="state-row quantum-state-card" key={`${step}-${item.basis}`}>
                           <div className="ket-header">
                             <span className="ket">|{item.basis}⟩</span>
                             <span
@@ -1345,7 +1481,7 @@ export default function Home() {
                             </span>
                           </div>
                           <div className="bar-track">
-                            <div style={{ width: `${item.probability * 100}%` }} />
+                            <div className="prob-bar-fill" style={{ width: `${item.probability * 100}%` }} />
                           </div>
                           <div className="state-metrics-row">
                             <span className="probability">{(item.probability * 100).toFixed(1)}%</span>
@@ -1383,7 +1519,7 @@ export default function Home() {
           {/* Lower Grid: Step execution, Measurement counts, and AI Coach */}
           <div className="lower-grid">
             {/* 04: Step-by-Step Execution Scrubber */}
-            <section className="panel steps-panel" aria-labelledby="steps-title">
+            <section className="panel steps-panel lab-wf-simulate" aria-labelledby="steps-title">
               <div className="panel-head">
                 <div>
                   <span className="panel-kicker">04 / CHRONOLOGY</span>
@@ -1459,7 +1595,7 @@ export default function Home() {
             </section>
 
             {/* 05: Measurement Counts (Shot sampling) */}
-            <section id="counts" className="panel measurement-panel" aria-labelledby="measurement-title">
+            <section id="counts" className="panel measurement-panel lab-wf-analyze" aria-labelledby="measurement-title">
               <div className="panel-head">
                 <div>
                   <span className="panel-kicker">05 / READOUT</span>
@@ -1468,21 +1604,70 @@ export default function Home() {
                 <span className="meta">1,024 shots</span>
               </div>
 
-              {result && displayCounts ? (
+              {result && dualHistogram ? (
                 <>
                   <p className="panel-description">
-                    {result.data.noisy_counts
-                      ? "Pedagogical noise sample — not live hardware. Compare to ideal chances in the step view."
-                      : "Empirical collapse statistics over 1,024 shots. Notice quantum shot noise compared to exact probabilities."}
+                    Same circuit revision: ideal shot sampling (no noise model) beside a pedagogical depolarizing model — not live
+                    hardware.
+                  </p>
+                  <div className="count-dual-grid" aria-label="Ideal versus pedagogical noise shot histograms">
+                    <div className="count-dual-col">
+                      <span className="panel-kicker">Ideal sampling</span>
+                      <div className="count-list">
+                        {histogramLabels.map((basis) => {
+                          const count = dualHistogram.ideal[basis] ?? 0;
+                          const pct = ((count / shots) * 100).toFixed(1);
+                          return (
+                            <div key={basis} className="count-row">
+                              <span className="count-ket">|{basis}⟩</span>
+                              <div className="bar-track bar-track-ideal">
+                                <div style={{ width: `${(count / shots) * 100}%` }} />
+                              </div>
+                              <div className="count-stat">
+                                <strong>{count}</strong>
+                                <small>({pct}%)</small>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="count-dual-col">
+                      <span className="panel-kicker">Pedagogical noise</span>
+                      <div className="count-list">
+                        {histogramLabels.map((basis) => {
+                          const count = dualHistogram.noisy[basis] ?? 0;
+                          const pct = ((count / shots) * 100).toFixed(1);
+                          return (
+                            <div key={basis} className="count-row">
+                              <span className="count-ket">|{basis}⟩</span>
+                              <div className="bar-track bar-track-noisy">
+                                <div style={{ width: `${(count / shots) * 100}%` }} />
+                              </div>
+                              <div className="count-stat">
+                                <strong>{count}</strong>
+                                <small>({pct}%)</small>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : result && displayCounts ? (
+                <>
+                  <p className="panel-description">
+                    Empirical collapse statistics over 1,024 shots. Notice quantum shot noise compared to exact probabilities.
                   </p>
                   <div className="count-list">
                     {Object.entries(displayCounts).map(([basis, count]) => {
-                      const pct = ((count / (result.data.shots || 1024)) * 100).toFixed(1);
+                      const pct = ((count / shots) * 100).toFixed(1);
                       return (
                         <div key={basis} className="count-row">
                           <span className="count-ket">|{basis}⟩</span>
                           <div className="bar-track">
-                            <div style={{ width: `${(count / (result.data.shots || 1024)) * 100}%` }} />
+                            <div style={{ width: `${(count / shots) * 100}%` }} />
                           </div>
                           <div className="count-stat">
                             <strong>{count}</strong>
@@ -1501,7 +1686,7 @@ export default function Home() {
             </section>
 
             {/* 06: Circuit AI Coach */}
-            <section className="panel insight-panel" id="coach" aria-labelledby="insight-title">
+            <section className="panel insight-panel lab-wf-analyze" id="coach" aria-labelledby="insight-title">
               <div className="panel-head">
                 <div>
                   <span className="panel-kicker">06 / REASONING</span>
@@ -1550,7 +1735,12 @@ export default function Home() {
             </>
           )}
 
-          {labMode === "circuit" && <><QuantumToolbox /><EntanglementLab /></>}
+          {labMode === "circuit" && (
+            <div className="lab-wf-analyze">
+              <QuantumToolbox />
+              <EntanglementLab />
+            </div>
+          )}
           <footer className="nextlevel-footer">
             <div className="footer-left">
               <span>◈ QuantumWalk Operating System</span>

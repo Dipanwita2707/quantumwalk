@@ -1577,6 +1577,31 @@
   margin-top: 14px;
 }
 
+.count-dual-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 14px;
+}
+
+@media (min-width: 720px) {
+  .count-dual-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.count-dual-col .panel-kicker {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.bar-track-ideal div {
+  background: linear-gradient(90deg, #38bdf8, #8cf5e2);
+}
+
+.bar-track-noisy div {
+  background: linear-gradient(90deg, #f59e0b, #a78bfa);
+}
+
 .count-row {
   display: flex;
   align-items: center;
@@ -1836,6 +1861,20 @@
   justify-content: flex-end;
 }
 
+.lab-guest-hint {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
+}
+
+.lab-engine-select select {
+  margin-left: 0.25rem;
+  background: #0b1428;
+  color: #e2e8f0;
+  border: 1px solid #57e6ea44;
+  border-radius: 4px;
+}
+
 .lab-glossary-drawer {
   width: min(420px, 92vw);
   height: 100%;
@@ -1843,6 +1882,24 @@
   border-left: 1px solid rgba(140, 245, 226, 0.2);
   padding: 1.25rem 1.5rem;
   overflow: auto;
+}
+
+.lab-glossary-full-ref {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(140, 245, 226, 0.15);
+  font-size: 0.88rem;
+}
+
+.lab-engine-guest-note {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0.35rem 0 0;
+}
+
+.lab-guest-banner-wrap {
+  grid-column: 1 / -1;
+  padding: 0 1rem;
 }
 
 .lab-engine-panel {
@@ -1854,10 +1911,43 @@
   font-size: 0.85rem;
 }
 
+.lab-guest-hint {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
+}
+
+.lab-engine-select select {
+  margin-left: 0.25rem;
+  background: #0b1428;
+  color: #e2e8f0;
+  border: 1px solid #57e6ea44;
+  border-radius: 4px;
+}
+
 .engine-agree-caption {
   margin-top: 0.5rem;
   font-size: 0.9rem;
   color: #8cf5e2;
+}
+
+.engine-compare-block {
+  margin-top: 0.75rem;
+}
+
+.engine-compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.engine-compare-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.15rem 0;
+  border-bottom: 1px solid #57e6ea22;
 }
 
 .glossary-open-btn {
@@ -1880,5 +1970,150 @@
 @media (prefers-reduced-motion: reduce) {
   .achievement-earned {
     animation: none;
+  }
+}
+
+.bar-track .prob-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8cf5e2, #a78bfa);
+  border-radius: inherit;
+  transition: width 0.38s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-track .prob-bar-fill {
+    transition: none;
+  }
+}
+
+.lab-run-error {
+  margin-top: 0.75rem;
+  max-width: 36rem;
+}
+
+/* Phase 3 — Build / Simulate / Analyze workflow */
+.lab-workflow-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 28px 0;
+}
+
+.lab-workflow-tab {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--qw-line);
+  border-radius: 8px;
+  background: rgba(15, 27, 43, 0.6);
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lab-workflow-tab.active,
+.lab-workflow-tab[aria-selected="true"] {
+  color: var(--qw-cyan);
+  border-color: var(--qw-line-bright);
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.lab-workflow-tab:focus-visible {
+  outline: 2px solid var(--qw-cyan);
+  outline-offset: 2px;
+}
+
+.lab-sticky-runbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding: 12px 28px;
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  background: rgba(6, 13, 26, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--qw-line);
+}
+
+.lab-sticky-runbar .run-button {
+  margin: 0;
+}
+
+.lab-guest-hint-inline {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.lab-build-intro {
+  padding: 8px 28px 16px;
+}
+
+.lab-build-intro h1 {
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  letter-spacing: -0.5px;
+}
+
+.lab-build-intro p {
+  margin: 0;
+  font-size: 13px;
+  color: #94a3b8;
+  max-width: 42rem;
+}
+
+.lab-advanced-engine {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--qw-line);
+  border-radius: 8px;
+  background: rgba(8, 16, 33, 0.5);
+}
+
+.lab-advanced-engine summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.lab-advanced-engine summary:focus-visible {
+  outline: 2px solid var(--qw-cyan);
+  outline-offset: 2px;
+}
+
+.lab-workflow-view-build .lab-wf-simulate,
+.lab-workflow-view-build .lab-wf-analyze {
+  display: none !important;
+}
+
+.lab-workflow-view-simulate .lab-wf-analyze,
+.lab-workflow-view-simulate .lab-wf-build {
+  display: none !important;
+}
+
+.lab-workflow-view-analyze .lab-wf-simulate,
+.lab-workflow-view-analyze .lab-wf-build {
+  display: none !important;
+}
+
+.lab-workflow-view-simulate .sidebar,
+.lab-workflow-view-analyze .sidebar {
+  display: none;
+}
+
+.lab-workflow-view-simulate .workspace,
+.lab-workflow-view-analyze .workspace {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (max-width: 700px) {
+  .lab-workflow-tabs,
+  .lab-sticky-runbar,
+  .lab-build-intro {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
