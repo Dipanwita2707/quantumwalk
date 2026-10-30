@@ -3,7 +3,7 @@
 **Document ID:** QW-PLAN-CIRQ-ENG-002  
 **Status:** draft architecture & product plan  
 **Date:** 19 October 2026  
-**Related:** [SIRRAYA_REFERENCE_AND_ROADMAP.md](SIRRAYA_REFERENCE_AND_ROADMAP.md), [PLATFORM_BUILD_PLAN.md](PLATFORM_BUILD_PLAN.md), `api/simulator.py`, `web/lib/milestones.ts`
+**Related:** [SIRRAYA_REFERENCE_AND_ROADMAP.md](sirraya/references/SIRRAYA_REFERENCE_AND_ROADMAP.md), [PLATFORM_BUILD_PLAN.md](PLATFORM_BUILD_PLAN.md), `api/simulator.py`, `web/lib/milestones.ts`
 
 ---
 

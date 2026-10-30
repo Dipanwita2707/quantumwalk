@@ -22,9 +22,16 @@
         "name": "next"
       }
     ],
+    "rootDirs": [
+      ".",
+      "../sirraya/web"
+    ],
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@sirraya/*": [
+        "../sirraya/web/*"
       ]
     }
   },
@@ -33,7 +40,9 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    ".next-srs/types/**/*.ts",
+    ".next-srs/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

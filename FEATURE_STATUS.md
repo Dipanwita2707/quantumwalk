@@ -13,21 +13,22 @@
 | Landing / `/start` | Onboarding, tool hub |
 | `/learn` | **13 lessons** in API catalog, unit sidebar with completion %, demo sim on whitelisted presets |
 | `/explorer` | Grover + TSP + classical charts + demo sim |
-| Lab `?preset=` | Run preset via demo API; engine select on Run |
+| Lab `/workspace` | Build and run guest circuits (up to 5 qubits and 64 operations), use presets, and inspect steps, Bloch state, and probabilities via the demo simulator |
+| `/explorer/tsp` | Edit a 3–6 city distance matrix and run the live backend Grover solve while the API is online |
 | `/challenges` | Read missions (grading requires sign-in) |
 
 ---
 
 ## Requires sign-in
 
-Custom lab circuits, save/export, engine compare, transpile preview, progress/XP/tiers, dashboard private data.
+Saving/exporting circuits, engine comparison, transpile preview, synced progress/XP/tiers, and dashboard private data.
 
 ---
 
 ## Launch-ready wedge (signed-in)
 
 - Full lab: step playback, Bloch, dual noise histogram, Qiskit/Cirq, export  
-- **6 lessons**, **4 challenges** (tiers), skill tree, achievements, discovery intro on dashboard  
+- **13 lessons**, **4 challenges** (tiers), skill tree, achievements, discovery intro on dashboard
 - Explorers + TSP Grover preset (42 gates) with **honest single-mark** callout  
 
 ---

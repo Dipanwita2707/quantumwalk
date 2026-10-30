@@ -2,9 +2,28 @@
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { QuantumSphere } from "./QuantumSphere";
+import { StateEvolutionGuide } from "./StateEvolution";
+import type { Operation } from "@/lib/circuitPresets";
 import "./QuantumEquationWhiteboard.css";
 
 type Complex = { re: number; im: number };
+
+function captureState(alpha: Complex, beta: Complex, index: number, steps: string[]) {
+  const prob0 = alpha.re ** 2 + alpha.im ** 2;
+  const prob1 = beta.re ** 2 + beta.im ** 2;
+  const x = 2 * (alpha.re * beta.re + alpha.im * beta.im);
+  const y = 2 * (alpha.re * beta.im - alpha.im * beta.re);
+  const z = prob0 - prob1;
+  const phi = (Math.atan2(y, x) + 2 * Math.PI) % (2 * Math.PI);
+  return {
+    index, alpha: { ...alpha }, beta: { ...beta }, prob0, prob1,
+    vector: { x, y, z }, theta: Math.acos(Math.max(-1, Math.min(1, z))), phi,
+    steps: [...steps],
+    amplitudes: [{ basis: "0", real: alpha.re, imag: alpha.im }, { basis: "1", real: beta.re, imag: beta.im }],
+    probabilities: [{ basis: "0", probability: prob0 }, { basis: "1", probability: prob1 }],
+    bloch: [{ qubit: 0, x, y, z, purity: (1 + x * x + y * y + z * z) / 2 }],
+  };
+}
 
 function formatFloat(n: number, decimals: number = 3): string {
   if (Math.abs(n) < 1e-4) return "0";
@@ -122,7 +141,11 @@ export function QuantumEquationWhiteboard() {
   const [solvedQuests, setSolvedQuests] = useState<Record<string, boolean>>({});
 
   // Simulation state
-  const [isSimulating, setIsSimulating] = useState(false);
+  const [runCount, setRunCount] = useState(0);
+  const [executedInput, setExecutedInput] = useState("");
+  const [step, setStep] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [playbackDelay, setPlaybackDelay] = useState(1400);
   const whiteboardHydratedRef = useRef(false);
 
   useEffect(() => {
@@ -165,7 +188,7 @@ export function QuantumEquationWhiteboard() {
   }, [activePreset, operatorChain, userAlpha, userBeta, currentQuestIdx, masteryXp, solvedQuests]);
 
   // Compute final state by multiplying unitary operators sequentially
-  const simulationResult = useMemo(() => {
+  const previewResult = useMemo(() => {
     let a: Complex = { ...userAlpha };
     let b: Complex = { ...userBeta };
 
@@ -178,6 +201,7 @@ export function QuantumEquationWhiteboard() {
     const derivationSteps: string[] = [
       `Initialized state |ψ₀⟩ = (${formatComplex(a)})|0⟩ + (${formatComplex(b)})|1⟩`,
     ];
+    const snapshots = [captureState(a, b, 0, derivationSteps)];
 
     // Sequentially apply operators
     operatorChain.forEach((op, idx) => {
@@ -243,47 +267,42 @@ export function QuantumEquationWhiteboard() {
 
       a = nextA;
       b = nextB;
+      snapshots.push(captureState(a, b, idx + 1, derivationSteps));
     });
 
-    // Compute Bloch coordinates
-    const p0 = a.re * a.re + a.im * a.im;
-    const p1 = b.re * b.re + b.im * b.im;
-
-    const x = 2 * (a.re * b.re + a.im * b.im);
-    const y = 2 * (a.re * b.im - a.im * b.re);
-    const z = p0 - p1;
-
-    const theta = Math.acos(Math.max(-1, Math.min(1, z)));
-    const phi = Math.atan2(y, x);
-    const normPhi = phi >= 0 ? phi : phi + 2 * Math.PI;
-
     return {
-      alpha: a,
-      beta: b,
-      prob0: Math.max(0, Math.min(1, p0)),
-      prob1: Math.max(0, Math.min(1, p1)),
-      vector: { x, y, z },
-      theta,
-      phi: normPhi,
-      steps: derivationSteps,
+      ...snapshots[snapshots.length - 1], snapshots,
+      operations: operatorChain.map((gate): Operation => ({ gate: gate.toLowerCase() as Operation["gate"], target: 0 })),
     };
   }, [userAlpha, userBeta, operatorChain]);
+
+  const [executedResult, setExecutedResult] = useState<typeof previewResult | null>(null);
+  const simulationResult = executedResult?.snapshots[step] ?? previewResult.snapshots[0];
+  const currentInput = JSON.stringify({ userAlpha, userBeta, operatorChain });
+  const changesPending = executedResult !== null && executedInput !== currentInput;
+
+  useEffect(() => {
+    if (!playing || !executedResult) return;
+    if (changesPending || step >= executedResult.snapshots.length - 1) { setPlaying(false); return; }
+    const timer = setTimeout(() => setStep((value) => value + 1), playbackDelay);
+    return () => clearTimeout(timer);
+  }, [playing, executedResult, changesPending, step, playbackDelay]);
 
   // Check if current simulation matches current quest
   const currentQuest = QUESTS[currentQuestIdx];
   const isQuestSolved = useMemo(() => {
-    if (!currentQuest) return false;
+    if (!currentQuest || !runCount || changesPending || step !== executedResult?.operations.length) return false;
     const target = currentQuest.targetVector;
     const v = simulationResult.vector;
     const dist = Math.sqrt(
       Math.pow(v.x - target.x, 2) + Math.pow(v.y - target.y, 2) + Math.pow(v.z - target.z, 2)
     );
     return dist < 0.05;
-  }, [simulationResult, currentQuest]);
+  }, [simulationResult, currentQuest, runCount, changesPending, step, executedResult]);
 
   // Handle quest victory
-  function claimQuestReward() {
-    if (isQuestSolved && !solvedQuests[currentQuest.id]) {
+  function claimQuestReward(matches: boolean) {
+    if (matches && !solvedQuests[currentQuest.id]) {
       setSolvedQuests((prev) => ({ ...prev, [currentQuest.id]: true }));
       setMasteryXp((prev) => prev + 100);
       if (currentQuestIdx < QUESTS.length - 1) {
@@ -310,13 +329,14 @@ export function QuantumEquationWhiteboard() {
   }
 
   function runSimulation() {
-    setIsSimulating(true);
-    setTimeout(() => {
-      setIsSimulating(false);
-      if (isQuestSolved && !solvedQuests[currentQuest.id]) {
-        claimQuestReward();
-      }
-    }, 600);
+    setExecutedResult(previewResult);
+    setExecutedInput(currentInput);
+    setRunCount((count) => count + 1);
+    setStep(0);
+    setPlaying(previewResult.operations.length > 0);
+    const target = currentQuest.targetVector;
+    const vector = previewResult.vector;
+    claimQuestReward(Math.hypot(vector.x - target.x, vector.y - target.y, vector.z - target.z) < 0.05);
   }
 
   return (
@@ -408,10 +428,11 @@ export function QuantumEquationWhiteboard() {
 
               {/* Spherical Coordinates Formulation */}
               <div className="qwb-spherical-render">
-                = cos(<span>{(simulationResult.theta / 2).toFixed(2)}</span>)|0⟩ + e^(
+                ≃ cos(<span>{(simulationResult.theta / 2).toFixed(2)}</span>)|0⟩ + e^(
                 <span>{formatFloat(simulationResult.phi, 2)}i</span>) · sin(
                 <span>{(simulationResult.theta / 2).toFixed(2)}</span>)|1⟩
               </div>
+              <p className="qwb-result-note">{changesPending ? "Results show the last run. Run the edited operator pipeline to update them." : "Bloch form omits global phase. A global phase change leaves the sphere and measurement probabilities unchanged."}</p>
 
               {/* Unitary Gate Chain Footprint */}
               <div style={{ fontSize: "12px", color: "#94a3b8", fontFamily: "monospace", marginBottom: "14px" }}>
@@ -468,16 +489,27 @@ export function QuantumEquationWhiteboard() {
               <button
                 type="button"
                 className="qwb-btn-simulate"
-                disabled={isSimulating}
                 onClick={runSimulation}
               >
-                {isSimulating ? "⚛ Simulating Wavefunction Dynamics…" : "▶ Run Equation Simulation"}
+                ▶ Run Equation Simulation
               </button>
 
-              <div className={`qwb-sim-status ${isSimulating ? "computing" : "coherent"}`}>
-                <span>{isSimulating ? "● COMPUTING UNITARY EVOLUTION" : "✓ COHERENT QUANTUM STATE"}</span>
+              <div className={`qwb-sim-status ${changesPending ? "computing" : "coherent"}`} role="status" aria-live="polite">
+                <span>{changesPending ? "Changes pending — run to update results" : playing ? `Running · Gate ${step} of ${operatorChain.length}` : runCount && step < operatorChain.length ? `Paused · Gate ${step} of ${operatorChain.length}` : runCount ? `Simulation complete · Run ${runCount} · ${operatorChain.length} gates` : "Build a sequence, then run to watch each gate"}</span>
               </div>
             </div>
+
+            {executedResult && <>
+              <div className="qwb-run-circuit" role="group" aria-label="Executed quantum circuit">
+                <span className="qwb-wire-label">q0: input</span>
+                {executedResult.operations.map((op, index) => <button key={index} type="button" disabled={changesPending} aria-label={`Circuit gate ${index + 1}: ${op.gate.toUpperCase()}`} aria-current={step === index + 1 ? "step" : undefined} onClick={() => { setPlaying(false); setStep(index + 1); }}>{op.gate.toUpperCase()}</button>)}
+                <span className="qwb-wire-label">Readout</span>
+              </div>
+              <StateEvolutionGuide snapshots={executedResult.snapshots} operations={executedResult.operations} step={step} playing={playing} disabled={changesPending}
+                onStep={(next) => { setPlaying(false); setStep(next); }}
+                onPlay={() => { if (!playing && step >= executedResult.snapshots.length - 1) setStep(0); setPlaying(!playing); }}
+                delay={playbackDelay} onDelay={setPlaybackDelay} initialStateDescription="The normalized input amplitudes for this preset are shown above. Follow the circuit from left to right; each highlighted gate updates the equation, sphere, and probabilities together." />
+            </>}
 
             {/* Step-by-Step Formal Mathematical Derivation */}
             <div className="qwb-derivation-box">
@@ -503,7 +535,7 @@ export function QuantumEquationWhiteboard() {
               </div>
 
               <div className="qwb-sphere-canvas-box">
-                <QuantumSphere vector={simulationResult.vector} label="Simulation Bloch sphere statevector" />
+                <QuantumSphere vector={simulationResult.vector} autoRotate={false} label="Simulation Bloch sphere statevector" />
               </div>
 
               {/* Exact Coordinate Expectations */}
@@ -526,7 +558,7 @@ export function QuantumEquationWhiteboard() {
                 </div>
                 <div className="qwb-matrix-cell">
                   <small>Phase ϕ</small>
-                  <strong>{((simulationResult.phi * 180) / Math.PI).toFixed(1)}°</strong>
+                  <strong>{Math.hypot(simulationResult.vector.x, simulationResult.vector.y) < 1e-8 ? "Undefined" : `${((simulationResult.phi * 180) / Math.PI).toFixed(1)}°`}</strong>
                 </div>
                 <div className="qwb-matrix-cell">
                   <small>Purity</small>

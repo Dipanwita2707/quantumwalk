@@ -1,0 +1,204 @@
+/* Reference: Quantum Lab Neon UI Showcase. Shared product primitives. */
+:root {
+  --bg: #070d18;
+  --surface: #101b2b;
+  --surface-2: #142237;
+  --line: #29394f;
+  --text: #eef1ff;
+  --muted: #a5b3ca;
+  --violet: #b395ff;
+  --cyan: #79dfec;
+  --qw-radius: 10px;
+  --qw-space-1: 4px;
+  --qw-space-2: 8px;
+  --qw-space-3: 12px;
+  --qw-space-4: 16px;
+  --qw-space-6: 24px;
+  --qw-space-8: 32px;
+  --qw-duration: 160ms;
+  --qw-success: #91e2bd;
+  --qw-warning: #f1c67d;
+  --qw-error: #ffacb8;
+  --qw-radius-small: 6px;
+  --qw-text-small: 12px;
+  --qw-text-section: 20px;
+  --qw-topbar-height: 64px;
+  --qw-content-max: 1320px;
+}
+body { background: var(--bg); }
+html[data-user-reduced-motion=true] *, html[data-user-reduced-motion=true] *::before, html[data-user-reduced-motion=true] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+.qw-skip-link { position: fixed; top: 8px; left: 16px; z-index: 100; padding: 12px 18px; border-radius: var(--qw-radius-small); background: var(--text); color: var(--bg); transform: translateY(-160%); }
+.qw-skip-link:focus { transform: translateY(0); }
+main:focus { outline: none; }
+button, input, textarea, select { font: inherit; }
+input, textarea, select { accent-color: var(--violet); }
+progress { accent-color: var(--violet); }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
+.site-topbar-shell { position: relative; z-index: 30; background: #090f1c; }
+.site-topbar-shell .site-topbar {
+  position: relative; height: var(--qw-topbar-height); min-height: var(--qw-topbar-height);
+  max-width: 1600px; margin: auto; padding: 0 clamp(16px, 3vw, 40px);
+  background: transparent; border: 0; backdrop-filter: none; gap: 24px;
+}
+.site-topbar .brand { min-width: 210px; gap: 10px; }
+.site-topbar .brand-mark { flex-shrink: 0; color: var(--violet); filter: none; }
+.site-topbar .brand strong { font-size: 16px; letter-spacing: -.4px; }
+.site-topbar .brand small { font-size: 9px; letter-spacing: .02em; color: var(--muted); }
+.site-topbar .header-nav-pills { gap: 6px; }
+.site-topbar .header-nav-pills a { min-height: 40px; display: inline-flex; align-items: center; border-radius: 6px; color: var(--muted); }
+.site-topbar .header-nav-pills a.active { background: #25213f; color: #e4d8ff; }
+.site-topbar .header-nav-pills a:hover { background: #162238; color: white; }
+.site-topbar-shell .app-breadcrumb-bar { max-width: 1320px; padding: 10px var(--qw-gutter) 12px; border-top: 1px solid #ffffff08; }
+.site-topbar .header-account-menu summary { max-width: 220px; overflow-wrap: anywhere; min-height: 40px; background: #151b2d; border-color: var(--line); }
+.header-account-menu nav, .header-mobile-nav nav { max-height: calc(100dvh - 90px); overflow-y: auto; overscroll-behavior: contain; }
+.content-shell h1, .qw-hub-home h1 { font-size: clamp(27px, 3vw, 38px); letter-spacing: -1px; line-height: 1.18; }
+.content-shell .content-intro { max-width: 68ch; font-size: 14px; line-height: 1.7; color: var(--muted); }
+.content-shell .content-card, .content-shell .qw-hub-card { border-radius: var(--qw-radius); border-color: var(--line); background: var(--surface); box-shadow: none; }
+.content-shell .card-action { min-height: 40px; display: inline-flex; align-items: center; border-radius: 6px; }
+.content-shell .panel-kicker { color: var(--violet); }
+.content-shell .content-error { color: var(--qw-error); }
+.content-shell .success-note { color: var(--qw-success); }
+
+/* Landing: compact introduction and a scientific visual in one first screen. */
+.quantum-landing .ql-showcase-backdrop { position: absolute; top: 0; left: 0; right: 0; height: 590px; pointer-events: none; overflow: hidden; mask-image: linear-gradient(#000 82%,transparent); }
+.ql-showcase-backdrop img { object-fit: cover; object-position: center 45%; }
+.quantum-landing .ql-universe { background: transparent; }
+.quantum-landing .ql-orbit-art, .quantum-landing .ql-core-label, .quantum-landing .ql-aura { display: none; }
+.quantum-landing .ql-universe .qf-canvas { opacity: .15; }
+.quantum-landing .ql-scene-top { top: 5%; }
+.quantum-landing .ql-hero-grid { opacity: .18; }
+.quantum-landing .ql-hero { padding-top: 16px; }
+.quantum-landing .ql-hero-copy { padding: 40px 0; }
+.quantum-landing .ql-hero h1 { font-size: clamp(42px, 4.8vw, 68px); letter-spacing: -2.5px; font-weight: 650; line-height: 1.08; }
+.quantum-landing .ql-hero-description { font-size: 15px; line-height: 1.75; max-width: 410px; }
+.quantum-landing .ql-universe { min-height: 460px; margin: 0; }
+.quantum-landing .ql-eyebrow { letter-spacing: 1.3px; color: var(--violet); }
+.quantum-landing .ql-primary, .db-shell .db-action-primary {
+  background: linear-gradient(115deg, #7854ef, #a35cf2); color: white;
+  border: 1px solid #b190ff; border-radius: 6px; box-shadow: 0 4px 16px #7544e51f;
+}
+.quantum-landing .ql-primary > span { color: white; }
+.quantum-landing .ql-concept-strip { margin-top: 0; padding: 20px 0; }
+.quantum-landing .ql-concept-buttons button { background: var(--surface); border-radius: 8px; min-height: 52px; }
+.quantum-landing .ql-concept-buttons button[aria-pressed=true] { background: #282040; border-color: #9f7eed; color: #e4d8ff; }
+.quantum-landing .ql-experience, .quantum-landing .ql-experiment, .quantum-landing .ql-private { padding-top: 72px; padding-bottom: 72px; }
+.quantum-landing .ql-welcome { margin-top: 20px; }
+
+/* Dashboard: learning is primary; the live preview supports it. */
+.db-shell .db-home { max-width: 1400px; padding: 24px var(--qw-gutter) 48px; }
+.db-shell .db-dashboard-grid { grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr); gap: 24px; }
+.db-shell .db-continue-primary { padding: 24px; margin-bottom: 20px; border: 1px solid #7664b45c; border-radius: var(--qw-radius); background: linear-gradient(120deg, #201d37, #111c2d 85%); }
+.db-shell .db-home h1 { font-size: clamp(28px, 3vw, 40px); letter-spacing: -1.2px; margin-bottom: 14px; }
+.db-shell .db-home .db-greeting { margin-bottom: 14px; }
+.db-shell .db-overview-compact { padding: 16px 0; margin-bottom: 16px; }
+.db-shell .db-overview-compact strong { font-size: 23px; }
+.db-shell .db-bloch-demo { border-radius: var(--qw-radius); background: var(--surface); box-shadow: none; align-self: start; padding: 18px; }
+.db-shell .db-bloch-demo .quantum-sphere.qs-hologram canvas { height: 290px !important; }
+.db-shell .db-card { padding: 20px; border-radius: var(--qw-radius); background: var(--surface); border-color: var(--line); }
+.db-shell .db-home h2 { font-size: 18px; margin: 8px 0; }
+.db-shell .db-home-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 16px; }
+.db-shell .db-discovery-details, .db-shell .db-progress-details { border-radius: var(--qw-radius); padding-bottom: 4px; }
+.db-shell .db-discovery-details > summary::after, .db-shell .db-progress-details > summary::after { content: '+'; margin-left: auto; color: var(--violet); font-size: 20px; }
+.db-shell details[open] > summary::after { content: '−'; }
+.db-shell .db-discovery-details[open], .db-shell .db-progress-details[open] { padding-bottom: 16px; }
+
+/* Route-specific catalogs retain their controls and data sources. */
+.content-shell.learn-trail-index { display: block; max-width: var(--qw-content-max); margin: auto; }
+.learn-trail-index .academy-unit-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.learn-trail-index .academy-unit-card { padding: 20px; }
+.learn-trail-index .academy-unit-card h2 { font-size: 19px; margin-top: 0; }
+.learn-trail-index .academy-unit-card p { font-size: 13px; color: var(--muted); }
+.learn-trail-index .academy-unit-card ul { font-size: 13px; line-height: 1.8; }
+.academy-unit-card .academy-resume { display: inline-flex; align-items: center; min-height: 40px; margin: 12px 0 0; padding: 8px 14px; background: #30234e; border: 1px solid #8d6aca; border-radius: 6px; color: #eee4ff; font-size: 13px; }
+.learn-trail-index .academy-unit-card { overflow: hidden; }
+.academy-unit-visual { display: block; width: calc(100% + 40px); height: 96px; margin: -20px -20px 20px; color: var(--violet); background: radial-gradient(ellipse at center, #573b7833, #080f1e); border-bottom: 1px solid var(--line); }
+.academy-unit-visual-1 { color: var(--cyan); }
+.academy-unit-visual-2 { color: #d6a7ef; }
+.learn-trail-index .academy-unit-card h2 { margin-top: 8px; }
+.academy-unit-card progress { display: block; width: 100%; height: 6px; margin-top: 16px; }
+.learn-trail-index .academy-unit-card .learn-path-lab-link { min-height: 40px; display: flex; align-items: center; }
+.learn-trail-index .learn-trail-lede { margin-bottom: 20px; }
+.content-shell.hub-home-layout { display: block; }
+.hub-home-layout > .hub-tools-nav { position: static; width: 100%; margin-bottom: 24px; padding: 12px; border: 1px solid var(--line); border-radius: var(--qw-radius); }
+.hub-home-layout > .hub-tools-nav ul { display: flex; flex-wrap: wrap; gap: 8px; }
+.hub-home-layout > .hub-tools-nav .hub-tools-nav-extras { display: none; }
+.hub-home-layout .qw-hub-hero { padding-top: 0; padding-bottom: 16px; }
+.hub-home-layout .hub-workflow-details { margin: 0 0 24px; border-bottom: 1px solid var(--line); }
+.hub-workflow-details > summary { padding: 12px 0; min-height: 44px; cursor: pointer; color: var(--muted); font-size: 13px; }
+.hub-home-layout .qw-hub-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.hub-home-layout .qw-hub-card { padding: 22px; }
+.hub-home-layout .qw-hub-card h3 { font-size: 19px; }
+.hub-home-layout .qw-hub-card p { line-height: 1.7; color: var(--muted); }
+.auth-layout .auth-card { border-radius: var(--qw-radius); background: var(--surface); border: 1px solid var(--line); box-shadow: none; }
+.lab-shell .panel, .lab-shell .lab-panel { border-radius: var(--qw-radius); }
+/* Supporting guidance stays visible without dominating the scientific work area. */
+.lab-shell .lab-top-tutor { padding: 16px 20px; border-radius: var(--qw-radius); background: var(--surface); }
+.lab-shell .lab-tutor-heading h2 { font-size: 16px; margin: 4px 0; }
+.lab-shell .lab-tutor-heading .panel-kicker { display: none; }
+.lab-shell .lab-tutor-topics { margin: 8px 0; gap: 6px; }
+.lab-shell .lab-tutor-topics button { min-height: 36px; padding: 6px 12px; }
+/* The overview catalog itself provides discovery navigation. Detail pages keep theirs. */
+.content-shell.explorer-overview { display: block; max-width: var(--qw-content-max); }
+.explorer-overview .explorer-shell { max-width: none; }
+.saved-work-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.saved-work-toolbar label { display: grid; gap: 8px; font-size: var(--qw-text-small); color: var(--muted); }
+.saved-work-toolbar label:first-child { flex: 1 1 240px; }
+.saved-work-toolbar input, .saved-work-toolbar select { min-height: 44px; width: 100%; padding: 10px 12px; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: var(--qw-radius-small); }
+.saved-work-create { background: #30234e; border: 1px solid #8d6aca; padding: 10px 16px; }
+.saved-work-count { font-size: var(--qw-text-small); color: var(--muted); }
+.saved-work-list { display: grid; gap: 12px; }
+.saved-work-list .content-card { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 24px; padding: 20px; }
+.saved-work-list .panel-kicker, .saved-work-list h2, .saved-work-list p { grid-column: 1; overflow-wrap: anywhere; }
+.saved-work-list h2 { font-size: var(--qw-text-section); margin: 8px 0; }
+.saved-work-list p { margin: 0; font-size: var(--qw-text-small); color: var(--muted); }
+.saved-work-list .card-actions { grid-column: 2; grid-row: 1 / 4; }
+.qw-app-layer .qw-guest-banner { padding: 12px 16px; border-radius: 8px; background: #101b2b; gap: 16px; }
+.qw-app-layer .qw-guest-banner .panel-kicker { display: none; }
+.qw-app-layer .qw-guest-banner strong { font-size: 13px; }
+.qw-app-layer .qw-guest-banner p { font-size: 12px; margin: 4px 0 0; line-height: 1.6; }
+.qw-app-layer .qw-guest-banner .card-action { box-shadow: none; white-space: nowrap; }
+.ql-orbit-art { position: absolute; inset: 8% 0 10%; width: 100%; height: 82%; color: #9b79f4; opacity: .65; pointer-events: none; }
+
+@media (max-width: 950px) {
+  .qw-app-layer .lab-shell .sidebar { min-height: 0; height: auto; }
+}
+@media (max-width: 1000px) {
+  .site-topbar .brand { min-width: 0; }
+  .site-topbar .brand small { display: none; }
+  .site-topbar .header-nav-pills a { padding: 9px 12px; }
+  .hub-home-layout .qw-hub-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 850px) {
+  .db-shell .db-dashboard-grid { grid-template-columns: 1fr; }
+  .db-shell .db-bloch-demo { width: 100%; max-width: none; }
+}
+@media (max-width: 800px) {
+  .site-topbar-shell .site-topbar { gap: 12px; }
+  .site-topbar .header-nav-pills { display: none; }
+  .site-topbar .header-mobile-nav nav { display: grid; }
+  .site-topbar .header-mobile-nav nav a { display: block; min-height: 44px; }
+  .quantum-landing .ql-hero h1 { font-size: clamp(40px, 8vw, 60px); }
+}
+@media (max-width: 760px) {
+  .quantum-landing .ql-showcase-backdrop { top: 310px; height: 410px; }
+  .ql-showcase-backdrop img { object-position: right center; }
+}
+@media (max-width: 560px) {
+  .saved-work-list .content-card { display: block; }
+  .saved-work-list .card-actions { margin-top: 16px; flex-wrap: wrap; }
+  .saved-work-toolbar > label, .saved-work-create { flex: 1 1 100%; }
+  .lab-shell .lab-top-tutor { padding: 14px; }
+  .lab-shell .lab-tutor-guidance p { min-height: 6.6em; }
+  .lab-shell .lab-tutor-topics button { min-height: 44px; }
+  .learn-trail-index .academy-unit-cards, .hub-home-layout .qw-hub-grid { grid-template-columns: 1fr; }
+  .quantum-landing .ql-universe { min-height: 330px; }
+  .quantum-landing .ql-hero-copy { padding: 24px 0 12px; }
+  .db-shell .db-continue-primary { padding: 20px; }
+  .db-shell .db-home-header { gap: 8px; }
+  .site-topbar .brand strong { font-size: 14px; }
+  .site-topbar .brand-mark { width: 27px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -9,7 +10,7 @@ from urllib.parse import quote, unquote, urlsplit
 from uuid import uuid4
 
 from dotenv import load_dotenv
-from sqlalchemy import JSON, Boolean, CheckConstraint, ForeignKey, Index, Integer, String, create_engine, event
+from sqlalchemy import JSON, Boolean, CheckConstraint, ForeignKey, Index, Integer, String, create_engine, event, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 
 
@@ -17,32 +18,84 @@ def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def utc_value(value: datetime) -> datetime:
+    """SQLite drops timezone metadata; persisted application timestamps are UTC."""
+    return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
+
+
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 default_database = f"sqlite:///{(Path(__file__).parent / 'quantumwalk-dev.db').as_posix()}"
 
 
 def normalize_database_url(value: str) -> str:
-    """Use psycopg 3 for both SQLAlchemy and provider-standard Postgres URLs."""
+    """Use psycopg 3; passwords may contain @ (split authority from the last @ only)."""
     if value.startswith("postgresql://"):
-        value = "postgresql+psycopg://" + value[len("postgresql://"):]
-    if value.startswith("postgresql+psycopg://"):
-        parts = urlsplit(value)
-        if parts.hostname:
-            auth = quote(unquote(parts.username or ""), safe="")
-            if parts.password is not None:
-                auth += ":" + quote(unquote(parts.password), safe="")
-            host = parts.hostname
-            if ":" in host and not host.startswith("["):
-                host = f"[{host}]"
-            netloc = f"{auth}@{host}"
-            if parts.port:
-                netloc += f":{parts.port}"
-            query = parts.query or ("sslmode=require" if host.endswith("supabase.co") else "")
-            value = f"postgresql+psycopg://{netloc}{parts.path}" + (f"?{query}" if query else "")
-    return value
+        value = "postgresql+psycopg://" + value[len("postgresql://") :]
+    if not value.startswith("postgresql+psycopg://"):
+        return value
+    scheme, rest = value.split("://", 1)
+    path_idx = rest.find("/")
+    authority = rest if path_idx == -1 else rest[:path_idx]
+    path_and_query = "" if path_idx == -1 else rest[path_idx:]
+    if "@" not in authority:
+        return value
+    userinfo, hostport = authority.rsplit("@", 1)
+    user = userinfo
+    password: str | None = None
+    if ":" in userinfo:
+        user, password = userinfo.split(":", 1)
+    user = quote(unquote(user), safe="")
+    auth = user if password is None else f"{user}:{quote(unquote(password), safe='')}"
+    host = hostport
+    port: int | None = None
+    if hostport.startswith("["):
+        end = hostport.find("]")
+        if end != -1:
+            host = hostport[: end + 1]
+            if len(hostport) > end + 1 and hostport[end + 1] == ":":
+                port = int(hostport[end + 2 :])
+    elif ":" in hostport:
+        host, port_str = hostport.rsplit(":", 1)
+        port = int(port_str)
+    if ":" in host and not host.startswith("["):
+        host = f"[{host}]"
+    netloc = f"{auth}@{host}" + (f":{port}" if port else "")
+    query = ""
+    if "?" in path_and_query:
+        path, query = path_and_query.split("?", 1)
+        path_and_query = path
+    else:
+        path = path_and_query
+    if not query and host.rstrip("]").endswith("supabase.co"):
+        query = "sslmode=require"
+    rebuilt = f"{scheme}://{netloc}{path_and_query}"
+    if query:
+        rebuilt += f"?{query}"
+    return rebuilt
 
 
-database_url = normalize_database_url(os.getenv("DATABASE_URL") or default_database)
+def _resolve_database_url() -> str:
+    configured = os.getenv("DATABASE_URL", "").strip()
+    url = normalize_database_url(configured) if configured else default_database
+    env = os.getenv("QUANTUMWALK_ENV", "development")
+    if env == "production" or url.startswith("sqlite:"):
+        return url
+    probe = create_engine(url, pool_pre_ping=True)
+    try:
+        with probe.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return url
+    except Exception:
+        logging.getLogger("uvicorn.error").warning(
+            "DATABASE_URL is unreachable in development; using local SQLite at %s",
+            default_database,
+        )
+        return default_database
+    finally:
+        probe.dispose()
+
+
+database_url = _resolve_database_url()
 engine = create_engine(
     database_url,
     connect_args={"check_same_thread": False} if database_url.startswith("sqlite:") else {},
@@ -135,3 +188,12 @@ class Progress(Base):
     score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(default=utc_now, onupdate=utc_now, nullable=False)
     user: Mapped[User] = relationship(back_populates="progress")
+
+
+def ensure_sqlite_schema() -> None:
+    """Create tables on local SQLite when running outside pytest fixtures."""
+    if database_url.startswith("sqlite:"):
+        # New SRS tables require an explicit migration; do not silently expand an
+        # existing developer database when the server reloads.
+        initial = {"users", "auth_identities", "user_sessions", "circuits", "user_progress"}
+        Base.metadata.create_all(bind=engine, tables=[table for table in Base.metadata.sorted_tables if table.name in initial])

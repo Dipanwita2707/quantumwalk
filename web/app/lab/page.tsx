@@ -1,0 +1,23 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { SiteHeader } from "@/components/SiteHeader";
+import { Surface, ActionLink, PageHeading } from "@/components/ui/QuantumUI";
+import { LabArtwork } from "@/components/LabArtwork";
+import { api } from "@/lib/api";
+import type { ScienceLab } from "@/lib/science";
+import "./science.css";
+
+export default function LabCatalog() {
+  const [labs, setLabs] = useState<ScienceLab[]>([]), [query, setQuery] = useState(""), [domain, setDomain] = useState("All domains"), [level, setLevel] = useState("All levels");
+  const [error, setError] = useState(""), [loading, setLoading] = useState(true), [attempt, setAttempt] = useState(0);
+  const [duration, setDuration] = useState("any"), [order, setOrder] = useState("recommended"), [prerequisite, setPrerequisite] = useState("any");
+  useEffect(() => { let active = true; setLoading(true); api<ScienceLab[]>("/api/science/labs").then(data => { if (active) { setLabs(data); setError(""); } }).catch(cause => { if (active) setError(cause.message); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, [attempt]);
+  const visible = labs.filter(lab => `${lab.title} ${lab.domain} ${lab.objective}`.toLowerCase().includes(query.toLowerCase()) && (domain === "All domains" || lab.domain === domain) && (level === "All levels" || lab.level === level) && (duration === "any" || (duration === "short" ? lab.minutes <= 10 : lab.minutes > 10)) && (prerequisite === "any" || !lab.prerequisites?.length)).sort((a, b) => order === "title" ? a.title.localeCompare(b.title) : order === "duration" ? a.minutes - b.minutes : 0);
+  return <><SiteHeader /><main className="content-shell science-shell"><PageHeading eyebrow="The quantum laboratory" title="Explore. Predict. Experiment." description="Discover the physics behind the quantum world through reproducible, classical models." actions={<ActionLink tone="secondary" href="/workspace?mode=circuit">Build a quantum circuit</ActionLink>} />
+    <div className="science-filters"><label>Search experiments<input type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Interference, atoms, cosmology…" /></label><label>Domain<select value={domain} onChange={event => setDomain(event.target.value)}>{["All domains", ...new Set(labs.map(lab => lab.domain))].map(value => <option key={value}>{value}</option>)}</select></label><label>Difficulty<select value={level} onChange={event => setLevel(event.target.value)}>{["All levels", "Beginner", "Intermediate"].map(value => <option key={value}>{value}</option>)}</select></label></div>
+    <details className="science-catalog-options"><summary>More filters & sorting ? all preview labs included in Explorer</summary><div className="science-filters"><label>Duration<select value={duration} onChange={event => setDuration(event.target.value)}><option value="any">Any duration</option><option value="short">10 minutes or less</option><option value="long">More than 10 minutes</option></select></label><label>Preparation<select value={prerequisite} onChange={event => setPrerequisite(event.target.value)}><option value="any">Any preparation</option><option value="none">No recommended prerequisites</option></select></label><label>Sort experiments<select value={order} onChange={event => setOrder(event.target.value)}><option value="recommended">Recommended order</option><option value="title">Title</option><option value="duration">Shortest first</option></select></label></div></details>
+    {loading && <p role="status">Loading the laboratory…</p>}{error && <p role="alert" className="content-error">{error} <button onClick={() => setAttempt(value => value + 1)}>Retry</button></p>}
+    {!loading && !error && <><p role="status" className="science-muted">{visible.length} experiments · scientific review pending</p><div className="science-catalog">{visible.map((lab, index) => <Surface as="article" className="content-card science-lab-card" key={lab.slug}><div className={`science-card-art science-card-art-${index % 3}`} aria-hidden="true"><LabArtwork slug={lab.slug} /></div><span className="panel-kicker">{lab.domain} · {lab.level}</span><h2>{lab.title}</h2><p>{lab.question}</p><footer><span>{lab.minutes} min · model {lab.version}</span><ActionLink className="science-primary" href={`/lab/${lab.slug}`}>Start experiment →</ActionLink></footer></Surface>)}</div>{visible.length === 0 && <div className="content-card"><h2>No experiments match</h2><button onClick={() => { setQuery(""); setDomain("All domains"); setLevel("All levels"); setDuration("any"); setOrder("recommended"); setPrerequisite("any"); }}>Reset filters</button></div>}</>}
+  </main></>;
+}

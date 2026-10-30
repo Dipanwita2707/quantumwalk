@@ -72,4 +72,19 @@ test.describe("Navigation shell", () => {
     await page.getByRole("navigation", { name: /Primary navigation/i }).getByRole("link", { name: "Lab" }).click();
     await expect(page).toHaveURL(/\/workspace/);
   });
+
+  test("nested breadcrumbs avoid missing parent routes", async ({ page }) => {
+    await page.goto("/academy/labs/qft");
+    await expect(page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Labs" })).toHaveAttribute("href", "/learn");
+
+    await page.route("**/api/me", (route) => route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ authenticated: true, id: "breadcrumb-test", display_name: "Test User", email: "test@example.test", avatar_url: null, analytics_opt_in: false, csrf_token: "test-only" }),
+    }));
+    await page.goto("/settings/profile");
+    const breadcrumbs = page.getByRole("navigation", { name: "Breadcrumb" });
+    await expect(breadcrumbs.getByText("Settings")).toBeVisible();
+    await expect(breadcrumbs.getByRole("link", { name: "Settings" })).toHaveCount(0);
+  });
 });

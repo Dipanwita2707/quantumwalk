@@ -54,9 +54,12 @@ export function buildBreadcrumbTrail(pathname: string): BreadcrumbSegment[] {
       return;
     }
     if (part === "dashboard") return;
+    let href = isLast ? undefined : pathAcc;
+    if (pathAcc === "/settings") href = undefined;
+    if (pathAcc === "/academy/labs") href = "/learn";
     trail.push({
       label: labelForSegment(part),
-      href: isLast ? undefined : pathAcc,
+      href,
     });
   });
 

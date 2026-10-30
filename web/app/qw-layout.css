@@ -1,4 +1,4 @@
-/* QuantumWalk vibe: navy void + violet/cyan flow. Route intensity via QuantumSiteAmbience profiles — landing/journey high, lab quiet. */
+/* QuantumWalk vibe: navy base + subtle static violet/cyan glow (QuantumSiteAmbience). Lab/dashboard profiles are flatter. */
 :root {
   --qw-content-max: 1320px;
   --qw-content-narrow: 1150px;
@@ -39,6 +39,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 20;
+  /* When nested under SiteHeader, offset is handled by page structure; standalone pages use this bar only. */
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -6,6 +6,8 @@ from alembic import context
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from database import Base, database_url, engine  # noqa: E402
+import extended_models  # noqa: E402,F401
+import completion_models  # noqa: E402,F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

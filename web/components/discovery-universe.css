@@ -1,0 +1,14 @@
+.du-layout { display: grid; grid-template-columns: minmax(0,1fr) 280px; gap: 20px; }
+.du-map { position: relative; height: 540px; background: radial-gradient(ellipse at center,#24214f55,transparent 75%),#081321; border: 1px solid var(--q-border); border-radius: var(--q-radius); }
+.du-map>svg { position: absolute; inset: 0; width: 100%; height: 100%; stroke: #776aa46b; stroke-width: 1.5; fill: none; }
+.du-map .du-object { position: absolute; transform: translate(-50%,-50%); display: grid; justify-items: center; gap: 8px; width: 136px; padding: 10px; border: 1px solid transparent; background: #0b1724e8; color: var(--q-text); border-radius: 7px; }
+.du-object>span { display: grid; place-items: center; width: 50px; height: 50px; border: 1px solid #79649d; background: #211a37; border-radius: 50%; color: #b995ee; }
+.du-object strong { font-size: 12px; line-height: 1.5; text-align: center; }
+.du-object small { font-size: 10px; color: var(--q-muted); }
+.du-map .du-discovered>span { color: var(--q-cyan); border-color: #62b8c5; background: #10313b; }
+.du-map .du-locked { border-style: dashed; border-color: #52617866; }
+.du-map .du-locked>span { color: #98a4b8; background: #152030; border-color: #4a5972; }
+.du-map .du-object[aria-pressed=true] { border-color: #bf9eff; }
+.du-detail h2 { font-size: 20px; margin: 14px 0; }.du-detail p { font-size: 13px; line-height: 1.8; }
+@media(max-width:1000px) { .du-layout { grid-template-columns: minmax(0,1fr); } }
+@media(max-width:600px) { .du-map { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 12px; height: auto; }.du-map>svg { display: none; }.du-map .du-object { position: static; transform: none; width: 100%; min-width: 0; } }

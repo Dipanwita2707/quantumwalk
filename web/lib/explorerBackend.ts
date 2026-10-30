@@ -122,8 +122,8 @@ export function buildGroverSolveRequest(distanceMatrix: number[][]): SolveTspReq
     algorithm: "grover",
     shots: 1024,
     optimization_level: 3,
-    enable_error_mitigation: true,
-    error_mitigation_method: "readout",
+    enable_error_mitigation: false,
+    error_mitigation_method: "none",
     grover_iterations: 2,
   };
 }

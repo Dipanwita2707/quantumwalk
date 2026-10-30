@@ -6,6 +6,7 @@ const repoRoot = path.join(__dirname, "..");
 const sirrayaWeb = path.join(repoRoot, "sirraya", "web");
 
 const nextConfig: NextConfig = {
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   outputFileTracingRoot: repoRoot,
   turbopack: {
     resolveAlias: {

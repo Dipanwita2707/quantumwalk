@@ -1,58 +1,32 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { HUB_CATEGORIES, HUB_TOOLS, type HubTool } from "../../lib/hubTools";
 import { HubToolsNav } from "@/components/HubToolsNav";
+import { isRecord, readRecentTools, recordRecentTool, useHubDraft } from "@/lib/hubWorkspace";
 import "@/app/hub/hub-home.css";
 
-const RECENT_KEY = "qw-hub-recent";
-
-function loadRecent(): string[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(RECENT_KEY);
-    return raw ? (JSON.parse(raw) as string[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function recordRecentTool(id: string) {
-  const prev = loadRecent();
-  const next = [id, ...prev.filter((x) => x !== id)].slice(0, 5);
-  localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-}
+type HubFilters = { category: (typeof HUB_CATEGORIES)[number]; query: string };
+const INITIAL_FILTERS: HubFilters = { category: "All", query: "" };
+function validFilters(value: unknown): value is HubFilters { return isRecord(value) && HUB_CATEGORIES.some(category => category === value.category) && typeof value.query === "string" && value.query.length <= 200; }
 
 export function HubHome() {
-  const [category, setCategory] = useState<(typeof HUB_CATEGORIES)[number]>("All");
-  const [toolQuery, setToolQuery] = useState("");
+  const filters = useHubDraft("qw-hub-filters", INITIAL_FILTERS, validFilters);
+  const { category, query: toolQuery } = filters.value;
   const [recent, setRecent] = useState<string[]>([]);
+  const pathname = usePathname();
 
   useEffect(() => {
-    setRecent(loadRecent());
-  }, []);
+    if (pathname === "/hub") setRecent(readRecentTools());
+  }, [pathname]);
 
   const tools = useMemo(() => {
     const q = toolQuery.trim().toLowerCase();
-    let list: HubTool[];
-    if (q) {
-      list = HUB_TOOLS.filter(
-        (t) =>
-          t.name.toLowerCase().includes(q) ||
-          t.description.toLowerCase().includes(q) ||
-          t.category.toLowerCase().includes(q),
-      );
-    } else if (category === "All") {
-      const featuredIds = new Set(HUB_TOOLS.filter((t) => t.featured).map((t) => t.id));
-      list = HUB_TOOLS.filter((t) => !featuredIds.has(t.id));
-    } else {
-      list = HUB_TOOLS.filter((t) => t.category === category);
-    }
-    return list;
+    return HUB_TOOLS.filter(tool => (category === "All" || tool.category === category) && (!q || `${tool.name} ${tool.description} ${tool.category}`.toLowerCase().includes(q)));
   }, [category, toolQuery]);
 
-  const featured = HUB_TOOLS.filter((t) => t.featured);
   const recentTools = recent
     .map((id) => HUB_TOOLS.find((t) => t.id === id))
     .filter((t): t is HubTool => !!t);
@@ -63,21 +37,14 @@ export function HubHome() {
       <div className="hub-home-main qw-hub-home" style={{ padding: 0, maxWidth: "none", margin: 0 }}>
         <section className="qw-hub-hero">
           <p className="eyebrow">TOOLS HUB</p>
-          <h1>Research, documents, and quantum — in one workspace</h1>
+          <h1>Your work, connected.</h1>
           <p className="content-intro">
-            Independent Sirraya-style hub. Documents stay in your browser until you choose to sign in and save server-side
-            features elsewhere in QuantumWalk.
+            Build a network design, turn it into a report, and refine the document. Tool drafts are saved in this browser;
+            Send actions carry a copy into the next tool without silently replacing another draft.
           </p>
         </section>
 
-        <section className="qw-hub-sec" aria-label="Primary tools">
-          <span className="panel-kicker">START HERE</span>
-          <div className="hub-primary-tools qw-hub-grid-lg">
-            {featured.map((tool) => (
-              <ToolCard key={tool.id} tool={tool} />
-            ))}
-          </div>
-        </section>
+        <details className="hub-workflow-details"><summary>How the document tools connect</summary><section className="hub-workflow-overview" aria-label="Connected document workflow"><div><Link href="/hub/ml-studio"><strong>01 · Design</strong><span>Build a network and send its design report</span></Link><span aria-hidden="true">→</span><Link href="/hub/doc-editor"><strong>02 · Draft</strong><span>Edit Markdown with a live preview</span></Link><span aria-hidden="true">→</span><Link href="/hub/document-pro"><strong>03 · Prepare</strong><span>Use templates, review, and print or export</span></Link></div></section></details>
 
         {recentTools.length > 0 && (
           <section className="qw-hub-sec">
@@ -94,18 +61,18 @@ export function HubHome() {
           </section>
         )}
 
-        <section className="qw-hub-sec qw-hub-catalog">
+        <section className="qw-hub-sec qw-hub-catalog" aria-label="Primary tools">
           <div className="qw-hub-sec-head">
             <h2>All tools</h2>
-            <div className="qw-hub-tabs" role="tablist" aria-label="Tool categories">
+            <div className="qw-hub-tabs" role="group" aria-label="Tool categories">
               {HUB_CATEGORIES.map((cat) => (
                 <button
                   key={cat}
                   type="button"
-                  role="tab"
-                  aria-selected={category === cat}
+                  disabled={!filters.ready}
+                  aria-pressed={category === cat}
                   className={category === cat ? "on" : ""}
-                  onClick={() => setCategory(cat)}
+                  onClick={() => filters.update(previous => ({ ...previous, category: cat }))}
                 >
                   {cat}
                 </button>
@@ -116,15 +83,17 @@ export function HubHome() {
             <span className="visually-hidden">Search tools</span>
             <input
               type="search"
+              disabled={!filters.ready}
+              maxLength={200}
               aria-label="Search tools"
               placeholder="Search documents, quantum, research…"
               value={toolQuery}
-              onChange={(event) => setToolQuery(event.target.value)}
+              onChange={(event) => filters.update(previous => ({ ...previous, query: event.target.value }))}
             />
           </label>
           {tools.length === 0 ? (
             <p className="explorer-note" role="status">
-              No tools match your search. Try another keyword or clear the filter.
+              No tools match your search. <button type="button" className="hub-button" onClick={() => filters.update(INITIAL_FILTERS)}>Reset filters</button>
             </p>
           ) : (
             <div className="qw-hub-grid">

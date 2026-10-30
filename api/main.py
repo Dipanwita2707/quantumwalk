@@ -1,4 +1,4 @@
-﻿"""QuantumWalk API entry point."""
+"""QuantumWalk API entry point."""
 
 import json
 import logging
@@ -14,23 +14,44 @@ if str(_REPO_ROOT) not in sys.path:
 from fastapi import Depends, FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, select
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi.responses import JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 
 from auth import AuthContext, COOKIE_NAME, get_db, google_callback, google_redirect, require_csrf
 from body_limit import BodyLimitMiddleware
-from database import User, UserSession
+from database import User, UserSession, ensure_sqlite_schema
+import extended_models  # Register additive tables before local schema initialization.
+import completion_models  # Register the approved completion schema; migrations remain explicit.
 from discovery_routes import router as discovery_router
+from explorer_routes import router as explorer_router
+from science_routes import router as science_router
+from laboratory_routes import router as laboratory_router
+from billing_routes import router as billing_router
+from email_identity import router as email_router
+from collaboration_routes import router as collaboration_router
+from progression_routes import router as progression_router
+from experiment_analysis import router as experiment_analysis_router
+from operations_routes import router as operations_router
+from lesson_versions import router as lesson_versions_router
+from rubric_routes import router as rubric_router
+from boss_routes import router as boss_router
+from simulation_jobs import router as simulation_jobs_router
 from sirraya.api.sirraya_v3_routes import router as sirraya_v3_router
 from limits import enforce_rate, simulation_slot, _simulation_slots
 from platform_routes import router
-from settings import cookie_secure, environment, frontend_origin, session_secret
+from settings import cookie_secure, cors_allowed_origins, environment, frontend_origin, session_secret
 from simulator import CircuitRequest, SimulationResponse, simulate
 
 
 app = FastAPI(title="QuantumWalk API")
+
+
+@app.on_event("startup")
+def startup_schema() -> None:
+    if environment != "production":
+        ensure_sqlite_schema()
 app.add_middleware(
     SessionMiddleware,
     secret_key=session_secret,
@@ -41,6 +62,19 @@ app.add_middleware(
 app.add_middleware(BodyLimitMiddleware, max_bytes=65536)
 app.include_router(router)
 app.include_router(discovery_router)
+app.include_router(explorer_router)
+app.include_router(science_router)
+app.include_router(laboratory_router)
+app.include_router(billing_router)
+app.include_router(email_router)
+app.include_router(collaboration_router)
+app.include_router(progression_router)
+app.include_router(experiment_analysis_router)
+app.include_router(operations_router)
+app.include_router(lesson_versions_router)
+app.include_router(rubric_router)
+app.include_router(boss_router)
+app.include_router(simulation_jobs_router)
 app.include_router(sirraya_v3_router)
 
 # Stable test hook for saturation behavior.
@@ -127,7 +161,13 @@ def logout(request: Request, auth: AuthContext = Depends(require_csrf), db: Sess
 
 
 @app.delete("/api/account", status_code=204)
-def delete_account(auth: AuthContext = Depends(require_csrf), db: Session = Depends(get_db)) -> Response:
+async def delete_account(auth: AuthContext = Depends(require_csrf), db: Session = Depends(get_db)) -> Response:
+    from billing_routes import stripe
+    from extended_models import Subscription
+    subscription = db.scalar(select(Subscription).where(Subscription.owner_user_id == auth.user.id))
+    if subscription and subscription.status not in ("canceled", "incomplete_expired", "institution_granted"):
+        # Do not delete the linkage and leave a learner paying for a lost account.
+        await stripe("DELETE", "subscriptions/" + subscription.provider_id)
     user = db.get(User, auth.user.id)
     db.delete(user)
     db.commit()
@@ -139,7 +179,7 @@ def delete_account(auth: AuthContext = Depends(require_csrf), db: Session = Depe
 # Add CORS last so even early size-limit errors carry the approved frontend origin.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[frontend_origin],
+    allow_origins=cors_allowed_origins(),
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "X-CSRF-Token"],

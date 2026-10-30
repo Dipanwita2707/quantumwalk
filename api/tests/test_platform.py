@@ -141,6 +141,47 @@ def test_google_start_is_unavailable_without_credentials(store, monkeypatch):
     assert TestClient(app).get("/auth/google/start", follow_redirects=False).status_code == 503
 
 
+def test_google_callback_creates_secure_application_session(store, monkeypatch):
+    import auth
+    from types import SimpleNamespace
+
+    async def verified_profile(_request):
+        return {"userinfo": {"sub": "callback-test-subject", "email": "callback@example.test", "email_verified": True, "name": "Callback Learner"}}
+
+    monkeypatch.setattr(auth, "google_enabled", True)
+    monkeypatch.setattr(auth, "oauth", SimpleNamespace(google=SimpleNamespace(authorize_access_token=verified_profile)))
+    client = TestClient(app)
+    response = client.get("/auth/google/callback", follow_redirects=False)
+
+    assert response.status_code == 303
+    assert response.headers["location"].endswith("/")
+    cookie = response.headers["set-cookie"].lower()
+    assert f"{COOKIE_NAME}=" in cookie
+    assert "httponly" in cookie
+    assert "samesite=lax" in cookie
+    assert "path=/" in cookie
+    profile = client.get("/api/me").json()
+    assert profile["authenticated"] is True
+    assert profile["display_name"] == "Callback Learner"
+    assert profile["email"] == "callback@example.test"
+
+
+def test_google_callback_reports_lost_oauth_state(store, monkeypatch):
+    import auth
+    from authlib.integrations.base_client.errors import MismatchingStateError
+    from types import SimpleNamespace
+
+    async def lost_state(_request):
+        raise MismatchingStateError()
+
+    monkeypatch.setattr(auth, "google_enabled", True)
+    monkeypatch.setattr(auth, "oauth", SimpleNamespace(google=SimpleNamespace(authorize_access_token=lost_state)))
+    response = TestClient(app).get("/auth/google/callback", follow_redirects=False)
+    assert response.status_code == 303
+    assert "error=session_expired" in response.headers["location"]
+    assert COOKIE_NAME not in response.cookies
+
+
 def test_google_database_outage_returns_safe_login_error(store, monkeypatch):
     import auth
     from types import SimpleNamespace

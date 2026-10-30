@@ -3,7 +3,7 @@
 **Document ID:** QW-PLAN-MARKET-003  
 **Status:** product strategy & build backlog  
 **Date:** 19 October 2026  
-**Builds on:** [SIRRAYA_REFERENCE_AND_ROADMAP.md](SIRRAYA_REFERENCE_AND_ROADMAP.md), [CIRQ_ENGINE_AND_GAMIFICATION_PLAN.md](CIRQ_ENGINE_AND_GAMIFICATION_PLAN.md)  
+**Builds on:** [SIRRAYA_REFERENCE_AND_ROADMAP.md](sirraya/references/SIRRAYA_REFERENCE_AND_ROADMAP.md), [CIRQ_ENGINE_AND_GAMIFICATION_PLAN.md](CIRQ_ENGINE_AND_GAMIFICATION_PLAN.md)  
 **Promise to protect:** “See inside a quantum algorithm.”
 
 ---
@@ -287,7 +287,7 @@ Keep the canonical circuit JSON. Do not add a second editor format.
 
 | ID | Document | Role |
 | --- | --- | --- |
-| QW-REF-SIRRAYA-001 | [SIRRAYA_REFERENCE_AND_ROADMAP.md](SIRRAYA_REFERENCE_AND_ROADMAP.md) | Competitive inventory and phased feature gaps |
+| QW-REF-SIRRAYA-001 | [SIRRAYA_REFERENCE_AND_ROADMAP.md](sirraya/references/SIRRAYA_REFERENCE_AND_ROADMAP.md) | Competitive inventory and phased feature gaps |
 | QW-PLAN-CIRQ-ENG-002 | [CIRQ_ENGINE_AND_GAMIFICATION_PLAN.md](CIRQ_ENGINE_AND_GAMIFICATION_PLAN.md) | Engine architecture, XP model, animation rules |
 | QW-PLAN-MARKET-003 | This file | What to add, in what order, to be new in the market |
 | QW-BACKLOG-004 | [IMPLEMENTATION_BACKLOG.md](IMPLEMENTATION_BACKLOG.md) | Ticket-level PR slices (R1–R4) |

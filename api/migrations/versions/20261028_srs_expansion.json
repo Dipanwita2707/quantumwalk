@@ -1,0 +1,1561 @@
+[
+  {
+    "name": "payment_events",
+    "columns": [
+      {
+        "name": "provider_event_id",
+        "type": "String",
+        "length": 120,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "event_type",
+        "type": "String",
+        "length": 80,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "provider_created",
+        "type": "Integer",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        null,
+        [
+          "provider_event_id"
+        ]
+      ]
+    ],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "plans",
+    "columns": [
+      {
+        "name": "slug",
+        "type": "String",
+        "length": 40,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "configuration",
+        "type": "JSON",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        null,
+        [
+          "slug"
+        ]
+      ]
+    ],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "audit_events",
+    "columns": [
+      {
+        "name": "actor_user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": "users.id",
+        "ondelete": "SET NULL"
+      },
+      {
+        "name": "action",
+        "type": "String",
+        "length": 100,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "target_id",
+        "type": "String",
+        "length": 120,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "details",
+        "type": "JSON",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "community_posts",
+    "columns": [
+      {
+        "name": "owner_user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "title",
+        "type": "String",
+        "length": 120,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "body",
+        "type": "Text",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "category",
+        "type": "String",
+        "length": 30,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "hidden",
+        "type": "Boolean",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": [
+      [
+        "ix_community_posts_owner_user_id",
+        [
+          "owner_user_id"
+        ],
+        false
+      ]
+    ]
+  },
+  {
+    "name": "email_credentials",
+    "columns": [
+      {
+        "name": "user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "email",
+        "type": "String",
+        "length": 320,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "password_hash",
+        "type": "String",
+        "length": 300,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "verified",
+        "type": "Boolean",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        null,
+        [
+          "email"
+        ]
+      ]
+    ],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "identity_tokens",
+    "columns": [
+      {
+        "name": "user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "token_hash",
+        "type": "String",
+        "length": 64,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "purpose",
+        "type": "String",
+        "length": 20,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "expires_at",
+        "type": "Integer",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        null,
+        [
+          "token_hash"
+        ]
+      ]
+    ],
+    "checks": [],
+    "indexes": [
+      [
+        "ix_identity_tokens_user_id",
+        [
+          "user_id"
+        ],
+        false
+      ]
+    ]
+  },
+  {
+    "name": "lab_definitions",
+    "columns": [
+      {
+        "name": "slug",
+        "type": "String",
+        "length": 80,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "version",
+        "type": "String",
+        "length": 30,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "length": 30,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "content",
+        "type": "JSON",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "reviewer_user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": "users.id",
+        "ondelete": "SET NULL"
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        null,
+        [
+          "slug"
+        ]
+      ]
+    ],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "lab_runs",
+    "columns": [
+      {
+        "name": "owner_user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "lab_slug",
+        "type": "String",
+        "length": 80,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "model_version",
+        "type": "String",
+        "length": 30,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "length": 20,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "prediction",
+        "type": "Text",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "result",
+        "type": "JSON",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": [
+      [
+        "ix_runs_owner_created",
+        [
+          "owner_user_id",
+          "created_at"
+        ],
+        false
+      ]
+    ]
+  },
+  {
+    "name": "notebooks",
+    "columns": [
+      {
+        "name": "owner_user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "title",
+        "type": "String",
+        "length": 120,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": [
+      [
+        "ix_notebooks_owner_user_id",
+        [
+          "owner_user_id"
+        ],
+        false
+      ]
+    ]
+  },
+  {
+    "name": "organizations",
+    "columns": [
+      {
+        "name": "owner_user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "length": 120,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "plan_entitlements",
+    "columns": [
+      {
+        "name": "plan_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": "plans.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "feature",
+        "type": "String",
+        "length": 80,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "daily_limit",
+        "type": "Integer",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "reward_events",
+    "columns": [
+      {
+        "name": "user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "event_key",
+        "type": "String",
+        "length": 120,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "xp",
+        "type": "Integer",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "reason",
+        "type": "String",
+        "length": 200,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        "uq_reward_user_event",
+        [
+          "user_id",
+          "event_key"
+        ]
+      ]
+    ],
+    "checks": [
+      [
+        "ck_reward_xp",
+        "xp >= 0"
+      ]
+    ],
+    "indexes": []
+  },
+  {
+    "name": "subscriptions",
+    "columns": [
+      {
+        "name": "owner_user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "provider_id",
+        "type": "String",
+        "length": 120,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "customer_id",
+        "type": "String",
+        "length": 120,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "plan_slug",
+        "type": "String",
+        "length": 40,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "length": 40,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "period_end",
+        "type": "Integer",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "cancel_at_period_end",
+        "type": "Boolean",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        "uq_subscription_user",
+        [
+          "owner_user_id"
+        ]
+      ],
+      [
+        null,
+        [
+          "provider_id"
+        ]
+      ]
+    ],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "usage_buckets",
+    "columns": [
+      {
+        "name": "user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "feature",
+        "type": "String",
+        "length": 80,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "period",
+        "type": "String",
+        "length": 10,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "used",
+        "type": "Integer",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [
+      [
+        "ck_usage_nonnegative",
+        "used >= 0"
+      ]
+    ],
+    "indexes": []
+  },
+  {
+    "name": "user_preferences",
+    "columns": [
+      {
+        "name": "user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "experience",
+        "type": "String",
+        "length": 20,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "interests",
+        "type": "JSON",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "reduced_motion",
+        "type": "Boolean",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "user_roles",
+    "columns": [
+      {
+        "name": "user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "role",
+        "type": "String",
+        "length": 30,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "classrooms",
+    "columns": [
+      {
+        "name": "organization_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "organizations.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "instructor_user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "title",
+        "type": "String",
+        "length": 120,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "join_code_hash",
+        "type": "String",
+        "length": 64,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        null,
+        [
+          "join_code_hash"
+        ]
+      ]
+    ],
+    "checks": [],
+    "indexes": [
+      [
+        "ix_classrooms_organization_id",
+        [
+          "organization_id"
+        ],
+        false
+      ]
+    ]
+  },
+  {
+    "name": "community_reports",
+    "columns": [
+      {
+        "name": "post_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "community_posts.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "reporter_user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "reason",
+        "type": "String",
+        "length": 500,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        "uq_community_report",
+        [
+          "post_id",
+          "reporter_user_id"
+        ]
+      ]
+    ],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "memberships",
+    "columns": [
+      {
+        "name": "organization_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": "organizations.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "role",
+        "type": "String",
+        "length": 30,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "mission_events",
+    "columns": [
+      {
+        "name": "user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "mission_slug",
+        "type": "String",
+        "length": 80,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "run_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "lab_runs.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "choice",
+        "type": "Integer",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "reflection",
+        "type": "Text",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "completed",
+        "type": "Boolean",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        "uq_mission_user_slug",
+        [
+          "user_id",
+          "mission_slug"
+        ]
+      ]
+    ],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "notebook_entries",
+    "columns": [
+      {
+        "name": "notebook_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "notebooks.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "run_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "lab_runs.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "notes",
+        "type": "Text",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": [
+      [
+        "ix_notebook_entries_notebook_id",
+        [
+          "notebook_id"
+        ],
+        false
+      ]
+    ]
+  },
+  {
+    "name": "report_artifacts",
+    "columns": [
+      {
+        "name": "owner_user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "run_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "lab_runs.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "format",
+        "type": "String",
+        "length": 10,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "checksum",
+        "type": "String",
+        "length": 64,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": [
+      [
+        "ix_report_artifacts_owner_user_id",
+        [
+          "owner_user_id"
+        ],
+        false
+      ]
+    ]
+  },
+  {
+    "name": "assignments",
+    "columns": [
+      {
+        "name": "classroom_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "classrooms.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "title",
+        "type": "String",
+        "length": 120,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "lab_slug",
+        "type": "String",
+        "length": 80,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "instructions",
+        "type": "Text",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "due_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": [
+      [
+        "ix_assignments_classroom_id",
+        [
+          "classroom_id"
+        ],
+        false
+      ]
+    ]
+  },
+  {
+    "name": "class_memberships",
+    "columns": [
+      {
+        "name": "classroom_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": "classrooms.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "submissions",
+    "columns": [
+      {
+        "name": "assignment_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "assignments.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "user_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "run_id",
+        "type": "String",
+        "length": 36,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "lab_runs.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "reflection",
+        "type": "Text",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "feedback",
+        "type": "Text",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "score",
+        "type": "Integer",
+        "length": null,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        "uq_submission_assignment_user",
+        [
+          "assignment_id",
+          "user_id"
+        ]
+      ]
+    ],
+    "checks": [],
+    "indexes": []
+  }
+]

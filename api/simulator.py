@@ -30,9 +30,12 @@ def _noisy_counts(request: CircuitRequest, measurement_targets: list[int]) -> di
         return None
     strength = request.noise_strength
     noise_model = NoiseModel()
-    error = depolarizing_error(strength, 1)
-    for name in ("h", "x", "y", "z", "s", "t", "rx", "ry", "rz", "cx", "cz", "swap"):
-        noise_model.add_all_qubit_quantum_error(error, [name])
+    error1 = depolarizing_error(strength, 1)
+    for name in ("h", "x", "y", "z", "s", "t", "rx", "ry", "rz"):
+        noise_model.add_all_qubit_quantum_error(error1, [name])
+    error2 = depolarizing_error(strength, 2)
+    for name in ("cx", "cz", "swap"):
+        noise_model.add_all_qubit_quantum_error(error2, [name])
     sampled = build_qiskit_circuit(
         CircuitRequest(qubits=request.qubits, operations=[op for op in request.operations if op.gate != "measure"], shots=request.shots)
     )

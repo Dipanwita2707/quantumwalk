@@ -194,5 +194,39 @@
   background: rgba(8, 16, 32, 0.5);
 }
 
+/* Showcase landing: a compact neon universe with direct paths into real tools. */
+.quantum-landing { --ql-accent: #b88aff; background: radial-gradient(ellipse at 76% 14%, #43216b24, transparent 36%); }
+.quantum-landing .ql-hero { grid-template-columns: 1fr 1.05fr; padding-top: 24px; }
+.quantum-landing .ql-hero-copy { padding: 48px 0; }
+.quantum-landing .ql-hero h1 { color: #f2efff; font-size: clamp(42px, 4.8vw, 68px); letter-spacing: -2px; line-height: 1.08; }
+.quantum-landing .ql-hero h1 > span { background: linear-gradient(110deg, #eee6ff, #bc9aff 65%, #8bdcff); background-clip: text; -webkit-text-fill-color: transparent; }
+.ql-hero-tagline { font-size: clamp(18px, 2vw, 25px); font-weight: 600; color: #d9a0ff; margin: -8px 0 22px; }
+.quantum-landing .ql-hero-description { max-width: 460px; color: #c0cadd; }
+.quantum-landing .ql-text-link { padding: 0 16px; border: 1px solid #586580; border-radius: 6px; }
+.quantum-landing .ql-play { border-color: #c88aff; color: #e6b5ff; }
+.quantum-landing .ql-universe { min-height: 500px; background: radial-gradient(ellipse at center, #793ec92b, transparent 66%); }
+.quantum-landing .ql-orbit-art { opacity: 1; }
+.quantum-landing .ql-core-label { text-shadow: 0 0 28px #c380ff; }
+.quantum-landing .ql-aura-one { background: radial-gradient(circle, #b54dec30, transparent 65%); }
+.quantum-landing .ql-hero-grid { background-image: radial-gradient(circle, #a09dff88 1px, transparent 1.5px), radial-gradient(circle, #71d5ff77 1px, transparent 1.5px); background-size: 97px 83px, 151px 137px; background-position: 9px 30px, 41px 17px; mask-image: radial-gradient(ellipse at 70% 40%, #000, transparent 76%); }
+.quantum-landing .ql-reveal { opacity: 1; transform: none; }
+.ql-feature-grid { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 8px 0 30px; }
+.ql-feature-grid > a { padding: 22px 20px; border: 1px solid #33415a; border-radius: 10px; background: linear-gradient(145deg, #19243c, #0c1725); transition: border-color .16s, transform .16s; }
+.ql-feature-grid > a:hover { border-color: var(--ql-accent); transform: translateY(-3px); }
+.ql-feature-grid > a > span { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 18px; border: 1px solid #a16bff66; border-radius: 50%; background: radial-gradient(circle, #7d43e34d, #34205044); color: #ceacff; font-size: 30px; box-shadow: 0 0 22px #9759f51c; }
+.ql-feature-grid > a:nth-child(2) > span { color: #ffc98b; border-color: #a6774c; }
+.ql-feature-grid > a:nth-child(3) > span, .ql-feature-grid > a:nth-child(4) > span { color: #89e3f2; border-color: #46818f; }
+.quantum-landing .ql-feature-grid h2 { font-size: 16px; letter-spacing: -.3px; margin: 0 0 10px; }
+.ql-feature-grid p { color: #aabbd2; font-size: 12px; line-height: 1.7; margin: 0 0 16px; }
+.ql-feature-grid small { color: #c8b3ff; font-size: 12px; }
+@media (max-width: 760px) {
+  .quantum-landing .ql-hero { grid-template-columns: 1fr; padding-top: 12px; }
+  .quantum-landing .ql-hero-copy { padding: 24px 0 0; }
+  .quantum-landing .ql-universe { min-height: 360px; }
+  .ql-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .ql-feature-grid > a { padding: 18px 14px; }
+}
+@media (max-width: 380px) { .ql-feature-grid { grid-template-columns: 1fr; } }
+
 @media(prefers-reduced-motion:reduce) { .quantum-landing *,.quantum-landing *::after { animation:none!important; } .ql-reveal { opacity:1; transform:none; transition:none!important; } .ql-hero-grid,.ql-universe { transform:none!important; } html:has(.quantum-landing) { scroll-behavior:auto; } }
 @media(forced-colors:active) { .ql-hero h1>span { background:none; -webkit-text-fill-color:CanvasText; } .ql-primary,.ql-probability-track { border:1px solid ButtonText; } }

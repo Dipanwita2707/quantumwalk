@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { SiteHeader } from "@/components/SiteHeader";
 import { useEffect, useState } from "react";
 import { useSiteAtmosphere } from "@/lib/site-atmosphere";
 import { QuantumField, type FieldMode } from "@/components/QuantumField";
@@ -33,36 +35,57 @@ export default function LandingPage() {
 
   return <div className={`quantum-landing qw-page-shell ${paused ? "ql-motion-paused" : ""}`}>
     <LandingScrollEngine />
-    <header className="ql-header">
-      <Link className="ql-brand" href="/" aria-label="QuantumWalk home"><span className="ql-logo" aria-hidden="true">◈</span>QuantumWalk<span className="ql-brand-period">.</span></Link>
-      <nav className="ql-nav" aria-label="Landing navigation">
-        <a href="#landing-title" data-ql-nav="top">Overview</a>
-        <a href="#experience" data-ql-nav="experience">The experience</a>
-        <a href="#first-discovery" data-ql-nav="first-discovery">Try an experiment</a>
-        <a href="#private-lab" data-ql-nav="private-lab">Your space</a>
-      </nav>
-      <Link className="ql-login" href={profile?.authenticated ? "/dashboard" : "/login"}>{profile?.authenticated ? "Dashboard" : "Sign in"}<span aria-hidden="true">↗</span></Link>
-    </header>
+    <SiteHeader />
 
     <main>
       <section className="ql-hero" aria-labelledby="landing-title">
+        <div className="ql-showcase-backdrop" aria-hidden="true"><Image src="/images/quantum-universe-v1.png" alt="" fill priority sizes="(max-width: 760px) 100vw, 1320px" /></div>
         <div className="ql-hero-grid" aria-hidden="true" />
         <div className="ql-hero-copy">
           <p className="ql-eyebrow ql-reveal"><span className="ql-status-dot" /> A PLAYGROUND FOR THE QUANTUM CURIOUS</p>
-          <h1 id="landing-title" className="ql-reveal ql-reveal-delay-1 qw-heading-gradient">Small qubits.<br />Extraordinary<br /><span>possibilities.</span></h1>
-          <p className="ql-hero-description ql-reveal ql-reveal-delay-2">Step inside the science that changes how we think about computing. Build it. See it. Make it click.</p>
-          <p className="ql-engine-chip ql-reveal ql-reveal-delay-2" role="note">One circuit · Qiskit &amp; Cirq · same chances in the lab</p>
-          <div className="ql-actions ql-reveal ql-reveal-delay-3"><Link className="ql-primary" href={destination}>{profile?.authenticated ? "Enter your quantum lab" : "Begin your discovery"}<span aria-hidden="true">↗</span></Link><a className="ql-text-link" href="#first-discovery"><span className="ql-play" aria-hidden="true">▷</span> Try a little quantum</a></div>
+          <h1 id="landing-title" className="ql-reveal ql-reveal-delay-1">Explore the <br /><span>Quantum Universe</span></h1>
+          <p className="ql-hero-tagline ql-reveal">Learn. Simulate. Play. Build.</p>
+          <p className="ql-hero-description ql-reveal ql-reveal-delay-2">An interactive quantum computing and physics lab for curious minds. From qubits to the cosmos — learn through simulations, challenges, and hands-on experiments.</p>
+          <div className="ql-actions ql-reveal ql-reveal-delay-3"><Link className="ql-primary" href={destination}>{profile?.authenticated ? "Enter your quantum lab" : "Start Exploring"}<span aria-hidden="true">→</span></Link><a className="ql-text-link" href="#first-discovery"><span className="ql-play" aria-hidden="true">▷</span> Try an Experiment</a></div>
           <div className="ql-welcome ql-reveal ql-reveal-delay-4"><span className="ql-welcome-icon" aria-hidden="true">✳</span><p>No physics degree required.<br /><strong>Just bring your curiosity.</strong></p></div>
         </div>
 
         <div className="ql-universe" data-mode={mode}>
           <div className="ql-aura ql-aura-one" aria-hidden="true" /><div className="ql-aura ql-aura-two" aria-hidden="true" />
+          <svg className="ql-orbit-art" viewBox="0 0 600 450" fill="none" aria-hidden="true">
+            <defs>
+              <radialGradient id="landing-nucleus"><stop stopColor="#fff2ff" /><stop offset=".2" stopColor="#edb4ff" /><stop offset=".55" stopColor="#9157eb" /><stop offset="1" stopColor="#416be5" stopOpacity="0" /></radialGradient>
+              <linearGradient id="landing-orbit"><stop stopColor="#69ddff" /><stop offset=".5" stopColor="#ac76ff" /><stop offset="1" stopColor="#ff98dc" /></linearGradient>
+              <filter id="landing-glow"><feGaussianBlur stdDeviation="5" /></filter>
+            </defs>
+            <circle cx="300" cy="225" r="110" fill="url(#landing-nucleus)" opacity=".7" />
+            <g stroke="url(#landing-orbit)" strokeWidth="5" filter="url(#landing-glow)" opacity=".7">
+              <ellipse cx="300" cy="225" rx="220" ry="78" transform="rotate(-32 300 225)" />
+              <ellipse cx="300" cy="225" rx="180" ry="78" transform="rotate(35 300 225)" />
+              <ellipse cx="300" cy="225" rx="178" ry="78" transform="rotate(90 300 225)" />
+            </g>
+            <g stroke="url(#landing-orbit)" strokeWidth="1.5">
+              <ellipse cx="300" cy="225" rx="220" ry="78" transform="rotate(-32 300 225)" />
+              <ellipse cx="300" cy="225" rx="180" ry="78" transform="rotate(35 300 225)" />
+              <ellipse cx="300" cy="225" rx="178" ry="78" transform="rotate(90 300 225)" />
+              <circle cx="300" cy="225" r="100" strokeDasharray="2 9" />
+            </g>
+            <circle cx="130" cy="315" r="5" fill="#79dfec" />
+            <circle cx="430" cy="304" r="6" fill="#dcb3ff" />
+            <circle cx="340" cy="65" r="4" fill="#79dfec" />
+          </svg>
           <QuantumField mode={mode} paused={paused} />
           <div className="ql-scene-top"><span>QUANTUM FIELD / {concept.number}</span><span className="ql-scene-mark" aria-hidden="true">⌖</span></div>
           <div className="ql-core-label" aria-hidden="true"><span>{mode === "entanglement" ? "Φ" : mode === "interference" ? "∿" : "ψ"}</span><small>{mode === "entanglement" ? "CONNECTED STATES" : mode === "interference" ? "AMPLITUDES IN MOTION" : "A WORLD OF POSSIBILITY"}</small></div>
           <div className="ql-formula" key={mode}><span>THE IDEA, EXPRESSED</span><strong>{concept.formula}</strong></div>
           <div className="ql-scene-bottom"><span>CONCEPTUAL VISUALIZATION</span><button type="button" onClick={togglePaused} aria-pressed={paused} aria-label={paused ? "Resume ambient animation" : "Pause ambient animation"}>{paused ? "▷ Motion paused" : "Ⅱ Pause motion"}</button></div>
+        </div>
+
+        <div className="ql-feature-grid" aria-label="Explore QuantumWalk">
+          <Link href="/workspace"><span aria-hidden="true">⚛</span><h2>Interactive Simulations</h2><p>Build circuits. See quantum states.</p><small>Enter the lab →</small></Link>
+          <Link href="/learn"><span aria-hidden="true">✧</span><h2>Guided Learning</h2><p>Small discoveries. Lasting understanding.</p><small>Find your path →</small></Link>
+          <Link href="/challenges"><span aria-hidden="true">⌘</span><h2>Quantum Challenges</h2><p>Test your reasoning, one mission at a time.</p><small>Take a challenge →</small></Link>
+          <Link href="/lab"><span aria-hidden="true">◎</span><h2>Physics &amp; Beyond</h2><p>Explore the ideas behind the experiments.</p><small>Discover more →</small></Link>
         </div>
 
         <div className="ql-concept-strip ql-reveal">

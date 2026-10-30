@@ -160,9 +160,12 @@ export function LibraryDetail({ kind, slug }: { kind: "algorithms" | "challenges
                       <li>Choose gates from the builder tray above and append them to target qubits.</li>
                       <li>Observe live state vector probabilities and Bloch sphere rotations as you build.</li>
                       <li>
-                        Click <strong>Verify Circuit & Submit Challenge</strong> directly above. Once correct, 100 XP is awarded.
+                        Click <strong>Verify Circuit & Submit Challenge</strong> directly above.
                       </li>
                     </ol>
+                    <p className="content-intro">
+                      Tiers: <strong>Bronze</strong> — correct probabilities · <strong>Silver</strong> — fewer gates · <strong>Gold</strong> — reference gate count.
+                    </p>
                     <details style={{ marginTop: "16px", cursor: "pointer" }}>
                       <summary style={{ color: "var(--cyan)", fontWeight: 600 }}>Need a conceptual hint?</summary>
                       <p style={{ marginTop: "8px" }}>

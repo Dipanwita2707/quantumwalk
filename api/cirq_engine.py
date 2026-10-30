@@ -41,7 +41,7 @@ def _cirq_gate(op: Operation, qubits: list[cirq.Qid]) -> cirq.Operation:
 def simulate_cirq(request: CircuitRequest) -> SimulationResponse:
     line = cirq.LineQubit.range(request.qubits)
     circuit = cirq.Circuit()
-    simulator = cirq.Simulator()
+    simulator = cirq.Simulator(dtype=complex)
     snapshots = [
         snapshot_from_statevector(Statevector.from_int(0, dims=[2] * request.qubits), request.qubits, 0)
     ]
@@ -52,7 +52,9 @@ def simulate_cirq(request: CircuitRequest) -> SimulationResponse:
             measurement_targets.append(op.target)
         else:
             circuit.append(_cirq_gate(op, line))
-        raw = simulator.simulate(circuit, qubit_order=line).final_state_vector
+        # Cirq orders its first qubit as the most significant tensor axis;
+        # QuantumWalk/Qiskit label q0 as the rightmost (least significant) bit.
+        raw = simulator.simulate(circuit, qubit_order=list(reversed(line))).final_state_vector
         state = Statevector(raw, dims=[2] * request.qubits)
         snapshots.append(snapshot_from_statevector(state, request.qubits, index))
 

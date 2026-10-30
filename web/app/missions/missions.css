@@ -1,0 +1,16 @@
+.q-ui-mastery-badge { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid var(--q-border); border-radius: var(--q-radius); background: var(--q-surface); color: #e5b76a; }
+.q-ui-mastery-badge>div { display: grid; gap: 4px; }
+.q-ui-mastery-badge strong { color: var(--q-text); font-size: 14px; }
+.q-ui-mastery-badge span, .q-ui-mastery-badge small { color: var(--q-muted); font-size: 11px; }
+.q-ui-quest .q-ui-page-heading { margin-bottom: 16px; }
+.q-ui-quest .mission-journey { padding: 20px; border-radius: var(--q-radius); }
+.q-ui-quest .mission-map { gap: 78px 24px; padding-top: 80px; }
+.q-ui-quest .mission-map .mission-world { padding: 14px; border-radius: var(--q-radius); background: #081324df; border-color: #8898cd55; backdrop-filter: none; }
+.q-ui-quest .mission-map .mission-world[data-locked=true]::before { content: none; }
+.q-ui-quest .mission-map .mission-world[data-locked=true] { background: #0a1526f5; border-style: dashed; }
+.q-ui-quest .mission-map .mission-world h2 { font-size: 15px; }
+.q-ui-quest .mission-map .mission-world p { font-size: 11px; }
+.q-ui-quest .mission-map .mission-world-number { width: 32px; height: 32px; font-size: 14px; top: -28px; }
+.q-ui-quest .mission-map .mission-world .q-ui-button { min-height: 40px; font-size: 11px; padding: 8px 12px; }
+.q-ui-quest-continue { display: flex; justify-content: flex-end; padding-top: 24px; }
+@media(max-width:760px) { .q-ui-quest .mission-map { gap: 50px; padding-top: 40px; }.q-ui-quest .q-ui-page-heading { align-items: stretch; }.q-ui-quest .q-ui-heading-actions { justify-content: flex-end; }.q-ui-quest .mission-journey { padding: 16px; } }

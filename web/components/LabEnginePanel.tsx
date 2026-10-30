@@ -5,9 +5,18 @@ import { api } from "@/lib/api";
 
 type Operation = { gate: string; target: number; control?: number; angle?: number };
 
+type Prob = { basis: string; probability: number };
+
 type Sim = {
-  steps: { probabilities: { basis: string; probability: number }[] }[];
+  steps: { probabilities: Prob[] }[];
   engine?: string;
+};
+
+export type EngineCompareResult = {
+  agree: boolean;
+  caption: string;
+  qiskit: Prob[];
+  cirq: Prob[];
 };
 
 export function LabEnginePanel({
@@ -23,13 +32,15 @@ export function LabEnginePanel({
   csrf?: string;
   noiseOn: boolean;
   onNoiseChange: (value: boolean) => void;
-  onCompare: (agree: boolean, caption: string) => void;
+  onCompare: (result: EngineCompareResult | null) => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [transpile, setTranspile] = useState<{ depth: number; size: number; basis_gates: string[] } | null>(null);
+  const [actionError, setActionError] = useState("");
 
   async function compareCirq() {
     setBusy(true);
+    setActionError("");
     try {
       const body = { qubits, operations, shots: 1024, engine: "qiskit" as const };
       const q = await api<Sim>("/api/simulate", { method: "POST", body: JSON.stringify(body) }, csrf);
@@ -42,9 +53,15 @@ export function LabEnginePanel({
         maxDelta = Math.max(maxDelta, Math.abs(item.probability - other));
       }
       const agree = maxDelta < 1e-5;
-      onCompare(agree, agree ? "Both libraries calculated the same chances." : "Engines differ slightly — check your gate list.");
-    } catch {
-      onCompare(false, "Could not compare engines.");
+      onCompare({
+        agree,
+        caption: agree ? "Both libraries calculated the same chances." : "Engines differ slightly — check your gate list.",
+        qiskit: pq,
+        cirq: pc,
+      });
+    } catch (cause) {
+      onCompare(null);
+      setActionError(cause instanceof Error ? cause.message : "Could not compare engines.");
     } finally {
       setBusy(false);
     }
@@ -52,14 +69,16 @@ export function LabEnginePanel({
 
   async function loadTranspile() {
     setBusy(true);
+    setActionError("");
     try {
       const data = await api<{ depth: number; size: number; basis_gates: string[] }>("/api/transpile-preview", {
         method: "POST",
         body: JSON.stringify({ qubits, operations, shots: 1 }),
       });
       setTranspile(data);
-    } catch {
+    } catch (cause) {
       setTranspile(null);
+      setActionError(cause instanceof Error ? cause.message : "Could not preview transpilation.");
     } finally {
       setBusy(false);
     }
@@ -68,12 +87,14 @@ export function LabEnginePanel({
   return (
     <div className="lab-engine-panel">
       <span className="panel-kicker">ADVANCED</span>
-      <button type="button" disabled={busy} onClick={() => void compareCirq()}>
+      <button type="button" disabled={busy || !csrf} onClick={() => void compareCirq()}>
         {busy ? "Comparing…" : "Compare Qiskit & Cirq"}
       </button>
-      <button type="button" disabled={busy} onClick={() => void loadTranspile()}>
+      <button type="button" disabled={busy || !csrf} onClick={() => void loadTranspile()}>
         Transpile preview
       </button>
+      {!csrf && <p className="lab-engine-guest-note">Sign in to compare engines or preview transpilation.</p>}
+      {actionError && <p className="lab-run-error" role="alert">{actionError}</p>}
       <label className="lab-noise-toggle">
         <input type="checkbox" checked={noiseOn} onChange={(e) => onNoiseChange(e.target.checked)} />
         Pedagogical noise on next run

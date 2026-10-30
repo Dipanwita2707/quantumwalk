@@ -490,7 +490,7 @@
 /* Diagnostics: State Vector & Bloch Sphere */
 .cv-diagnostics-grid {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, .85fr);
   gap: 20px;
 }
 
@@ -501,6 +501,7 @@
 }
 
 .cv-diag-card {
+  min-width: 0;
   background: rgba(13, 26, 48, 0.7);
   border: 1px solid rgba(32, 50, 80, 0.8);
   border-radius: 12px;
@@ -589,9 +590,15 @@
 }
 
 .cv-sphere-wrapper {
-  width: 220px;
-  height: 220px;
+  width: 100%;
+  max-width: 360px;
   margin: 0 auto;
+}
+
+@media (max-width: 600px) {
+  .cv-container { padding: 16px; }
+  .cv-header, .cv-card-header { flex-wrap: wrap; gap: 12px; }
+  .cv-diag-card { padding: 14px; }
 }
 
 .cv-bloch-coords {

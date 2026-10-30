@@ -1,0 +1,39 @@
+# Local development stack (optional). Copy .env.example to .env before use.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: quantumwalk
+      POSTGRES_PASSWORD: quantumwalk
+      POSTGRES_DB: quantumwalk
+    ports:
+      - "5432:5432"
+    volumes:
+      - qw_pg_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://quantumwalk:quantumwalk@db:5432/quantumwalk
+      FRONTEND_ORIGIN: http://localhost:3000
+      QUANTUMWALK_ENV: development
+    depends_on:
+      - db
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      - api
+
+volumes:
+  qw_pg_data:

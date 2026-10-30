@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { api, useSession } from "@/lib/api";
 
 type Export = { profile: object; circuits: object[]; progress: object[] };
 
 export default function ProfilePage() {
-  const router = useRouter();
   const { profile, loading, refresh } = useSession();
   const [name, setName] = useState("");
   const [analytics, setAnalytics] = useState(false);
@@ -40,18 +38,19 @@ export default function ProfilePage() {
   async function logout() {
     if (!profile?.authenticated || busy) return;
     setBusy("logout"); setError(""); setNotice("");
-    try { await api<null>("/api/logout", { method: "POST" }, profile.csrf_token); try { localStorage.removeItem(`qw_circuit_draft_${profile.id}`); localStorage.removeItem("qw_circuit_draft"); } catch { /* Storage may be unavailable. */ } await refresh(); router.push("/"); router.refresh(); }
+    try { await api<null>("/api/logout", { method: "POST" }, profile.csrf_token); try { localStorage.removeItem(`qw_circuit_draft_${profile.id}`); localStorage.removeItem("qw_circuit_draft"); } catch { /* Storage may be unavailable. */ } window.location.replace("/"); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Could not sign out."); }
     finally { setBusy(""); }
   }
   async function deleteAccount() {
     if (!profile?.authenticated || deletionText !== "DELETE" || busy) return;
     setBusy("delete"); setError(""); setNotice("");
-    try { await api<null>("/api/account", { method: "DELETE" }, profile.csrf_token); try { localStorage.removeItem(`qw_circuit_draft_${profile.id}`); localStorage.removeItem("qw_circuit_draft"); } catch { /* Storage may be unavailable. */ } await refresh(); router.push("/"); router.refresh(); }
+    try { await api<null>("/api/account", { method: "DELETE" }, profile.csrf_token); try { localStorage.removeItem(`qw_circuit_draft_${profile.id}`); localStorage.removeItem("qw_circuit_draft"); } catch { /* Storage may be unavailable. */ } window.location.replace("/"); }
     catch (cause) { setError(cause instanceof Error ? cause.message : "Could not delete account."); }
     finally { setBusy(""); }
   }
   return <><SiteHeader /><main className="content-shell narrow"><p className="eyebrow">ACCOUNT & PRIVACY</p><h1>Your profile</h1>
+    <p><Link className="card-action" href="/settings/preferences">Learning & accessibility preferences →</Link></p>
     {loading && <p role="status">Loading account…</p>}
     {!loading && !profile?.authenticated && <p className="content-card">Sign in to manage your account. <Link className="card-action" href="/login">Sign in →</Link></p>}
     {error && <p className="content-error" role="alert">{error}</p>}{notice && <p className="success-note" role="status">{notice}</p>}{busy && <p role="status">{busy === "save" ? "Saving profile…" : busy === "export" ? "Preparing data export…" : busy === "logout" ? "Signing out…" : "Deleting account…"}</p>}

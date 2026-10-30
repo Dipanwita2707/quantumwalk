@@ -14,7 +14,7 @@ export function GuestExperienceBanner({
   const copy = {
     lab: {
       title: "Demo lab mode",
-      body: "Preset circuits run on the public demo simulator. Sign in to edit gates, save, export, and compare engines.",
+      body: "Build and run circuits on the public demo simulator (up to 5 qubits). Sign in to save, export, and compare engines.",
     },
     learn: {
       title: "Preview mode",
@@ -22,7 +22,7 @@ export function GuestExperienceBanner({
     },
     explorer: {
       title: "Explorer preview",
-      body: "Static charts and circuit previews are educational. Live Grover TSP sampling runs on the QuantumWalk API when it is online (no sign-in). Sign in for the full lab, custom circuits, and saves.",
+      body: "Explore concepts and run live Grover TSP sampling when the API is online. Build guest circuits in the Lab; sign in to save them.",
     },
     challenge: {
       title: "Sign in to compete",

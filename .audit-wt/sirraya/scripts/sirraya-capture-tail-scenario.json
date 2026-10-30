@@ -1,0 +1,71 @@
+{
+  "browser": {
+    "mode": "launch",
+    "executable_path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "headless": true
+  },
+  "start_url": { "url": "https://tools.sirraya.org/" },
+  "capture": {
+    "after_each_step": ["url", "accessibility"],
+    "at_end": ["screenshot", "accessibility"],
+    "events": ["network", "console", "page-errors"],
+    "network": {
+      "request_body": false,
+      "response_body": true,
+      "header_values": false
+    }
+  },
+  "actions": [
+    {
+      "step_id": "hub-ready",
+      "action": "wait_for",
+      "timeout_ms": 60000,
+      "locator": { "kind": "role", "role": "button", "name": "Create a document" },
+      "state": "visible"
+    },
+    {
+      "step_id": "tool-document-pro",
+      "action": "click",
+      "timeout_ms": 45000,
+      "locator": { "kind": "css", "selector": "button:has(h3:text-is('Document Pro'))" }
+    },
+    { "step_id": "tool-document-pro-settle", "action": "wait_for_timeout", "duration_ms": 12000 },
+    {
+      "step_id": "hub-reset",
+      "action": "goto",
+      "timeout_ms": 45000,
+      "destination": { "url": "https://tools.sirraya.org/" },
+      "wait_until": "domcontentloaded"
+    },
+    { "step_id": "hub-wait", "action": "wait_for_timeout", "duration_ms": 2500 },
+    {
+      "step_id": "tool-quantum-academy",
+      "action": "click",
+      "timeout_ms": 45000,
+      "locator": { "kind": "css", "selector": "button:has(h3:text-is('Quantum Academy'))" }
+    },
+    { "step_id": "tool-quantum-academy-settle", "action": "wait_for_timeout", "duration_ms": 15000 },
+    {
+      "step_id": "hub-reset-2",
+      "action": "goto",
+      "timeout_ms": 45000,
+      "destination": { "url": "https://tools.sirraya.org/" },
+      "wait_until": "domcontentloaded"
+    },
+    { "step_id": "hub-wait-2", "action": "wait_for_timeout", "duration_ms": 2500 },
+    {
+      "step_id": "tool-quantum-explorer",
+      "action": "click",
+      "timeout_ms": 45000,
+      "locator": { "kind": "css", "selector": "button:has(h3:text-is('Quantum Explorer'))" }
+    },
+    { "step_id": "explorer-settle", "action": "wait_for_timeout", "duration_ms": 10000 },
+    {
+      "step_id": "click-check-status",
+      "action": "click",
+      "timeout_ms": 20000,
+      "locator": { "kind": "role", "role": "button", "name": "Check Status" }
+    },
+    { "step_id": "after-check-status", "action": "wait_for_timeout", "duration_ms": 4000 }
+  ]
+}

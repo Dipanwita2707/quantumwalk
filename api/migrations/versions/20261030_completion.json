@@ -1,0 +1,669 @@
+[
+  {
+    "name": "lesson_revisions",
+    "columns": [
+      {
+        "name": "lesson_slug",
+        "type": "String",
+        "length": 80,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "revision",
+        "type": "Integer",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "content",
+        "type": "JSON",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "length": 20,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "creator_user_id",
+        "type": "String",
+        "length": 36,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": "users.id",
+        "ondelete": "SET NULL"
+      },
+      {
+        "name": "reviewer_user_id",
+        "type": "String",
+        "length": 36,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": "users.id",
+        "ondelete": "SET NULL"
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "timezone": false,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        "uq_lesson_revision",
+        [
+          "lesson_slug",
+          "revision"
+        ]
+      ]
+    ],
+    "checks": [
+      [
+        "ck_lesson_revision_positive",
+        "revision > 0"
+      ]
+    ],
+    "indexes": []
+  },
+  {
+    "name": "lesson_publications",
+    "columns": [
+      {
+        "name": "lesson_slug",
+        "type": "String",
+        "length": 80,
+        "timezone": false,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "revision_id",
+        "type": "String",
+        "length": 36,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "lesson_revisions.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "state",
+        "type": "String",
+        "length": 20,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "length": null,
+        "timezone": true,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "assignment_rubrics",
+    "columns": [
+      {
+        "name": "assignment_id",
+        "type": "String",
+        "length": 36,
+        "timezone": false,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": "assignments.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "definition",
+        "type": "JSON",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "revision",
+        "type": "Integer",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "timezone": true,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "submission_rubrics",
+    "columns": [
+      {
+        "name": "submission_id",
+        "type": "String",
+        "length": 36,
+        "timezone": false,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": "submissions.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "definition_snapshot",
+        "type": "JSON",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "ratings",
+        "type": "JSON",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "revision",
+        "type": "Integer",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "graded_at",
+        "type": "DateTime",
+        "length": null,
+        "timezone": true,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": []
+  },
+  {
+    "name": "boss_definitions",
+    "columns": [
+      {
+        "name": "slug",
+        "type": "String",
+        "length": 80,
+        "timezone": false,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "version",
+        "type": "Integer",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "content",
+        "type": "JSON",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "length": 20,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "creator_user_id",
+        "type": "String",
+        "length": 36,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": "users.id",
+        "ondelete": "SET NULL"
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "timezone": true,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [
+      [
+        "ck_boss_version_positive",
+        "version > 0"
+      ]
+    ],
+    "indexes": []
+  },
+  {
+    "name": "boss_attempts",
+    "columns": [
+      {
+        "name": "owner_user_id",
+        "type": "String",
+        "length": 36,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "boss_slug",
+        "type": "String",
+        "length": 80,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "boss_definitions.slug",
+        "ondelete": null
+      },
+      {
+        "name": "boss_version",
+        "type": "Integer",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "definition_snapshot",
+        "type": "JSON",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "evidence",
+        "type": "JSON",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "reflection",
+        "type": "Text",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "passed",
+        "type": "Boolean",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "timezone": false,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [],
+    "checks": [],
+    "indexes": [
+      [
+        "ix_boss_owner_created",
+        [
+          "owner_user_id",
+          "created_at"
+        ],
+        false
+      ]
+    ]
+  },
+  {
+    "name": "simulation_jobs",
+    "columns": [
+      {
+        "name": "owner_user_id",
+        "type": "String",
+        "length": 36,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": "users.id",
+        "ondelete": "CASCADE"
+      },
+      {
+        "name": "request_key",
+        "type": "String",
+        "length": 80,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "request_hash",
+        "type": "String",
+        "length": 64,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "kind",
+        "type": "String",
+        "length": 20,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "lab_slug",
+        "type": "String",
+        "length": 80,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "model_version",
+        "type": "String",
+        "length": 40,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "parameters",
+        "type": "JSON",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "length": 20,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "result",
+        "type": "JSON",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "run_id",
+        "type": "String",
+        "length": 36,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": "lab_runs.id",
+        "ondelete": "SET NULL"
+      },
+      {
+        "name": "error_code",
+        "type": "String",
+        "length": 60,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "lease_owner",
+        "type": "String",
+        "length": 80,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "lease_expires_at",
+        "type": "DateTime",
+        "length": null,
+        "timezone": true,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "heartbeat_at",
+        "type": "DateTime",
+        "length": null,
+        "timezone": true,
+        "primary_key": false,
+        "nullable": true,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "attempt_count",
+        "type": "Integer",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "cancel_requested",
+        "type": "Boolean",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "updated_at",
+        "type": "DateTime",
+        "length": null,
+        "timezone": true,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "id",
+        "type": "String",
+        "length": 36,
+        "timezone": false,
+        "primary_key": true,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      },
+      {
+        "name": "created_at",
+        "type": "DateTime",
+        "length": null,
+        "timezone": false,
+        "primary_key": false,
+        "nullable": false,
+        "foreign_key": null,
+        "ondelete": null
+      }
+    ],
+    "unique": [
+      [
+        "uq_job_owner_request",
+        [
+          "owner_user_id",
+          "request_key"
+        ]
+      ]
+    ],
+    "checks": [
+      [
+        "ck_job_attempts_nonnegative",
+        "attempt_count >= 0"
+      ],
+      [
+        "ck_job_status",
+        "status IN ('queued','running','completed','failed','cancelled')"
+      ]
+    ],
+    "indexes": [
+      [
+        "ix_job_owner_created",
+        [
+          "owner_user_id",
+          "created_at"
+        ],
+        false
+      ],
+      [
+        "ix_job_state_created",
+        [
+          "status",
+          "created_at"
+        ],
+        false
+      ]
+    ]
+  }
+]

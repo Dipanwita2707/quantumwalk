@@ -107,7 +107,7 @@ test.describe("Authenticated UX audit (mock session)", () => {
 
   test("Dashboard loads private data without guest intro card", async ({ page }) => {
     await page.goto("/dashboard");
-    await expect(page.getByText(/Your dashboard/i)).toBeVisible();
+    await expect(page.getByTestId("dashboard-continue")).toBeVisible();
     await expect(page.getByRole("main").getByText("UX Audit User")).toBeVisible();
     await expect(page.getByText("Guest overview")).toHaveCount(0);
   });

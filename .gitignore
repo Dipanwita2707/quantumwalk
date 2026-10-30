@@ -6,6 +6,8 @@
 __pycache__/
 .pytest_cache/
 web/node_modules/
+web/sirraya/node_modules/
+sirraya/web/node_modules/
 web/.next/
 .npm-cache/
 .npm-cache-swc/
@@ -17,3 +19,4 @@ api/*.db-*
 backups/
 *.dump
 *.dump.sha256
+.next-srs/

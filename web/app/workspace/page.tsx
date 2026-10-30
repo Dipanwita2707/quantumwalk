@@ -1,20 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useRef } from "react";
+import { Suspense, useEffect, useMemo, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import type { CSSProperties } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { PageHeading } from "@/components/ui/QuantumUI";
 import { GuestExperienceBanner } from "@/components/GuestExperienceBanner";
 import { api, useSession } from "@/lib/api";
 import { QuantumSphere } from "@/components/QuantumSphere";
+import { EngineProbabilityComparison, StateEvolutionGuide, StateVectorView } from "@/components/StateEvolution";
+import { explainStateStep } from "@/lib/stateExplanation";
 import { EntanglementLab } from "@/components/EntanglementLab";
 import { QuantumMissions } from "@/components/QuantumMissions";
 import { QuantumToolbox } from "@/components/QuantumToolbox";
 import { QuantumEquationWhiteboard } from "@/components/QuantumEquationWhiteboard";
 import { LabGlossaryDrawer } from "@/components/LabGlossaryDrawer";
 import { LabEnginePanel, type EngineCompareResult } from "@/components/LabEnginePanel";
+import { LabCircuitTutor } from "@/components/LabCircuitTutor";
 import { demoPresetFromParam, demoSimulateCircuit, type DemoPreset } from "@/lib/demoSimulate";
 import { CIRCUIT_PRESETS } from "@/lib/circuitPresets";
-import { stepButtonLabel, stepNarrator } from "@/lib/stepNarrator";
+import { LAB_SECTION_ROUTES, normalizeLabHash } from "@/lib/labSections";
+import { stepButtonLabel } from "@/lib/stepNarrator";
 import "./lab.css";
 
 type Gate = "h" | "x" | "y" | "z" | "s" | "t" | "rx" | "ry" | "rz" | "cx" | "cz" | "swap" | "measure";
@@ -109,15 +116,18 @@ const ghz: Operation[] = [
 
 const superposition: Operation[] = [{ gate: "h", target: 0 }];
 
-function complexLabel(item: Amplitude) {
-  const r = Math.abs(item.real) < 0.0001 ? 0 : item.real;
-  const i = Math.abs(item.imag) < 0.0001 ? 0 : item.imag;
-  if (!i) return r.toFixed(3);
-  return `${r.toFixed(3)} ${i < 0 ? "−" : "+"} ${Math.abs(i).toFixed(3)}i`;
-}
+
 
 export default function Home() {
-  const { profile, loading: accountLoading, refresh: refreshSession } = useSession();
+  return <Suspense fallback={<p role="status">Loading circuit workspace…</p>}><Workspace /></Suspense>;
+}
+
+function Workspace() {
+  const searchParams = useSearchParams();
+  const sourceKey = JSON.stringify(["preset", "algorithm", "challenge", "circuit", "blank"].map(key => searchParams.get(key)));
+  const requestedMode = searchParams.get("mode");
+  const hydratedSourceRef = useRef<string | null>(null);
+  const { profile, loading: accountLoading, error: sessionError, refresh: refreshSession } = useSession();
 
   useEffect(() => {
     const syncSession = () => {
@@ -148,41 +158,34 @@ export default function Home() {
   const [saveNotice, setSaveNotice] = useState("");
   const [challenge, setChallenge] = useState<{ slug: string; title: string; summary: string } | null>(null);
   const [challengeNotice, setChallengeNotice] = useState("");
-  const [question, setQuestion] = useState("");
-  const [coachAnswer, setCoachAnswer] = useState("");
-  const [coachBusy, setCoachBusy] = useState(false);
-  const [allowExternalAI, setAllowExternalAI] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackDelay, setPlaybackDelay] = useState(1400);
   const [categoryFilter, setCategoryFilter] = useState<GateCategory>("all");
   const [labMode, setLabMode] = useState<"circuit" | "whiteboard">("circuit");
-  const [workflowView, setWorkflowView] = useState<"build" | "simulate" | "analyze">("build");
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   const [engineCompare, setEngineCompare] = useState<EngineCompareResult | null>(null);
   const [noiseOn, setNoiseOn] = useState(false);
   const [runEngine, setRunEngine] = useState<"qiskit" | "cirq">("qiskit");
   const [demoPresetKey, setDemoPresetKey] = useState<DemoPreset | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const hydratedOwnerRef = useRef<string | null>(null);
 
   const current = result?.data.steps[Math.min(step, result.data.steps.length - 1)];
   const stale = result !== null && result.revision !== revision;
-  const vector = current?.bloch[selectedQubit];
+  const vector = stale ? undefined : current?.bloch[selectedQubit];
 
   // Auto-play step evolution
   useEffect(() => {
-    if (!isPlaying || !result || result.data.steps.length <= 1) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      return;
-    }
-    timerRef.current = setInterval(() => {
-      setStep((prev) => (prev < result.data.steps.length - 1 ? prev + 1 : 0));
-    }, 1400);
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isPlaying, result]);
+    if (!isPlaying || !result) return;
+    if (stale || busy || step >= result.data.steps.length - 1) { setIsPlaying(false); return; }
+    const timer = setTimeout(() => setStep(step + 1), playbackDelay);
+    return () => clearTimeout(timer);
+  }, [isPlaying, result, step, stale, busy, playbackDelay]);
 
   const isHydratedRef = useRef(false);
+
+  useEffect(() => {
+    if (requestedMode === "circuit" || requestedMode === "whiteboard") setLabMode(requestedMode);
+  }, [requestedMode]);
 
   function switchMode(nextMode: "circuit" | "whiteboard") {
     setLabMode(nextMode);
@@ -228,9 +231,47 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined" || accountLoading) return;
+
+    function applyLabSectionHash(rawHash: string) {
+      const hash = normalizeLabHash(rawHash);
+      if (!hash) return;
+      const route = LAB_SECTION_ROUTES[hash];
+      if (route) {
+        setLabMode(route.mode);
+        try {
+          localStorage.setItem("qw_lab_mode", route.mode);
+          const url = new URL(window.location.href);
+          url.searchParams.set("mode", route.mode);
+          url.hash = hash;
+          window.history.replaceState({}, "", url.toString());
+        } catch {}
+      }
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          const target = document.getElementById(hash);
+          if (!target) return;
+          let parent: HTMLElement | null = target;
+          while (parent) {
+            if (parent instanceof HTMLDetailsElement) parent.open = true;
+            parent = parent.parentElement;
+          }
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+    }
+
+    applyLabSectionHash(window.location.hash);
+    const onHashChange = () => applyLabSectionHash(window.location.hash);
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, [accountLoading]);
+
+  useEffect(() => {
     if (accountLoading) return;
     const ownerKey = profile?.authenticated ? profile.id : "guest";
-    if (hydratedOwnerRef.current === ownerKey) return;
+    if (hydratedOwnerRef.current === ownerKey && hydratedSourceRef.current === sourceKey) return;
+    hydratedSourceRef.current = sourceKey;
     hydratedOwnerRef.current = ownerKey;
     isHydratedRef.current = false;
     setQubits(1);
@@ -238,6 +279,10 @@ export default function Home() {
     setResult(null);
     setName("My quantum circuit");
     setLoadedId(null);
+    setChallenge(null);
+    setPast([]);
+    setFuture([]);
+    setDemoPresetKey(null);
     const params = new URLSearchParams(window.location.search);
     const algorithm = params.get("algorithm");
     const slug = params.get("challenge");
@@ -264,6 +309,7 @@ export default function Home() {
     } else if (algorithm) {
       void api<AlgorithmResource>(`/api/algorithms/${encodeURIComponent(algorithm)}`)
         .then((item) => {
+          if (hydratedSourceRef.current !== sourceKey || hydratedOwnerRef.current !== ownerKey) return;
           changeCircuit(item.operations, item.qubits);
           setResult(null);
           setName(item.title);
@@ -271,12 +317,14 @@ export default function Home() {
           isHydratedRef.current = true;
         })
         .catch((cause) => {
+          if (hydratedSourceRef.current !== sourceKey || hydratedOwnerRef.current !== ownerKey) return;
           setError(cause instanceof Error ? cause.message : "Could not load algorithm.");
           isHydratedRef.current = true;
         });
     } else if (slug) {
       void api<ChallengeResource[]>("/api/challenges")
         .then((items) => {
+          if (hydratedSourceRef.current !== sourceKey || hydratedOwnerRef.current !== ownerKey) return;
           const item = items.find((entry) => entry.slug === slug);
           if (!item) throw new Error("Challenge not found.");
           setChallenge({ slug, title: item.title, summary: item.summary });
@@ -286,6 +334,7 @@ export default function Home() {
           isHydratedRef.current = true;
         })
         .catch((cause) => {
+          if (hydratedSourceRef.current !== sourceKey || hydratedOwnerRef.current !== ownerKey) return;
           setError(cause instanceof Error ? cause.message : "Could not load challenge.");
           isHydratedRef.current = true;
         });
@@ -309,10 +358,17 @@ export default function Home() {
         }
       } catch {}
       isHydratedRef.current = true;
+    } else if (params.get("blank") === "1") {
+      isHydratedRef.current = true;
+    } else if (mode === "circuit" || mode === null) {
+      applyCircuit(superposition, 1);
+      setGate("h");
+      setName("Single Qubit Superposition");
+      isHydratedRef.current = true;
     } else {
       isHydratedRef.current = true;
     }
-  }, [accountLoading, profile?.authenticated]);
+  }, [accountLoading, profile?.authenticated, profile?.authenticated ? profile.id : null, sourceKey]);
 
   useEffect(() => {
     const circuitId = new URLSearchParams(window.location.search).get("circuit");
@@ -321,15 +377,18 @@ export default function Home() {
       setError("Sign in to load your saved circuit.");
       return;
     }
+    let active = true;
     void api<CircuitResource>(`/api/circuits/${encodeURIComponent(circuitId)}`)
       .then((item) => {
+        if (!active) return;
         changeCircuit(item.operations, item.qubits);
         setResult(null);
         setName(item.name);
         setLoadedId(item.id);
       })
-      .catch((cause) => setError(cause instanceof Error ? cause.message : "Could not load saved circuit."));
-  }, [accountLoading, profile?.authenticated]);
+      .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Could not load saved circuit."); });
+    return () => { active = false; };
+  }, [accountLoading, profile?.authenticated, sourceKey]);
 
   function applyCircuit(next: Operation[], count: number) {
     setOperations(next);
@@ -414,11 +473,19 @@ export default function Home() {
     changeCircuit([...operations, { gate, target, ...(twoQubit.has(gate) ? { control } : {}), ...(rotations.has(gate) ? { angle } : {}) }]);
   }
 
+  function focusSimulationResults() {
+    if (typeof window === "undefined" || !window.matchMedia("(max-width: 1100px)").matches) return;
+    requestAnimationFrame(() => {
+      document.getElementById("bloch")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    });
+  }
+
   async function run() {
-    if (busy) return;
+    if (busy || accountLoading) return;
     setBusy(true);
     setError("");
     setEngineCompare(null);
+    setIsPlaying(false);
     const submittedRevision = revision;
     try {
       let data: Simulation;
@@ -450,7 +517,9 @@ export default function Home() {
         );
       }
       setResult({ revision: submittedRevision, operations, data });
-      setStep(data.steps.length - 1);
+      setStep(0);
+      setIsPlaying(data.steps.length > 1);
+      focusSimulationResults();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Simulation failed.");
     } finally {
@@ -500,28 +569,6 @@ export default function Home() {
     }
   }
 
-  async function askCoach(event: React.FormEvent) {
-    event.preventDefault();
-    if (!question.trim() || coachBusy) return;
-    setCoachBusy(true);
-    setError("");
-    try {
-      const response = await api<{ answer: string; uses_external_ai: boolean }>(
-        "/api/tutor/explain",
-        {
-          method: "POST",
-          body: JSON.stringify({ question, circuit: { qubits, operations }, allow_external_ai: allowExternalAI }),
-        },
-        profile?.authenticated ? profile.csrf_token : undefined
-      );
-      setCoachAnswer(`${response.answer}\n\n${response.uses_external_ai ? "AI explanation · verify numbers in simulator." : "Local circuit explanation."}`);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The coach is unavailable.");
-    } finally {
-      setCoachBusy(false);
-    }
-  }
-
   async function exportCircuit(format: "qasm" | "qiskit" | "cirq") {
     setError("");
     try {
@@ -538,11 +585,9 @@ export default function Home() {
     }
   }
 
-  const hilbertDim = 1 << qubits;
-  const isEntangled = Boolean(vector && vector.purity < 0.985);
   const filteredGates = categoryFilter === "all" ? gateOptions : gateOptions.filter((g) => gateCategoryMap[g] === categoryFilter);
   const stepGate = step > 0 && result ? result.operations[step - 1]?.gate : null;
-  const narrator = stepNarrator(step, stepGate ?? null);
+  const narrator = result ? explainStateStep(step, result.operations, result.data.steps) : null;
   const shots = result?.data.shots || 1024;
   const dualHistogram =
     result?.data.mode === "pedagogical_noise" && result.data.counts && result.data.noisy_counts
@@ -553,11 +598,15 @@ export default function Home() {
     ? [...new Set([...Object.keys(dualHistogram.ideal), ...Object.keys(dualHistogram.noisy)])].sort()
     : [];
 
+  const latestProbs = useMemo(() => {
+    if (!result || stale) return null;
+    const probs = current?.probabilities ?? [];
+    return [...probs].sort((a, b) => b.probability - a.probability).filter((p) => p.probability > 0.0001).slice(0, 4);
+  }, [result, current, stale]);
+
   return (
     <div
-      className={`app-shell lab-shell nextlevel-system ${labMode === "whiteboard" ? "whiteboard-mode" : ""} ${
-        labMode === "circuit" ? `lab-workflow-view-${workflowView}` : ""
-      }`}
+      className={`app-shell lab-shell nextlevel-system ${labMode === "whiteboard" ? "whiteboard-mode" : ""}`}
     >
       <SiteHeader />
 
@@ -565,6 +614,11 @@ export default function Home() {
         {labMode === "circuit" && (
           <div className="lab-guest-banner-wrap">
             <GuestExperienceBanner context="lab" />
+            {sessionError && (
+              <p className="error lab-run-error" role="alert">
+                {sessionError} You can still try the guest simulator while sign-in is unavailable.
+              </p>
+            )}
           </div>
         )}
         {/* Left Quantum Navigation & Gate Library */}
@@ -579,9 +633,6 @@ export default function Home() {
 
           <div className="side-caption">QUICK PRESETS</div>
           <div className="sidebar-presets-list">
-            {labMode === "circuit" && <a className="side-preset-btn" href="#quantum-toolbox">◎ <span>Noise & concept toolbox ↘</span></a>}
-            {labMode === "circuit" && <a className="side-preset-btn" href="#quantum-missions">✧ <span>Quantum missions ↘</span></a>}
-            {labMode === "circuit" && <a className="side-preset-btn" href="#entanglement-lab">⊗ <span>Entanglement experiment ↘</span></a>}
             <button
               type="button"
               className="side-preset-btn"
@@ -646,11 +697,12 @@ export default function Home() {
             <span className="side-badge">{gateOptions.length}</span>
           </div>
 
-          {/* Gate category filter tabs */}
-          <div className="gate-category-tabs" role="tablist" aria-label="Gate categories">
+          {/* Gate category filters */}
+          <div className="gate-category-tabs" role="group" aria-label="Gate categories">
             <button
               type="button"
               className={categoryFilter === "all" ? "active-tab" : ""}
+              aria-pressed={categoryFilter === "all"}
               onClick={() => setCategoryFilter("all")}
             >
               All
@@ -658,6 +710,7 @@ export default function Home() {
             <button
               type="button"
               className={categoryFilter === "superposition" ? "active-tab" : ""}
+              aria-pressed={categoryFilter === "superposition"}
               onClick={() => setCategoryFilter("superposition")}
               title="Superposition gates (H)"
             >
@@ -666,6 +719,7 @@ export default function Home() {
             <button
               type="button"
               className={categoryFilter === "pauli" ? "active-tab" : ""}
+              aria-pressed={categoryFilter === "pauli"}
               onClick={() => setCategoryFilter("pauli")}
               title="Pauli & Phase gates"
             >
@@ -674,6 +728,7 @@ export default function Home() {
             <button
               type="button"
               className={categoryFilter === "rotations" ? "active-tab" : ""}
+              aria-pressed={categoryFilter === "rotations"}
               onClick={() => setCategoryFilter("rotations")}
               title="Parametric rotations"
             >
@@ -682,6 +737,7 @@ export default function Home() {
             <button
               type="button"
               className={categoryFilter === "entangle" ? "active-tab" : ""}
+              aria-pressed={categoryFilter === "entangle"}
               onClick={() => setCategoryFilter("entangle")}
               title="Multi-qubit entanglement"
             >
@@ -728,9 +784,11 @@ export default function Home() {
 
           <div className="lab-private-note">
             <span aria-hidden="true">⚛</span>
-            <strong>Hardware-grade privacy</strong>
-            <p>Circuits are isolated and private to your secure session.</p>
-            <Link href="/circuits">Open saved work ↗</Link>
+            <strong>{profile?.authenticated ? "Private saved circuits" : "Guest lab"}</strong>
+            <p>{profile?.authenticated ? "Saved circuits are private to your account." : "Guest simulations run on the QuantumWalk API. Sign in to save your circuits."}</p>
+            <Link href={profile?.authenticated ? "/circuits" : "/login?return_to=%2Fworkspace%3Fmode%3Dcircuit"}>
+              {profile?.authenticated ? "Open saved work ↗" : "Sign in to save ↗"}
+            </Link>
           </div>
 
           <Link href="/dashboard" className="side-dash-return">
@@ -740,6 +798,7 @@ export default function Home() {
 
         {/* Main Quantum Workbench */}
         <div className="main-column" id="lab">
+          <PageHeading title="Build & run quantum circuits" description="Create circuits, follow each gate, and inspect the quantum state. Executions use a classical simulator." />
           {/* Workspace Mode Switcher */}
           <div className="lab-mode-switcher-bar" role="group" aria-label="Lab view">
             <button
@@ -760,243 +819,31 @@ export default function Home() {
             </button>
           </div>
 
-          {labMode === "circuit" && (
-            <div className="lab-workflow-tabs" role="tablist" aria-label="Lab workflow">
-              {(
-                [
-                  { id: "build" as const, label: "Build" },
-                  { id: "simulate" as const, label: "Simulate" },
-                  { id: "analyze" as const, label: "Analyze" },
-                ] as const
-              ).map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={workflowView === tab.id}
-                  className={`lab-workflow-tab ${workflowView === tab.id ? "active" : ""}`}
-                  onClick={() => setWorkflowView(tab.id)}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {labMode === "circuit" && (
-            <div className="lab-sticky-runbar" role="region" aria-label="Run simulation">
-              <button
-                type="button"
-                className={`run-button ${busy ? "busy-glow" : ""}`}
-                disabled={busy || accountLoading}
-                onClick={run}
-              >
-                {busy ? "Running simulation…" : "Run simulation"}
-              </button>
-              <span className="lab-session-state">
-                {busy ? "Running" : stale ? "Results out of date" : result ? "Latest result loaded" : "Ready"}
-              </span>
-              {!profile?.authenticated && (
-                <span className="lab-guest-hint-inline" role="status">
-                  Guest demo · ≤5 qubits
-                </span>
-              )}
-            </div>
-          )}
-
           {labMode === "whiteboard" ? (
-            <div style={{ padding: "0 28px 40px" }}>
+            <div className="lab-whiteboard-stack">
+              <div className="lab-whiteboard-mode-bar" role="region" aria-label="Whiteboard vs circuit builder">
+                <div>
+                  <strong>Whiteboard mode</strong>
+                  <p>
+                    Preset operators and missions live here. Gates, the circuit canvas, and Execute are in{" "}
+                    <strong>Circuit builder</strong>.
+                  </p>
+                </div>
+                <button type="button" className="lab-whiteboard-to-circuit" onClick={() => switchMode("circuit")}>
+                  Open circuit builder →
+                </button>
+              </div>
               <QuantumEquationWhiteboard />
+              <QuantumMissions />
             </div>
           ) : (
             <>
-              <div className="lab-wf-build">
-                <QuantumMissions />
-              </div>
-              {/* Top Quantum HUD Banner */}
-              <section id="circuit" className="hero nextlevel-hero lab-wf-simulate" aria-labelledby="page-title">
-            <div className="hero-quantum-content">
-              <div className="eyebrow">
-                <span className="lab-status-dot" />
-                <span>VISUAL CIRCUIT LAB</span>
-                <span className="quantum-dim-tag">dim(ℋ) = 2^{qubits} = {hilbertDim}</span>
-              </div>
-              <h1 id="page-title">
-                Build a circuit. <span>See what changes.</span>
-              </h1>
-              <p>
-                Add gates, run the simulator, and inspect each step through the Bloch sphere, state vector, and probabilities.
-              </p>
-            </div>
-
-            <div className="lab-launch">
-              <div className="quantum-hud-status">
-                <span className="quantum-pulse-beacon" />
-                <span className="lab-session-state">
-                  {busy ? "Running simulation" : stale ? "Results out of date — run again" : result ? "Showing latest result" : "Ready to run"}
-                </span>
-              </div>
-              <div className="launch-specs">
-                <span>Exact Statevector</span>
-                <span>·</span>
-                <span>1,024 Shots</span>
-              </div>
-              <details className="lab-advanced-engine" open={workflowView === "simulate"}>
-                <summary>Engine, noise & comparison</summary>
-                <label className="lab-engine-select">
-                  Engine{" "}
-                  <select value={runEngine} onChange={(e) => setRunEngine(e.target.value as "qiskit" | "cirq")}>
-                    <option value="qiskit">Qiskit</option>
-                    <option value="cirq">Cirq</option>
-                  </select>
-                </label>
-                <LabEnginePanel
-                  qubits={qubits}
-                  operations={operations}
-                  csrf={profile?.authenticated ? profile.csrf_token : undefined}
-                  noiseOn={noiseOn}
-                  onNoiseChange={setNoiseOn}
-                  onCompare={setEngineCompare}
-                />
-              </details>
-              {error && (
-                <p className="error lab-run-error" role="alert">
-                  {error}{" "}
-                  <button type="button" onClick={() => setError("")}>
-                    Dismiss
-                  </button>
-                </p>
-              )}
-              {!profile?.authenticated && (
-                <p className="lab-guest-hint lab-wf-simulate" role="status">
-                  Demo simulator (≤5 qubits). Sign in to save, export, and sync progress.
-                </p>
-              )}
-              {engineCompare && (
-                <div className="engine-compare-block" role="status">
-                  <p className="engine-agree-caption">{engineCompare.caption}</p>
-                  <div className="engine-compare-grid" aria-label="Qiskit versus Cirq ideal probabilities">
-                    <div>
-                      <span className="panel-kicker">Qiskit</span>
-                      {engineCompare.qiskit.map((row) => (
-                        <div key={row.basis} className="engine-compare-row">
-                          <span>|{row.basis}⟩</span>
-                          <span>{(row.probability * 100).toFixed(1)}%</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div>
-                      <span className="panel-kicker">Cirq</span>
-                      {engineCompare.cirq.map((row) => (
-                        <div key={row.basis} className="engine-compare-row">
-                          <span>|{row.basis}⟩</span>
-                          <span>{(row.probability * 100).toFixed(1)}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-
-          <section className="lab-build-intro lab-wf-build" aria-labelledby="lab-build-title">
-            <h1 id="lab-build-title">Circuit lab</h1>
-            <p>Add gates from the library, wire them on the canvas, then run simulation to inspect results.</p>
-          </section>
-
-          {/* Precision Telemetry Bar */}
-          <div className="lab-telemetry quantum-hud-telemetry lab-wf-simulate" aria-label="Current quantum experiment telemetry">
-            <div>
-              <span>QUBITS</span>
-              <strong>
-                {String(qubits).padStart(2, "0")} <small>{qubits === 1 ? "qubit" : "qubits"}</small>
-              </strong>
-              <small className="hud-sub">Register q0..q{qubits - 1}</small>
-            </div>
-            <div>
-              <span>STATE SPACE DIMENSION</span>
-              <strong>
-                2^{qubits} <small>= {hilbertDim} states</small>
-              </strong>
-              <small className="hud-sub">Hilbert space ℂ^{hilbertDim}</small>
-            </div>
-            <div>
-              <span>GATES IN CIRCUIT</span>
-              <strong>
-                {String(operations.length).padStart(2, "0")} <small>gates</small>
-              </strong>
-              <small className="hud-sub">{twoQubit.has(gate) ? "Entangling gate ready" : "Single-qubit ready"}</small>
-            </div>
-            <div className="lab-telemetry-coherence">
-              <span>SELECTED QUBIT</span>
-              <strong className={isEntangled ? "entangled-accent" : "coherent-accent"}>
-                {!vector ? "Run to inspect" : isEntangled ? "Mixed local state" : "Pure local state"}
-              </strong>
-              <small className="hud-sub">{vector ? `q${selectedQubit} purity: ${(vector.purity * 100).toFixed(1)}%` : "Initial ground state"}</small>
-            </div>
-          </div>
-
-          {/* Quick preset chips */}
-          <div className="quantum-presets-bar lab-wf-build" aria-label="Quantum algorithm quick presets">
-            <span className="preset-label">PRESETS:</span>
-            <button
-              type="button"
-              className="preset-pill"
-              onClick={() => {
-                changeCircuit(superposition, 1);
-                setGate("h");
-                setResult(null);
-                setLoadedId(null);
-                setChallenge(null);
-                setName("Single Qubit Superposition");
-              }}
-            >
-              |+⟩ Superposition
-            </button>
-            <button
-              type="button"
-              className="preset-pill"
-              onClick={() => {
-                changeCircuit(bell, 2);
-                setGate("h");
-                setResult(null);
-                setLoadedId(null);
-                setChallenge(null);
-                setName("Bell Pair |Φ+⟩");
-              }}
-            >
-              |Φ+⟩ Bell Pair
-            </button>
-            <button
-              type="button"
-              className="preset-pill"
-              onClick={() => {
-                changeCircuit(ghz, 3);
-                setGate("h");
-                setResult(null);
-                setLoadedId(null);
-                setChallenge(null);
-                setName("GHZ 3-Qubit Entanglement");
-              }}
-            >
-              |GHZ⟩ 3-Qubit State
-            </button>
-            <button
-              type="button"
-              className="preset-pill"
-              onClick={() => {
-                changeCircuit([{ gate: "x", target: 0 }, { gate: "measure", target: 0 }], 1);
-                setResult(null);
-                setLoadedId(null);
-                setChallenge(null);
-                setName("Bit Flip & Measure");
-              }}
-            >
-              X Bit-Flip & Readout
-            </button>
-          </div>
-
+          <LabCircuitTutor qubits={qubits} operations={operations} snapshot={current} explanation={narrator}
+            step={step} lastStep={result ? result.data.steps.length - 1 : 0} stale={stale}
+            busy={busy || accountLoading} playing={isPlaying}
+            onRun={() => void run()}
+            onPlay={() => { if (!isPlaying && result && step >= result.data.steps.length - 1) setStep(0); setIsPlaying(!isPlaying); }}
+            onNext={() => { setIsPlaying(false); if (result) setStep(Math.min(step + 1, result.data.steps.length - 1)); }} />
           {/* Active challenge strip if loaded */}
           {challenge && (
             <section className="challenge-strip" aria-label="Active challenge">
@@ -1014,18 +861,17 @@ export default function Home() {
 
           {stale && (
             <p className="stale-notice" role="status">
-              Circuit modified. Run simulation to compute updated amplitudes and Bloch coordinates.
+              Circuit modified. Execute again to refresh the sphere and probabilities.
             </p>
           )}
 
           {/* Main 2-column Workbench (Circuit Grid + 3D Bloch Sphere) */}
           <div className="panel-grid">
             {/* Panel 01: Circuit Builder */}
-            <section className="panel circuit-panel lab-wf-build" aria-labelledby="circuit-title">
-              <div className="panel-head">
+            <section id="circuit" className="panel circuit-panel" aria-labelledby="circuit-title">
+              <div className="panel-head lab-canvas-status">
                 <div>
-                  <span className="panel-kicker">01 / BUILD</span>
-                  <h2 id="circuit-title">Quantum circuit composer</h2>
+                  <h2 id="circuit-title">{name}</h2>
                 </div>
                 <div className="composer-meta-tags">
                   <span className="meta">{qubits} {qubits === 1 ? "qubit" : "qubits"}</span>
@@ -1111,13 +957,19 @@ export default function Home() {
               </div>
 
               {/* The Superconducting Circuit Canvas */}
-              <div className="circuit-scroll">
-                <div className="circuit-grid">
+              {result && !stale && <p className="lab-execution-progress" role="status">{step === 0 ? "Initial state — all qubits prepared in |0⟩" : step === result.data.steps.length - 1 ? "Final state" : `After gate ${step}: ${result.operations[step - 1]?.gate.toUpperCase()}`} · Step {step} of {result.data.steps.length - 1}{isPlaying ? " · Playing" : " · Paused"}</p>}
+              <div className={`circuit-scroll${busy ? " lab-circuit-busy" : ""}`}>
+                {busy && (
+                  <div className="lab-circuit-busy-overlay" role="status" aria-label="Simulation in progress">
+                    Computing amplitudes…
+                  </div>
+                )}
+                <div className="circuit-grid" style={{ "--lab-gate-columns": Math.max(5, operations.length) } as CSSProperties}>
                   <div className="lab-circuit-ruler" aria-hidden="true">
                     <span>REGISTER</span>
                     <div>
                       {Array.from({ length: Math.max(5, operations.length) }, (_, i) => (
-                        <span key={i} className={step === i + 1 ? "ruler-active" : ""}>
+                        <span key={i} className={!stale && result && step === i + 1 ? "ruler-active" : ""}>
                           T{String(i + 1).padStart(2, "0")}
                         </span>
                       ))}
@@ -1146,7 +998,8 @@ export default function Home() {
                             return (
                               <div
                                 key={i}
-                                className={`operation-slot ${isStepActive ? "slot-highlight" : ""}`}
+                                className={`operation-slot ${isStepActive ? "slot-highlight" : !stale && result && step > i + 1 ? "slot-completed" : ""}`}
+                                aria-current={isStepActive ? "step" : undefined}
                               >
                                 {hasEntangleLine && (
                                   <div
@@ -1200,7 +1053,7 @@ export default function Home() {
                 </div>
                 {operations.length === 0 && (
                   <p className="lab-canvas-hint">
-                    Start with a Hadamard (H) gate. Select it, add it to <strong>q0</strong>, then choose <strong>Run simulation</strong> to see what changes.
+                    Start with a Hadamard (H) gate. Select it, add it to <strong>q0</strong>, then choose <strong>Execute</strong> to see what changes.
                   </p>
                 )}
               </div>
@@ -1222,10 +1075,26 @@ export default function Home() {
                 <button type="button" className="subtle-button" onClick={() => changeCircuit(operations, Math.min(5, qubits + 1))} disabled={qubits >= 5}>
                   + Qubit ({qubits}/5)
                 </button>
-                <button type="button" className="run-button circuit-run-btn" onClick={run} disabled={busy}>
+                <button
+                  type="button"
+                  className={`run-button circuit-run-btn${busy ? " busy-glow" : ""}`}
+                  onClick={() => void run()}
+                  disabled={busy || accountLoading}
+                  aria-busy={busy}
+                >
                   {busy ? "Computing…" : "▶ Execute"}
                 </button>
               </div>
+
+              {result && (
+                <StateEvolutionGuide
+                  snapshots={result.data.steps} operations={result.operations} step={step}
+                  onStep={(next) => { setIsPlaying(false); setStep(next); }}
+                  playing={isPlaying} disabled={busy || stale}
+                  onPlay={() => { if (!isPlaying && step >= result.data.steps.length - 1) setStep(0); setIsPlaying(!isPlaying); }}
+                  delay={playbackDelay} onDelay={setPlaybackDelay}
+                />
+              )}
 
               {/* Reorder / Details list */}
               {operations.length > 0 && (
@@ -1303,8 +1172,8 @@ export default function Home() {
               )}
             </section>
 
-            {/* Panel 02: 3D Bloch Sphere */}
-            <section id="bloch" className="panel bloch-panel lab-wf-analyze" aria-labelledby="bloch-title">
+            <div className="lab-results-stack">
+            <section id="bloch" className="panel bloch-panel" aria-labelledby="bloch-title">
               <div className="panel-head">
                 <div>
                   <span className="panel-kicker">02 / VISUALIZE</span>
@@ -1328,6 +1197,8 @@ export default function Home() {
               </div>
 
               <QuantumSphere
+                autoRotate={false}
+                transitionMs={Math.min(playbackDelay - 150, 900)}
                 vector={vector || { x: 0, y: 0, z: 1 }}
                 label={
                   vector
@@ -1335,48 +1206,6 @@ export default function Home() {
                     : "Initial Bloch sphere state"
                 }
               />
-
-              {/* Step Scrubber & Playback */}
-              {result && (
-                <div className="lab-preview-stepper" role="group" aria-label="Explore state evolution">
-                  <button
-                    type="button"
-                    aria-label="View previous quantum state"
-                    disabled={step === 0}
-                    onClick={() => {
-                      setIsPlaying(false);
-                      setStep(step - 1);
-                    }}
-                  >
-                    ←
-                  </button>
-                  <button
-                    type="button"
-                    className="stepper-play-btn"
-                    onClick={() => setIsPlaying(!isPlaying)}
-                    aria-label={isPlaying ? "Pause auto step evolution" : "Play auto step evolution"}
-                  >
-                    {isPlaying ? "⏸" : "▶"}
-                  </button>
-                  <div className="stepper-state-text">
-                    <span>
-                      {stale ? "OUTDATED RUN" : "STEP EVOLUTION"} · {step} / {result.data.steps.length - 1}
-                    </span>
-                    <strong>{step === 0 ? "Initial ground state |0⟩" : gateNames[result.operations[step - 1].gate]}</strong>
-                  </div>
-                  <button
-                    type="button"
-                    aria-label="View next quantum state"
-                    disabled={step >= result.data.steps.length - 1}
-                    onClick={() => {
-                      setIsPlaying(false);
-                      setStep(step + 1);
-                    }}
-                  >
-                    →
-                  </button>
-                </div>
-              )}
 
               {/* Exact Coordinate Readout */}
               <div className="bloch-readout">
@@ -1397,28 +1226,18 @@ export default function Home() {
                 )}
               </div>
 
-              <div style={{ marginTop: "14px" }}>
-                <Link
-                  href="/studio"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    width: "100%",
-                    background: "linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(168, 85, 247, 0.2))",
-                    border: "1px solid rgba(56, 189, 248, 0.4)",
-                    borderRadius: "8px",
-                    padding: "8px 12px",
-                    fontSize: "12px",
-                    fontWeight: 700,
-                    color: "#ffffff",
-                    textDecoration: "none",
-                  }}
-                >
-                  ⚛ Open Equation Whiteboard Simulator ↗
-                </Link>
-              </div>
+              <ul className="lab-side-probs" aria-label="Top measurement probabilities">
+                {busy && <li className="lab-side-probs-empty">Computing amplitudes…</li>}
+                {!busy && stale && <li className="lab-side-probs-empty">Circuit changed. Execute again to refresh.</li>}
+                {!busy && !stale && latestProbs && latestProbs.map((item) => (
+                  <li key={item.basis}>
+                    <span>|{item.basis}⟩</span>
+                    <progress value={item.probability * 100} max={100} aria-label={`Probability of ${item.basis}`} />
+                    <span>{(item.probability * 100).toFixed(1)}%</span>
+                  </li>
+                ))}
+                {!busy && !result && <li className="lab-side-probs-empty">Execute the circuit to see probabilities here.</li>}
+              </ul>
 
               {vector && vector.purity < 0.985 && (
                 <div className="explain-note mixed-state-alert">
@@ -1434,69 +1253,20 @@ export default function Home() {
             </section>
 
             {/* Panel 03: State Vector & Wavefunction */}
-            <section id="probabilities" className="panel state-panel lab-wf-analyze" aria-labelledby="state-title">
+            <section id="probabilities" className="panel state-panel" aria-labelledby="state-title">
               <div className="panel-head">
                 <div>
-                  <span className="panel-kicker">03 / WAVEFUNCTION</span>
+                  <span className="panel-kicker">03 · Wavefunction</span>
                   <h2 id="state-title">State vector & complex amplitudes</h2>
                 </div>
                 <div className="state-panel-meta">
-                  <span className="meta">2^{qubits} basis states</span>
-                  <span className="meta">Exact Aer engine</span>
+                  <span className="meta">{2 ** qubits} basis states</span>
+                  <span className="meta">Local statevector</span>
                 </div>
               </div>
 
-              {current ? (
-                <>
-                  <div className="state-vector-hud">
-                    <p className="panel-description">
-                      Wavefunction amplitudes at execution step {step}. Basis string |b⟩ format places q0 as the rightmost bit.
-                    </p>
-                    <div className="vector-hud-metrics">
-                      <span>Total probability: <strong>100.0%</strong></span>
-                      <span>·</span>
-                      <span>State norm: <strong>⟨ψ|ψ⟩ = 1.000</strong></span>
-                    </div>
-                  </div>
-
-                  <div className="state-rows nextlevel-state-rows">
-                    {current.probabilities.map((item, i) => {
-                      const amp = current.amplitudes[i];
-                      const phaseRad = Math.atan2(amp.imag, amp.real);
-                      const phaseDeg = Math.round(((phaseRad < 0 ? phaseRad + 2 * Math.PI : phaseRad) * 180) / Math.PI);
-                      const magnitude = Math.sqrt(amp.real ** 2 + amp.imag ** 2);
-                      const hue = Math.round(phaseDeg % 360);
-
-                      return (
-                        <div className="state-row quantum-state-card" key={`${step}-${item.basis}`}>
-                          <div className="ket-header">
-                            <span className="ket">|{item.basis}⟩</span>
-                            <span
-                              className="phase-pill"
-                              style={{ borderColor: `hsl(${hue}, 80%, 55%)`, color: `hsl(${hue}, 90%, 75%)` }}
-                              title={`Phase angle φ = ${phaseDeg}°`}
-                            >
-                              <span className="phase-dot" style={{ backgroundColor: `hsl(${hue}, 90%, 65%)` }} />
-                              φ = {phaseDeg}°
-                            </span>
-                          </div>
-                          <div className="bar-track">
-                            <div className="prob-bar-fill" style={{ width: `${item.probability * 100}%` }} />
-                          </div>
-                          <div className="state-metrics-row">
-                            <span className="probability">{(item.probability * 100).toFixed(1)}%</span>
-                            <span className="amplitude-complex" title="Cartesian complex amplitude (a + bi)">
-                              {complexLabel(amp)}
-                            </span>
-                            <small className="amplitude-polar" title="Polar magnitude and phase angle">
-                              {magnitude > 0.001 ? `${magnitude.toFixed(3)}∠${phaseDeg}°` : "0.000"}
-                            </small>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
+              {current && !stale ? (
+                <StateVectorView snapshot={current} />
               ) : (
                 <div className="lab-state-empty">
                   <span className="lab-empty-wave" aria-hidden="true">
@@ -1508,28 +1278,37 @@ export default function Home() {
                       Execute the experiment to inspect exact complex amplitudes, quantum interference phases, and measurement probabilities across all 2^{qubits} basis states.
                     </p>
                   </div>
-                  <button type="button" className="text-button" disabled={busy || accountLoading} onClick={run}>
-                    Compute wavefunction ↗
-                  </button>
                 </div>
               )}
             </section>
+            </div>
           </div>
 
-          {/* Lower Grid: Step execution, Measurement counts, and AI Coach */}
-          <div className="lower-grid">
-            {/* 04: Step-by-Step Execution Scrubber */}
-            <section className="panel steps-panel lab-wf-simulate" aria-labelledby="steps-title">
+          <section className="lab-analysis" aria-labelledby="lab-analysis-title">
+            <div className="lab-analysis-head">
+              <div>
+                <span className="panel-kicker">READ THE RESULT</span>
+                <h2 id="lab-analysis-title">Analysis</h2>
+              </div>
+              <p>Evolution, measurements, and comparisons stay on one board. Open a card when you need it.</p>
+            </div>
+            <div className="lab-analysis-grid">
+            <details className="lab-analysis-card lab-analysis-steps">
+              <summary>
+                <span className="panel-kicker">04 · Chronology</span>
+                <span className="lab-analysis-label">Step-by-step state evolution</span>
+              </summary>
+            <section className="panel steps-panel" aria-labelledby="steps-title">
               <div className="panel-head">
                 <div>
-                  <span className="panel-kicker">04 / CHRONOLOGY</span>
                   <h2 id="steps-title">Step-by-step state evolution</h2>
                 </div>
                 {result && (
                   <button
                     type="button"
                     className="auto-play-toggle"
-                    onClick={() => setIsPlaying(!isPlaying)}
+                    disabled={busy || stale}
+                    onClick={() => { if (!isPlaying && step >= result.data.steps.length - 1) setStep(0); setIsPlaying(!isPlaying); }}
                   >
                     {isPlaying ? "⏸ Pause" : "▶ Play evolution"}
                   </button>
@@ -1555,8 +1334,8 @@ export default function Home() {
                     ))}
                   </div>
                   <div className="step-explanation-box">
-                    <strong>{narrator.headline}</strong>
-                    <p>{narrator.body}</p>
+                    <strong>{narrator?.title}</strong>
+                    <p>{narrator?.action}</p><p>{narrator?.observation}</p>
                     {stepGate && (
                       <details>
                         <summary>Technical detail</summary>
@@ -1593,12 +1372,16 @@ export default function Home() {
                 </div>
               )}
             </section>
+            </details>
 
-            {/* 05: Measurement Counts (Shot sampling) */}
-            <section id="counts" className="panel measurement-panel lab-wf-analyze" aria-labelledby="measurement-title">
+            <details className="lab-analysis-card lab-analysis-measure">
+              <summary>
+                <span className="panel-kicker">05 · Readout</span>
+                <span className="lab-analysis-label">Measurement sampling</span>
+              </summary>
+            <section id="counts" className="panel measurement-panel" aria-labelledby="measurement-title">
               <div className="panel-head">
                 <div>
-                  <span className="panel-kicker">05 / READOUT</span>
                   <h2 id="measurement-title">Measurement sampling</h2>
                 </div>
                 <span className="meta">1,024 shots</span>
@@ -1684,62 +1467,52 @@ export default function Home() {
                 </div>
               )}
             </section>
+            </details>
 
-            {/* 06: Circuit AI Coach */}
-            <section className="panel insight-panel lab-wf-analyze" id="coach" aria-labelledby="insight-title">
-              <div className="panel-head">
-                <div>
-                  <span className="panel-kicker">06 / REASONING</span>
-                  <h2 id="insight-title">Quantum circuit tutor</h2>
-                </div>
-                <div className="insight-icon">✦</div>
-              </div>
-
-              <p className="coach-intro-text">
-                {step > 0 && result?.operations[step - 1]
-                  ? gateHints[result.operations[step - 1].gate]
-                  : "Ask conceptual questions about phase interference, entanglement, or your circuit's unitary matrix."}
-              </p>
-
-              <form className="coach-form" onSubmit={(event) => void askCoach(event)}>
-                <label htmlFor="coach-question" className="sr-only">
-                  Your question
+            <details className="lab-analysis-card lab-analysis-engine">
+              <summary>
+                <span className="panel-kicker">Engines</span>
+                <span className="lab-analysis-label">Engine, noise, and comparison</span>
+              </summary>
+              <div className="lab-more-body">
+                <label className="lab-engine-select">
+                  Engine{" "}
+                  <select value={runEngine} onChange={(e) => setRunEngine(e.target.value as "qiskit" | "cirq")}>
+                    <option value="qiskit">Qiskit</option>
+                    <option value="cirq">Cirq</option>
+                  </select>
                 </label>
-                <input
-                  id="coach-question"
-                  value={question}
-                  maxLength={500}
-                  placeholder="e.g. Why did the phase shift create destructive interference?"
-                  onChange={(event) => setQuestion(event.target.value)}
+                <LabEnginePanel
+                  qubits={qubits}
+                  operations={operations}
+                  csrf={profile?.authenticated ? profile.csrf_token : undefined}
+                  noiseOn={noiseOn}
+                  onNoiseChange={setNoiseOn}
+                  onCompare={setEngineCompare}
                 />
-                <label className="ai-consent">
-                  <input
-                    type="checkbox"
-                    checked={allowExternalAI}
-                    onChange={(event) => setAllowExternalAI(event.target.checked)}
-                  />
-                  <span>Opt-in AI reasoning (send circuit structure to provider)</span>
-                </label>
-                <button type="submit" disabled={coachBusy || !question.trim()}>
-                  {coachBusy ? "Analyzing state…" : "Ask coach ↗"}
-                </button>
-              </form>
+                {engineCompare && (
+                  <EngineProbabilityComparison result={engineCompare} />
+                )}
+              </div>
+            </details>
 
-              {coachAnswer && (
-                <div className="coach-answer" role="status">
-                  {coachAnswer}
-                </div>
-              )}
-            </section>
-          </div>
-            </>
-          )}
-
-          {labMode === "circuit" && (
-            <div className="lab-wf-analyze">
+            <details className="lab-analysis-card lab-analysis-tools">
+              <summary>
+                <span className="panel-kicker">Explore</span>
+                <span className="lab-analysis-label">Noise and concept toolbox</span>
+              </summary>
               <QuantumToolbox />
+            </details>
+            <details className="lab-analysis-card lab-analysis-experiment">
+              <summary>
+                <span className="panel-kicker">Explore</span>
+                <span className="lab-analysis-label">Entanglement experiment</span>
+              </summary>
               <EntanglementLab />
+            </details>
             </div>
+          </section>
+            </>
           )}
           <footer className="nextlevel-footer">
             <div className="footer-left">

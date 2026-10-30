@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { recordRecentTool } from "@/lib/hubWorkspace";
 import { HUB_TOOLS } from "@sirraya/lib/hubTools";
 
 function toolActive(pathname: string, href: string): boolean {
@@ -10,6 +12,7 @@ function toolActive(pathname: string, href: string): boolean {
 
 export function HubToolsNav() {
   const pathname = usePathname() ?? "";
+  useEffect(() => { const tool = HUB_TOOLS.find(item => item.href === pathname); if (tool) recordRecentTool(tool.id); }, [pathname]);
 
   return (
     <nav className="hub-tools-nav" aria-label="Tools directory">

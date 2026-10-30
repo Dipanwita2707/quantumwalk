@@ -1,0 +1,1479 @@
+[
+  {
+    "route": "/",
+    "finalRoute": "/",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 19,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "ql-hero-grid",
+        "width": 468,
+        "right": 429,
+        "html": "<div class=\"ql-hero-grid\" aria-hidden=\"true\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/start",
+    "finalRoute": "/start",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 12,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "path",
+        "className": "[object SVGAnimatedString]",
+        "width": 1642,
+        "right": 932,
+        "html": "<path class=\"path-branch path-branch-2\" d=\"M 120 280 C 120 240 200 230 360 230 S 720 230 900 230\"></path>"
+      },
+      {
+        "tag": "path",
+        "className": "[object SVGAnimatedString]",
+        "width": 1642,
+        "right": 932,
+        "html": "<path class=\"path-branch-flow path-branch-flow-2\" d=\"M 120 280 C 120 240 200 230 360 230 S 720 230 900 230\"></path>"
+      },
+      {
+        "tag": "path",
+        "className": "[object SVGAnimatedString]",
+        "width": 1810,
+        "right": 1100,
+        "html": "<path class=\"path-branch path-branch-3\" d=\"M 120 280 C 120 260 220 300 380 320 S 760 360 980 340\"></path>"
+      },
+      {
+        "tag": "path",
+        "className": "[object SVGAnimatedString]",
+        "width": 1810,
+        "right": 1100,
+        "html": "<path class=\"path-branch-flow path-branch-flow-3\" d=\"M 120 280 C 120 260 220 300 380 320 S 760 360 980 340\"></path>"
+      },
+      {
+        "tag": "circle",
+        "className": "[object SVGAnimatedString]",
+        "width": 21,
+        "right": 942,
+        "html": "<circle class=\"path-branch-node path-branch-node-2\" cx=\"900\" cy=\"230\" r=\"5\"></circle>"
+      },
+      {
+        "tag": "circle",
+        "className": "[object SVGAnimatedString]",
+        "width": 21,
+        "right": 1110,
+        "html": "<circle class=\"path-branch-node path-branch-node-3\" cx=\"980\" cy=\"340\" r=\"5\"></circle>"
+      }
+    ]
+  },
+  {
+    "route": "/login",
+    "finalRoute": "/login",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 5,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/dashboard",
+    "finalRoute": "/dashboard",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 38,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/workspace?mode=circuit&preset=bell",
+    "finalRoute": "/workspace",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 111,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "",
+        "width": 310,
+        "right": 432,
+        "html": "<div><span class=\"\">T<!-- -->01</span><span class=\"\">T<!-- -->02</span><span class=\"\">T<!-- -->03</span><span class=\"\">T<!-- -->04</span><span class=\"\">T<!-- -->05</span></div>"
+      },
+      {
+        "tag": "span",
+        "className": "",
+        "width": 90,
+        "right": 536,
+        "html": "<span>ACTIONS</span>"
+      },
+      {
+        "tag": "div",
+        "className": "wire",
+        "width": 310,
+        "right": 432,
+        "html": "<div class=\"wire\"><div class=\"operation-track\"><div class=\"operation-slot \"><span class=\"operation  on-wire gate-h\" title=\"Hadamard at step 1\"><span>H</span></span></div><div class=\"operation-slot \"><div class=\"entanglem"
+      },
+      {
+        "tag": "button",
+        "className": "add-wire",
+        "width": 90,
+        "right": 536,
+        "html": "<button type=\"button\" class=\"add-wire\" aria-label=\"Add Hadamard to qubit 0\">+ Wire q<!-- -->0</button>"
+      },
+      {
+        "tag": "div",
+        "className": "wire",
+        "width": 310,
+        "right": 432,
+        "html": "<div class=\"wire\"><div class=\"operation-track\"><div class=\"operation-slot \"><span class=\"operation  empty \"></span></div><div class=\"operation-slot \"><div class=\"entanglement-connector connect-down\"></div><span class=\"op"
+      },
+      {
+        "tag": "button",
+        "className": "add-wire",
+        "width": 90,
+        "right": 536,
+        "html": "<button type=\"button\" class=\"add-wire\" aria-label=\"Add Hadamard to qubit 1\">+ Wire q1</button>"
+      }
+    ]
+  },
+  {
+    "route": "/workspace?mode=whiteboard",
+    "finalRoute": "/workspace",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 54,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "qwb-ribbon-label",
+        "width": 840,
+        "right": 922,
+        "html": "<span class=\"qwb-ribbon-label\">Load Canonical Equation:</span>"
+      },
+      {
+        "tag": "button",
+        "className": "qwb-preset-chip ",
+        "width": 173,
+        "right": 431,
+        "html": "<button type=\"button\" class=\"qwb-preset-chip \">Y-Basis Circular State |+i⟩</button>"
+      },
+      {
+        "tag": "button",
+        "className": "qwb-preset-chip ",
+        "width": 123,
+        "right": 563,
+        "html": "<button type=\"button\" class=\"qwb-preset-chip \">Pauli-X Inversion</button>"
+      },
+      {
+        "tag": "button",
+        "className": "qwb-preset-chip ",
+        "width": 154,
+        "right": 724,
+        "html": "<button type=\"button\" class=\"qwb-preset-chip \">T-Gate π/4 Phase Turn</button>"
+      },
+      {
+        "tag": "button",
+        "className": "qwb-preset-chip ",
+        "width": 189,
+        "right": 922,
+        "html": "<button type=\"button\" class=\"qwb-preset-chip \">Hadamard Self-Inverse H² = I</button>"
+      },
+      {
+        "tag": "span",
+        "className": "",
+        "width": 285,
+        "right": 393,
+        "html": "<span>MATHEMATICAL WAVEFUNCTION STATE</span>"
+      },
+      {
+        "tag": "span",
+        "className": "qwb-beta-math",
+        "width": 107,
+        "right": 417,
+        "html": "<span class=\"qwb-beta-math\">(0.707)|1⟩</span>"
+      }
+    ]
+  },
+  {
+    "route": "/learn",
+    "finalRoute": "/learn",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 143,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/learn/reference",
+    "finalRoute": "/learn/reference",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 53,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/learn/hardware",
+    "finalRoute": "/learn/hardware",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 25,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/academy",
+    "finalRoute": "/learn",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 143,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/academy/foundations",
+    "finalRoute": "/academy/foundations",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 21,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/academy/reservoir",
+    "finalRoute": "/academy/reservoir",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 22,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/academy/labs/grover",
+    "finalRoute": "/academy/labs/grover",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 23,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/academy/labs/qft",
+    "finalRoute": "/academy/labs/qft",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 31,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/academy/labs/shor",
+    "finalRoute": "/academy/labs/shor",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 29,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/academy/labs/qec",
+    "finalRoute": "/academy/labs/qec",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 24,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/academy/labs/reservoir",
+    "finalRoute": "/academy/labs/reservoir",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 25,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/explorer",
+    "finalRoute": "/explorer",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 26,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/explorer/grover",
+    "finalRoute": "/explorer/grover",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 30,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/explorer/tsp",
+    "finalRoute": "/explorer/tsp",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 36,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/explorer/mapper",
+    "finalRoute": "/explorer/mapper",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 47,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 77,
+        "right": 426,
+        "html": "<span class=\"cv-gate-symbol\">MEASURE</span>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-gate-pass",
+        "width": 40,
+        "right": 469,
+        "html": "<div class=\"cv-gate-pass\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-gate-pass",
+        "width": 40,
+        "right": 529,
+        "html": "<div class=\"cv-gate-pass\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-gate-pass",
+        "width": 40,
+        "right": 405,
+        "html": "<div class=\"cv-gate-pass\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 77,
+        "right": 486,
+        "html": "<span class=\"cv-gate-symbol\">MEASURE</span>"
+      }
+    ]
+  },
+  {
+    "route": "/hub",
+    "finalRoute": "/hub",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 40,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/hub/doc-editor",
+    "finalRoute": "/hub/doc-editor",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 28,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/hub/document-pro",
+    "finalRoute": "/hub/document-pro",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 32,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/hub/ml-studio",
+    "finalRoute": "/hub/ml-studio",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 34,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/algorithms",
+    "finalRoute": "/algorithms",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 23,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/challenges",
+    "finalRoute": "/challenges",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 19,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/coach",
+    "finalRoute": "/coach",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 25,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/circuits",
+    "finalRoute": "/login",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 5,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/achievements",
+    "finalRoute": "/login",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 5,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/settings/profile",
+    "finalRoute": "/login",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 5,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/hardware",
+    "finalRoute": "/hardware",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 16,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/privacy",
+    "finalRoute": "/privacy",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 15,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/terms",
+    "finalRoute": "/terms",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 15,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/learn/first-qubit",
+    "finalRoute": "/learn/first-qubit",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 70,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 569,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/learn/entanglement",
+    "finalRoute": "/learn/entanglement",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 71,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 569,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 569,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/learn/grover-boost",
+    "finalRoute": "/learn/grover-boost",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 71,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 738,
+        "right": 938,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 12,
+        "right": 426,
+        "html": "<span class=\"cv-gate-symbol\">H</span>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-gate-pass",
+        "width": 40,
+        "right": 502,
+        "html": "<div class=\"cv-gate-pass\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 11,
+        "right": 549,
+        "html": "<span class=\"cv-gate-symbol\">X</span>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-gate-pass",
+        "width": 40,
+        "right": 626,
+        "html": "<div class=\"cv-gate-pass\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-dot-ctrl",
+        "width": 11,
+        "right": 673,
+        "html": "<span class=\"cv-dot-ctrl\">●</span>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 11,
+        "right": 737,
+        "html": "<span class=\"cv-gate-symbol\">X</span>"
+      }
+    ]
+  },
+  {
+    "route": "/learn/pedagogy-noise",
+    "finalRoute": "/learn/pedagogy-noise",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 71,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 569,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 569,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/learn/tsp-classical",
+    "finalRoute": "/learn/tsp-classical",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 71,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 738,
+        "right": 938,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 12,
+        "right": 426,
+        "html": "<span class=\"cv-gate-symbol\">H</span>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-gate-pass",
+        "width": 40,
+        "right": 502,
+        "html": "<div class=\"cv-gate-pass\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 11,
+        "right": 549,
+        "html": "<span class=\"cv-gate-symbol\">X</span>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-gate-pass",
+        "width": 40,
+        "right": 626,
+        "html": "<div class=\"cv-gate-pass\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-dot-ctrl",
+        "width": 11,
+        "right": 673,
+        "html": "<span class=\"cv-dot-ctrl\">●</span>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 11,
+        "right": 737,
+        "html": "<span class=\"cv-gate-symbol\">X</span>"
+      }
+    ]
+  },
+  {
+    "route": "/learn/qec-bit-flip",
+    "finalRoute": "/learn/qec-bit-flip",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 70,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 569,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 569,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/algorithms/superposition",
+    "finalRoute": "/algorithms/superposition",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 29,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/algorithms/bell-pair",
+    "finalRoute": "/algorithms/bell-pair",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 29,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-gate-pass",
+        "width": 40,
+        "right": 413,
+        "html": "<div class=\"cv-gate-pass\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 77,
+        "right": 426,
+        "html": "<span class=\"cv-gate-symbol\">MEASURE</span>"
+      }
+    ]
+  },
+  {
+    "route": "/algorithms/ghz-three",
+    "finalRoute": "/algorithms/ghz-three",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 29,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/algorithms/deutsch-jozsa-balanced",
+    "finalRoute": "/algorithms/deutsch-jozsa-balanced",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 29,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-dot-ctrl",
+        "width": 11,
+        "right": 392,
+        "html": "<span class=\"cv-dot-ctrl\">●</span>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 12,
+        "right": 457,
+        "html": "<span class=\"cv-gate-symbol\">H</span>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 77,
+        "right": 554,
+        "html": "<span class=\"cv-gate-symbol\">MEASURE</span>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 22,
+        "right": 402,
+        "html": "<span class=\"cv-gate-symbol\">CX</span>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-gate-pass",
+        "width": 40,
+        "right": 473,
+        "html": "<div class=\"cv-gate-pass\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/algorithms/grover-two",
+    "finalRoute": "/algorithms/grover-two",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 29,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 862,
+        "right": 1033,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 12,
+        "right": 397,
+        "html": "<span class=\"cv-gate-symbol\">H</span>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-gate-pass",
+        "width": 40,
+        "right": 473,
+        "html": "<div class=\"cv-gate-pass\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 11,
+        "right": 520,
+        "html": "<span class=\"cv-gate-symbol\">X</span>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-gate-pass",
+        "width": 40,
+        "right": 597,
+        "html": "<div class=\"cv-gate-pass\"></div>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-dot-ctrl",
+        "width": 11,
+        "right": 644,
+        "html": "<span class=\"cv-dot-ctrl\">●</span>"
+      },
+      {
+        "tag": "span",
+        "className": "cv-gate-symbol",
+        "width": 11,
+        "right": 708,
+        "html": "<span class=\"cv-gate-symbol\">X</span>"
+      }
+    ]
+  },
+  {
+    "route": "/challenges/make-superposition",
+    "finalRoute": "/challenges/make-superposition",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 46,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/challenges/make-bell-pair",
+    "finalRoute": "/challenges/make-bell-pair",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 46,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/challenges/mark-grover-state",
+    "finalRoute": "/challenges/mark-grover-state",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 46,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      }
+    ]
+  },
+  {
+    "route": "/challenges/tsp-encode-superposition",
+    "finalRoute": "/challenges/tsp-encode-superposition",
+    "status": 200,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "controlCount": 46,
+    "unnamed": [],
+    "unreachable": [],
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "qw-ambience-glow qw-ambience-glow-violet",
+        "width": 215,
+        "right": 413,
+        "html": "<div class=\"qw-ambience-glow qw-ambience-glow-violet\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      },
+      {
+        "tag": "div",
+        "className": "cv-wire-track",
+        "width": 369,
+        "right": 540,
+        "html": "<div class=\"cv-wire-track\"></div>"
+      }
+    ]
+  }
+]

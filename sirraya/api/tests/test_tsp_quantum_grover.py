@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
+import pytest
+from pydantic import ValidationError
 
 from main import app
+from sirraya.api.sirraya_v3_routes import SolveTspRequest
 from sirraya.api.tsp_quantum_grover import grover_tsp_sample
 
 client = TestClient(app)
@@ -56,3 +59,27 @@ def test_solve_tsp_six_cities_bounded():
     )
     assert response.status_code == 200
     assert response.json()["execution_details"]["qubits_used"] == 10
+
+
+@pytest.mark.parametrize("distance", [-1, 2, 1e308])
+def test_solve_tsp_rejects_invalid_costs(distance: float):
+    matrix = [row[:] for row in MATRIX_3]
+    matrix[0][0 if distance == 2 else 1] = distance
+    response = client.post("/api/v3/solve-tsp", json={"distance_matrix": matrix})
+    assert response.status_code == 422
+
+
+def test_solve_tsp_rejects_nonfinite_cost():
+    matrix = [row[:] for row in MATRIX_3]
+    matrix[0][1] = float("inf")
+    with pytest.raises(ValidationError):
+        SolveTspRequest.model_validate({"distance_matrix": matrix})
+
+
+@pytest.mark.parametrize("algorithm", ["qaoa", "vqe"])
+def test_solve_tsp_does_not_mislabel_grover_as_other_algorithm(algorithm: str):
+    response = client.post(
+        "/api/v3/solve-tsp", json={"distance_matrix": MATRIX_3, "algorithm": algorithm}
+    )
+    assert response.status_code == 501
+    assert "not implemented" in response.json()["detail"]

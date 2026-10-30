@@ -11,6 +11,19 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 environment = os.getenv("QUANTUMWALK_ENV", "development")
 frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000").rstrip("/")
+
+
+def cors_allowed_origins() -> list[str]:
+    """Dev allows both localhost and 127.0.0.1 (browser treats them as different origins)."""
+    origins = {frontend_origin}
+    if environment != "production":
+        origins.update(
+            {
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+            }
+        )
+    return sorted(origins)
 google_client_id = os.getenv("GOOGLE_CLIENT_ID", "")
 google_client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "")
 google_redirect_uri = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/auth/google/callback")

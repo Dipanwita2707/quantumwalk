@@ -13,11 +13,13 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe("Explorer & Tools hubs (Phase 5)", () => {
-  test("explorer overview has demo sidebar", async ({ page }) => {
+  test("explorer overview has one experiment catalog and opens a demo", async ({ page }) => {
     await page.goto("/explorer");
-    await expect(page.getByRole("navigation", { name: "Explorer demos" })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("navigation", { name: "Explorer demos" })).toHaveCount(0);
     await expect(page.getByText("Explorer preview")).toBeVisible();
     await expect(page.getByRole("heading", { level: 1 })).toContainText(/Problem/i);
+    await page.getByRole("link", { name: /Suggested first stop: Three-city routes/ }).click();
+    await expect(page).toHaveURL(/\/explorer\/tsp/);
   });
 
   test("explorer catalog search filters demos", async ({ page }) => {

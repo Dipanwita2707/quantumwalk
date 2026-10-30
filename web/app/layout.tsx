@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import "./style.css";
 import "./qw-layout.css";
+import "../../sirraya/web/styles/hub.css";
 import "@/components/quantum-site-ambience.css";
+import "./reference-system.css";
+import "@/components/ui/quantum-ui.css";
 import { AuthGate } from "@/components/AuthGate";
-import { QuantumSiteAmbience } from "@/components/QuantumSiteAmbience";
+import { QuantumSiteAmbience } from "@/components/QuantumSiteAmbienceClient";
 import { SiteAtmosphereProvider } from "@/lib/site-atmosphere";
 import { SessionProvider } from "@/lib/api";
+import { PreferenceMotion } from "@/components/PreferenceMotion";
 
 export const metadata: Metadata = {
   title: "QuantumWalk — See inside a quantum algorithm",
@@ -15,8 +19,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="qw-reference-ui">
         <SessionProvider>
+          <PreferenceMotion />
           <SiteAtmosphereProvider>
             <AuthGate>
               <QuantumSiteAmbience />

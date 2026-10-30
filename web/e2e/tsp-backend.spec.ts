@@ -131,6 +131,11 @@ test("TSP sends edited matrix in solve request and renders mocked results", asyn
   await solveBtn.click();
   await expect(page.getByTestId("tsp-backend-solve-results")).toBeVisible({ timeout: 10_000 });
   expect(solveCalls).toBe(1);
+
+  await page.getByRole("tab", { name: "Configure" }).click();
+  await page.getByTestId("tsp-matrix-cell-0-1").fill("8");
+  await openTspRunPhase(page);
+  await expect(page.getByTestId("tsp-backend-solve-results")).toHaveCount(0);
 });
 
 test("TSP duplicate submit prevented while loading", async ({ page }) => {

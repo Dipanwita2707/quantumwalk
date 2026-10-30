@@ -8,10 +8,13 @@ import { milestones } from "@/lib/milestones";
 
 type Progress = { activity_slug: string; completed: boolean };
 
+type Filter = "all" | "lessons" | "challenges";
+
 export default function AchievementsPage() {
   const { profile } = useSession();
   const [progress, setProgress] = useState<Progress[] | null>(null);
   const [error, setError] = useState("");
+  const [filter, setFilter] = useState<Filter>("all");
   const load = useCallback(async () => {
     if (!profile?.authenticated) return;
     try { setProgress(await api<Progress[]>("/api/progress")); setError(""); }
@@ -20,14 +23,26 @@ export default function AchievementsPage() {
   useEffect(() => { setProgress(null); setError(""); void load(); }, [load]);
   const completed = new Set(progress?.filter((item) => item.completed).map((item) => item.activity_slug) ?? []);
   const earned = milestones.filter((item) => completed.has(item.activity)).length;
+  const visible = milestones.filter((item) => {
+    if (filter === "lessons") return item.activity.startsWith("lesson:");
+    if (filter === "challenges") return item.activity.startsWith("challenge:");
+    return true;
+  });
 
   return <><SiteHeader /><main className="content-shell">
     <p className="eyebrow">YOUR LEARNING MILESTONES</p><h1>Achievements</h1>
     <p className="content-intro">Each milestone comes from a lesson or challenge you completed. Keep exploring at your own pace.</p>
+    <div className="achievement-filters" role="tablist" aria-label="Filter milestones">
+      {(["all", "lessons", "challenges"] as const).map((key) => (
+        <button key={key} type="button" role="tab" aria-selected={filter === key} onClick={() => setFilter(key)}>
+          {key === "all" ? "All" : key === "lessons" ? "Lessons" : "Challenges"}
+        </button>
+      ))}
+    </div>
     {error && <div className="content-error" role="alert">{error} <button type="button" onClick={() => void load()}>Retry</button></div>}
     {!progress && !error && <p role="status">Loading milestones…</p>}
     {progress && <><p role="status">{earned} of {milestones.length} milestones earned</p><div className="content-cards">
-      {milestones.map((item) => <article key={item.id} className={`content-card ${completed.has(item.activity) ? "achievement-earned" : ""}`}>
+      {visible.map((item) => <article key={item.id} className={`content-card ${completed.has(item.activity) ? "achievement-earned" : ""}`}>
         <span className="panel-kicker">{completed.has(item.activity) ? "✦ EARNED" : "UP NEXT"}</span>
         <h2>{item.title}</h2><p>{item.description}</p>
         {!completed.has(item.activity) && <Link className="card-action" href={item.href}>Start activity →</Link>}

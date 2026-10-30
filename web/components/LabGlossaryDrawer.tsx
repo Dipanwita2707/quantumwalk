@@ -1,16 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { GLOSSARY } from "@/lib/glossary";
+import { filterGlossary } from "@/lib/glossary";
 
 export function LabGlossaryDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState("");
   const panel = useRef<HTMLDivElement>(null);
-  const visible = GLOSSARY.filter((item) => {
-    const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return item.term.toLowerCase().includes(q) || item.plain.toLowerCase().includes(q);
-  });
+  const visible = filterGlossary(query);
 
   useEffect(() => {
     if (!open) return;
@@ -57,6 +54,11 @@ export function LabGlossaryDrawer({ open, onClose }: { open: boolean; onClose: (
             </li>
           ))}
         </ul>
+        <p className="lab-glossary-full-ref">
+          <Link href="/learn/reference" onClick={onClose}>
+            Full glossary & cheat sheets →
+          </Link>
+        </p>
       </aside>
     </div>
   );

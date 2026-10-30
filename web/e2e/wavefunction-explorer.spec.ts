@@ -1,0 +1,41 @@
+import { expect, test } from "@playwright/test";
+
+test("five-qubit explorer filters, selects, searches, and preserves tiny amplitudes", async ({ page }, testInfo) => {
+  await page.route("**/api/me", route => route.fulfill({ json: { authenticated: false, google_enabled: true } }));
+  const populated = new Set(["11000", "11010", "11100", "11110"]);
+  const amplitudes = Array.from({ length: 32 }, (_, index) => {
+    const basis = index.toString(2).padStart(5, "0");
+    return { basis, real: populated.has(basis) ? -.5 : basis === "01000" ? 1e-7 : -0, imag: 0 };
+  });
+  const final = { index: 1, amplitudes, probabilities: amplitudes.map(amp => ({ basis: amp.basis, probability: amp.real ** 2 })), bloch: Array.from({ length: 5 }, (_, qubit) => ({ qubit, x: 0, y: 0, z: 0, purity: .5 })) };
+  await page.route("**/api/explorer/demo/simulate", route => route.fulfill({ json: { qubits: 5, shots: 1024, steps: [{ ...final, index: 0 }, final], counts: null, basis_order: "q0 rightmost", mode: "ideal_simulator" } }));
+  await page.goto("/workspace?mode=circuit&preset=superposition");
+  await page.locator(".circuit-panel").getByRole("button", { name: /Execute/i }).click();
+  await page.getByRole("slider", { name: "Quantum evolution step" }).fill("1");
+  const view = page.locator(".state-panel .qsv-view");
+  await expect(view.locator(".qsv-row")).toHaveCount(4);
+  await view.getByRole("button", { name: "Inspect basis 11110" }).click();
+  await expect(view.getByRole("complementary", { name: "Selected amplitude" })).toContainText("|11110⟩");
+  await expect(view.getByRole("complementary", { name: "Selected amplitude" })).toContainText("0.500");
+  await view.getByRole("button", { name: "Show all 32 states" }).click();
+  await expect(view.locator(".qsv-row")).toHaveCount(32);
+  await view.getByRole("button", { name: "Inspect basis 01000" }).click();
+  await expect(view.getByRole("complementary", { name: "Selected amplitude" })).toContainText("1.00e-7");
+  await expect(view.locator('.qsv-row[data-basis="01000"]')).toContainText("1.00e-12%");
+  await view.getByRole("button", { name: "Inspect basis 00000" }).click();
+  await expect(view.getByRole("complementary", { name: "Selected amplitude" })).toContainText("0 + 0i");
+  await view.getByRole("searchbox", { name: "Find a basis state" }).fill("111");
+  await expect(view.locator(".qsv-row")).toHaveCount(8);
+  await view.getByRole("searchbox").fill("11110");
+  await expect(view.locator(".qsv-row")).toHaveCount(1);
+  await view.getByRole("searchbox").fill("no match");
+  await expect(view.getByRole("status")).toContainText("No matching states");
+  await view.getByRole("searchbox").fill("");
+  await view.getByRole("button", { name: "Hide near-zero states" }).click();
+  await view.screenshot({ path: testInfo.outputPath("wavefunction-explorer.png") });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  await view.getByRole("button", { name: "Inspect basis 11010" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(view.getByRole("button", { name: "Inspect basis 11010" })).toHaveAttribute("aria-pressed", "true");
+});

@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { api, useSession } from "@/lib/api";
+import { demoSimulateCircuit } from "@/lib/demoSimulate";
 import { QuantumSphere } from "@/components/QuantumSphere";
+import { StateEvolutionGuide, StateVectorView } from "@/components/StateEvolution";
 import "./CircuitViewer.css";
 
 export type Gate = "h" | "x" | "y" | "z" | "s" | "t" | "rx" | "ry" | "rz" | "cx" | "cz" | "swap" | "measure";
@@ -26,14 +28,16 @@ interface CircuitViewerProps {
   challengeSlug?: string;
   onSolved?: () => void;
   fullLabHref?: string;
+  demoPreset?: "superposition" | "bell" | "grover2" | "tsp3" | "tsp3grover";
 }
 
 const AVAILABLE_GATES: Gate[] = ["h", "x", "y", "z", "s", "t", "rx", "ry", "rz", "cx", "cz", "swap", "measure"];
 const TWO_QUBIT_GATES = new Set<Gate>(["cx", "cz", "swap"]);
+const EMPTY_OPERATIONS: Operation[] = [];
 
 export function CircuitViewer({
   initialQubits = 2,
-  initialOperations = [],
+  initialOperations = EMPTY_OPERATIONS,
   readonly = false,
   editable = false,
   title,
@@ -54,6 +58,8 @@ export function CircuitViewer({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackDelay, setPlaybackDelay] = useState(1400);
+  const [retryAttempt, setRetryAttempt] = useState(0);
   
   // Builder state when editable is true
   const [activeGate, setActiveGate] = useState<Gate>("h");
@@ -65,32 +71,33 @@ export function CircuitViewer({
   const [verifying, setVerifying] = useState(false);
   const [challengeStatus, setChallengeStatus] = useState<{ solved?: boolean; message?: string } | null>(null);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
   // Sync when initial operations change
   useEffect(() => {
     setQubits(initialQubits);
     setOperations(initialOperations);
     setStep(0);
+    setIsPlaying(false);
   }, [initialQubits, initialOperations]);
 
   // Run simulation whenever circuit operations or qubits change
   useEffect(() => {
-    if (!csrfToken) return;
     let active = true;
     async function runSim() {
       setBusy(true);
+      setIsPlaying(false);
+      setSimData(null);
       setError("");
       try {
-        const payload = {
-          qubits,
-          operations,
-          shots: 1024,
-        };
-        const data = await api<Simulation>("/api/simulate", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        }, csrfToken);
+        const data = csrfToken
+          ? await api<Simulation>(
+              "/api/simulate",
+              {
+                method: "POST",
+                body: JSON.stringify({ qubits, operations, shots: 1024 }),
+              },
+              csrfToken
+            )
+          : (await demoSimulateCircuit({ qubits, operations, shots: 1024 })) as Simulation;
         if (active) {
           setSimData(data);
           setStep((prev) => Math.min(prev, Math.max(0, data.steps.length - 1)));
@@ -108,21 +115,15 @@ export function CircuitViewer({
     return () => {
       active = false;
     };
-  }, [qubits, operations, csrfToken]);
+  }, [qubits, operations, csrfToken, retryAttempt]);
 
   // Auto-play state evolution
   useEffect(() => {
-    if (!isPlaying || !simData || simData.steps.length <= 1) {
-      if (timerRef.current) clearInterval(timerRef.current);
-      return;
-    }
-    timerRef.current = setInterval(() => {
-      setStep((prev) => (prev < simData.steps.length - 1 ? prev + 1 : 0));
-    }, 1200);
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isPlaying, simData]);
+    if (!isPlaying || !simData || busy) return;
+    if (step >= simData.steps.length - 1) { setIsPlaying(false); return; }
+    const timer = setTimeout(() => setStep(step + 1), playbackDelay);
+    return () => clearTimeout(timer);
+  }, [isPlaying, simData, step, busy, playbackDelay]);
 
   const currentSnapshot = simData?.steps[Math.min(step, (simData?.steps.length || 1) - 1)];
   const blochVector = currentSnapshot?.bloch[selectedQubit];
@@ -159,7 +160,7 @@ export function CircuitViewer({
     setVerifying(true);
     setChallengeStatus(null);
     try {
-      const res = await api<{ solved: boolean; saved: boolean }>(
+      const res = await api<{ solved: boolean; saved: boolean; tier?: string; xp_awarded?: number }>(
         `/api/challenges/${challengeSlug}/submit`,
         {
           method: "POST",
@@ -168,10 +169,12 @@ export function CircuitViewer({
         profile?.authenticated ? profile.csrf_token : undefined
       );
       if (res.solved) {
+        const tierLabel =
+          res.tier === "gold" ? "Gold — efficient circuit" : res.tier === "silver" ? "Silver — compact circuit" : res.tier === "bronze" ? "Bronze — correct probabilities" : "";
         setChallengeStatus({
           solved: true,
-          message: `Mission Accomplished! Target quantum state successfully synthesized.${
-            res.saved ? " Progress & XP recorded to your profile." : " (Sign in to permanently save progress)."
+          message: `Mission complete${tierLabel ? ` · ${tierLabel}` : ""}.${
+            res.saved ? ` ${res.xp_awarded ?? 100} XP recorded.` : " Sign in to save progress."
           }`,
         });
         if (onSolved) onSolved();
@@ -209,21 +212,24 @@ export function CircuitViewer({
         </div>
       </div>
 
-      {error && <div className="cv-error" role="alert">⚠ {error}</div>}
+      {error && <div className="cv-error" role="alert">⚠ {error} <button type="button" className="cv-btn" disabled={busy} onClick={() => setRetryAttempt((attempt) => attempt + 1)}>Retry simulation</button></div>}
 
       {/* Circuit wire diagram */}
       <div className="cv-circuit-board">
         <div className="cv-wires-container">
           {Array.from({ length: qubits }).map((_, qIdx) => (
             <div key={qIdx} className={`cv-wire-row ${selectedQubit === qIdx ? "active-qubit" : ""}`}>
-              <div 
-                className="cv-qubit-label" 
+              <button
+                type="button"
+                className="cv-qubit-label"
+                aria-label={`Inspect qubit ${qIdx}`}
+                aria-pressed={selectedQubit === qIdx}
                 onClick={() => setSelectedQubit(qIdx)}
                 title="Click to view Bloch Sphere for this qubit"
               >
                 <span>q[{qIdx}]</span>
                 <small>{selectedQubit === qIdx ? "inspecting" : ""}</small>
-              </div>
+              </button>
               <div className="cv-wire-line">
                 <div className="cv-wire-track" />
                 <div className="cv-gates-slot-list">
@@ -273,50 +279,16 @@ export function CircuitViewer({
         </div>
       </div>
 
-      {/* Interactive Controls & Step Evolution */}
-      <div className="cv-playback-bar">
-        <div className="cv-step-controls">
-          <button
-            type="button"
-            className="cv-ctrl-btn"
-            disabled={step <= 0 || busy}
-            onClick={() => setStep((s) => Math.max(0, s - 1))}
-            title="Step Back"
-          >
-            ◀
-          </button>
-          <button
-            type="button"
-            className={`cv-ctrl-btn cv-play-btn ${isPlaying ? "playing" : ""}`}
-            disabled={!simData || simData.steps.length <= 1 || busy}
-            onClick={() => setIsPlaying(!isPlaying)}
-            title={isPlaying ? "Pause Evolution" : "Auto-play Evolution"}
-          >
-            {isPlaying ? "❚❚ Pause" : "▶ Play Evolution"}
-          </button>
-          <button
-            type="button"
-            className="cv-ctrl-btn"
-            disabled={!simData || step >= simData.steps.length - 1 || busy}
-            onClick={() => setStep((s) => (simData ? Math.min(simData.steps.length - 1, s + 1) : s))}
-            title="Step Forward"
-          >
-            ▶
-          </button>
-          <span className="cv-step-counter">
-            Step <strong>{step}</strong> / {simData ? simData.steps.length - 1 : operations.length}
-          </span>
-        </div>
-
-        <div className="cv-status-telemetry">
-          <span className="cv-telemetry-badge">
-            Hilbert Dim: <strong>2^{qubits} = {Math.pow(2, qubits)}</strong>
-          </span>
-          <span className={`cv-telemetry-state ${busy ? "busy" : "ready"}`}>
-            {busy ? "● Simulating…" : "✓ Coherent"}
-          </span>
-        </div>
-      </div>
+      {simData && (
+        <StateEvolutionGuide
+          snapshots={simData.steps} operations={operations} step={step}
+          onStep={(next) => { setIsPlaying(false); setStep(next); }}
+          playing={isPlaying} disabled={busy}
+          onPlay={() => { if (!isPlaying && step >= simData.steps.length - 1) setStep(0); setIsPlaying(!isPlaying); }}
+          delay={playbackDelay} onDelay={setPlaybackDelay}
+        />
+      )}
+      {busy && <p role="status" className="qse-note">Calculating the state after each gate?</p>}
 
       {/* Optional Mini-Builder (For Challenges & Experimentation) */}
       {editable && (
@@ -408,34 +380,11 @@ export function CircuitViewer({
         {showStateVector && (
           <div className="cv-diag-card">
             <div className="cv-card-header">
-              <h4>State Vector Probabilities</h4>
+              <h4>Probability &amp; relative phase</h4>
               <small>|ψ⟩ at Step {step}</small>
             </div>
-            <div className="cv-probabilities-list">
-              {currentSnapshot?.probabilities.map((prob) => {
-                const pct = (prob.probability * 100).toFixed(1);
-                const amp = currentSnapshot.amplitudes.find((a) => a.basis === prob.basis);
-                const ampStr = amp ? `${amp.real.toFixed(2)} + ${amp.imag.toFixed(2)}i` : "";
+            {currentSnapshot && <StateVectorView snapshot={currentSnapshot} />}
 
-                return (
-                  <div key={prob.basis} className="cv-prob-row">
-                    <div className="cv-prob-basis">|{prob.basis}⟩</div>
-                    <div className="cv-prob-bar-wrapper">
-                      <div
-                        className="cv-prob-bar-fill"
-                        style={{ width: `${Math.max(prob.probability * 100, 0)}%` }}
-                      />
-                    </div>
-                    <div className="cv-prob-values">
-                      <strong>{pct}%</strong>
-                      <span className="cv-amp-label" title={`Amplitude: ${ampStr}`}>
-                        {amp ? `(${amp.real.toFixed(2)}, ${amp.imag.toFixed(2)}i)` : ""}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         )}
 
@@ -448,6 +397,7 @@ export function CircuitViewer({
             </div>
             <div className="cv-sphere-wrapper">
               <QuantumSphere
+                autoRotate={false}
                 vector={{
                   x: blochVector?.x ?? 0,
                   y: blochVector?.y ?? 0,

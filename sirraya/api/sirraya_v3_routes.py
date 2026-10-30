@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+import math
 import time
 from typing import Any, Literal
 
@@ -35,9 +36,16 @@ class SolveTspRequest(BaseModel):
         n = len(value)
         if n < 3 or n > 6:
             raise ValueError("distance_matrix must be 3–6 cities")
-        for row in value:
+        for i, row in enumerate(value):
             if len(row) != n:
                 raise ValueError("distance_matrix must be square")
+            for j, distance in enumerate(row):
+                if not math.isfinite(distance) or distance < 0:
+                    raise ValueError("distance_matrix costs must be finite and non-negative")
+                if not math.isfinite(n * distance):
+                    raise ValueError("distance_matrix tour costs must remain finite")
+                if i == j and distance != 0:
+                    raise ValueError("distance_matrix diagonal costs must be 0")
         return value
 
 
@@ -58,12 +66,6 @@ def _all_tours(matrix: list[list[float | int]]) -> list[dict[str, Any]]:
         rows.append({"route": list(order), "distance": cost})
     rows.sort(key=lambda r: r["distance"])
     return rows
-
-
-def _mitigation_label(enabled: bool, method: Mitigation) -> str:
-    if not enabled:
-        return "disabled"
-    return method
 
 
 def _solutions_from_counts(
@@ -100,17 +102,12 @@ def solve_tsp(body: SolveTspRequest, request: Request) -> dict[str, Any]:
     """POST /api/v3/solve-tsp — Grover sampling for 3–6 cities (direct Qiskit)."""
     enforce_rate(request, "sirraya_solve_tsp", limit=20, window_seconds=60)
     started = time.perf_counter()
+    if body.algorithm != "grover":
+        raise HTTPException(status_code=501, detail=f"{body.algorithm.upper()} TSP solve is not implemented")
     n = len(body.distance_matrix)
     tours = _all_tours(body.distance_matrix)
     classical_optimal = tours[0]["distance"]
     recommendations: list[str] = []
-
-    if body.algorithm == "qaoa":
-        recommendations.append("QAOA path uses classical tour ranking with QAOA-labeled metadata (hybrid placeholder).")
-    elif body.algorithm == "vqe":
-        recommendations.append("VQE path uses classical tour ranking with VQE-labeled metadata (hybrid placeholder).")
-    elif body.algorithm != "grover":
-        raise HTTPException(status_code=501, detail=f"Unknown algorithm {body.algorithm!r}")
 
     iterations = body.grover_iterations or 2
     try:
@@ -118,7 +115,7 @@ def solve_tsp(body: SolveTspRequest, request: Request) -> dict[str, Any]:
             sample = grover_tsp_sample(
                 body.distance_matrix,
                 shots=body.shots,
-                grover_iterations=iterations if body.algorithm == "grover" else 1,
+                grover_iterations=iterations,
             )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -138,10 +135,8 @@ def solve_tsp(body: SolveTspRequest, request: Request) -> dict[str, Any]:
             }
         ]
 
-    if body.enable_error_mitigation and body.error_mitigation_method == "readout":
-        recommendations.append("Readout mitigation is modeled via fidelity estimate only in this build.")
-
-    theoretical_fidelity = 0.92 if body.enable_error_mitigation else 0.85
+    if body.enable_error_mitigation:
+        recommendations.append("Error mitigation is not applied by this local simulator.")
     quantum_best = quantum_solutions[0]["distance"]
     found_optimal = abs(quantum_best - classical_optimal) < 1e-6
 
@@ -160,11 +155,11 @@ def solve_tsp(body: SolveTspRequest, request: Request) -> dict[str, Any]:
             "shots": body.shots,
             "qubits_used": qubits_used,
             "depth": depth,
-            "quantum_volume": max(1, qubits_used * max(1, depth // 4)),
+            "quantum_volume": None,
             "optimization_level": body.optimization_level,
-            "error_mitigation": _mitigation_label(body.enable_error_mitigation, body.error_mitigation_method),
+            "error_mitigation": "disabled",
             "grover_iterations": iterations,
-            "theoretical_fidelity": theoretical_fidelity,
+            "theoretical_fidelity": None,
         },
         "circuit_metrics": {
             "gate_count": depth,

@@ -1,5 +1,26 @@
 /* challenges.css - Quantum Arena UI */
 
+/* Shared reference composition: compact challenge rows and a secondary ranking. */
+.qw-reference-ui .chal-shell { max-width: 1360px; padding: 28px 24px 60px; }
+.q-ui-challenge-layout { display: grid; grid-template-columns: minmax(0,1fr) 330px; gap: 24px; align-items: start; }
+.q-ui-challenge-layout>aside { position: sticky; top: 20px; min-width: 0; }
+.qw-reference-ui .q-ui-challenge-layout .chal-grid { grid-template-columns: minmax(0,1fr); gap: 14px; }
+.qw-reference-ui .q-ui-challenge-layout .chal-card { display: grid; grid-template-columns: 40px minmax(0,1fr) auto; gap: 16px; align-items: start; padding: 18px; border-radius: var(--q-radius); border: 1px solid var(--q-border); background: var(--q-surface); box-shadow: none; min-height: 0; }
+.qw-reference-ui .q-ui-challenge-layout .chal-card:hover { transform: none; border-color: #49617b; }
+.q-ui-challenge-icon { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid #355563; border-radius: 50%; color: var(--q-cyan); }
+.qw-reference-ui .q-ui-challenge-layout .chal-card h2 { font-size: 17px; margin: 10px 0 6px; }
+.qw-reference-ui .q-ui-challenge-layout .chal-card p { font-size: 12px; line-height: 1.7; margin: 0; }
+.qw-reference-ui .q-ui-challenge-layout .chal-meta-row { gap: 10px; justify-content: flex-start; margin-bottom: 0; }
+.qw-reference-ui .q-ui-challenge-layout .chal-level-badge { color: #c8b0fa; border-color: #9d78cf55; background: #5c3c8022; }
+.qw-reference-ui .q-ui-challenge-layout .chal-reward-badge { color: #d4b77d; border-color: #b58b3955; background: #805a1122; }
+.qw-reference-ui .q-ui-challenge-layout .chal-action-btn { align-self: center; width: auto; margin: 0; padding: 10px 14px; min-height: 44px; color: white; background: linear-gradient(110deg,#7846f5,#a64df0); border: 1px solid #ad79ff; border-radius: 5px; font-size: 12px; }
+.q-ui-challenge-criteria { margin-top: 10px; }
+.q-ui-challenge-criteria summary { color: var(--q-muted); font-size: 11px; min-height: 40px; align-content: center; cursor: pointer; }
+.qw-reference-ui .q-ui-challenge-layout .chal-target-val { color: var(--q-cyan); font-size: 11px; }
+.qw-reference-ui .q-ui-challenge-layout .chal-tier-list strong { color: #c2a5ee; }
+@media(max-width:900px) { .q-ui-challenge-layout { grid-template-columns: minmax(0,1fr); }.q-ui-challenge-layout>aside { position: static; } }
+@media(max-width:560px) { .qw-reference-ui .q-ui-challenge-layout .chal-card { grid-template-columns: 32px minmax(0,1fr); gap: 12px; padding: 16px; }.q-ui-challenge-icon { width: 32px; height: 32px; }.qw-reference-ui .q-ui-challenge-layout .chal-action-btn { grid-column: 2; justify-self: start; } }
+
 .chal-shell {
   max-width: 1720px;
   margin: 0 auto;
@@ -157,6 +178,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.chal-tier-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #94a3b8;
+}
+
+.chal-tier-list strong {
+  color: #f59e0b;
+  font-weight: 700;
 }
 
 .chal-target-label {

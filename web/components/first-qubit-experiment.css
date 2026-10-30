@@ -1,0 +1,81 @@
+.fq-lab { margin: 28px 0; border: 1px solid #344968; border-radius: 16px; overflow: hidden; background: #0a1425; color: #e4edfa; }
+.fq-controls, .fq-observations { min-width: 0; }
+.qw-reference-ui .lesson-workbench .fq-workspace { display: grid; grid-template-columns: 220px minmax(0,1fr); align-items: start; }
+.qw-reference-ui .lesson-workbench .fq-controls { border-right: 1px solid var(--q-border); padding-bottom: 12px; }
+.qw-reference-ui .lesson-workbench .fq-setups { flex-direction: column; }
+.qw-reference-ui .lesson-workbench .fq-predict { display: grid; gap: 12px; }
+.qw-reference-ui .lesson-workbench .fq-predict fieldset>div { flex-direction: column; gap: 4px; }
+.qw-reference-ui .lesson-workbench .fq-circuit { padding: 12px; flex-wrap: wrap; gap: 12px; }
+.qw-reference-ui .lesson-workbench .fq-controls .fq-circuit>span { flex-basis: 100%; }
+.qw-reference-ui .lesson-workbench .fq-controls .fq-circuit button::before { left: -13px; width: 12px; }
+.qw-reference-ui .lesson-workbench .fq-observation-grid { grid-template-columns: minmax(0,1fr); border-top: 0; }
+.qw-reference-ui .lesson-workbench .fq-state { border-right: 0; border-bottom: 1px solid var(--q-border); }
+.qw-reference-ui .lesson-workbench .fq-readout { border-top: 0; }
+.qw-reference-ui .lesson-workbench .fq-controls>.fq-hint, .qw-reference-ui .lesson-workbench .fq-controls>.fq-error { padding: 0 18px; }
+.qw-reference-ui .lesson-workbench .fq-observations>.qse-guide { margin: 12px; }
+@media(max-width:760px) { .qw-reference-ui .lesson-workbench .fq-workspace { grid-template-columns: minmax(0,1fr); }.qw-reference-ui .lesson-workbench .fq-controls { border-right: 0; border-bottom: 1px solid var(--q-border); } }
+.fq-header { display: flex; gap: 20px; justify-content: space-between; align-items: start; padding: 24px; background: linear-gradient(120deg, #162240, #0b2030); border-bottom: 1px solid #30435e; }
+.fq-eyebrow { display: block; color: #7ed9dc; font: 700 10px ui-monospace, monospace; letter-spacing: .1em; }
+.fq-lab h3 { margin: 10px 0 8px; font-size: 24px; color: #eef4ff; letter-spacing: -.6px; }
+.fq-lab h4 { margin: 8px 0 10px; color: #e4eafa; font-size: 16px; }
+.fq-lab p { margin: 8px 0; color: #adbed4; font-size: 13px; line-height: 1.75; }
+.fq-model { flex-shrink: 0; padding: 7px 10px; border: 1px solid #527887; border-radius: 6px; color: #a3d8dd; font-size: 10px; }
+.fq-setups { display: flex; gap: 4px; padding: 16px 24px 0; flex-wrap: wrap; }
+.fq-lab button, .fq-lab select { font: inherit; font-size: 12px; }
+.fq-setups button { flex: 1; min-height: 44px; border: 1px solid #344864; background: #111e32; color: #aebed5; padding: 12px; border-radius: 7px; cursor: pointer; }
+.fq-setups button[aria-pressed="true"] { background: #2a2547; border-color: #a38bd3; color: #e3d9ff; }
+.fq-protocol { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; padding: 16px 24px; }
+.fq-protocol p { max-width: 65ch; }
+.fq-protocol label { color: #a4b7cf; font-size: 11px; align-self: center; }
+.fq-protocol select { display: block; margin-top: 8px; width: 100%; min-height: 42px; border: 1px solid #3d506e; border-radius: 7px; background: #101d32; color: #d6e2f4; padding: 8px; }
+.fq-circuit { display: flex; align-items: center; gap: 28px; margin: 0 24px; padding: 20px; border: 1px solid #344864; border-radius: 8px; background: repeating-linear-gradient(90deg, transparent 0 23px, #8694b008 23px 24px), #071120; overflow-x: auto; }
+.fq-circuit > span { flex-shrink: 0; color: #98cddd; font: 12px ui-monospace, monospace; }
+.fq-circuit button { position: relative; flex: 0 0 44px; min-height: 44px; border: 1px solid #8d7ab9; border-radius: 7px; color: #ded1ff; background: #292044; font: 700 14px ui-monospace, monospace; }
+.fq-circuit button::before { content: ""; position: absolute; left: -29px; top: 50%; height: 1px; width: 28px; background: #486c86; }
+.fq-circuit button[aria-current="step"] { background: #184552; border-color: #7de6e7; color: #c9feff; box-shadow: 0 0 16px #7de6e722; }
+.fq-predict { display: flex; gap: 20px; align-items: end; justify-content: space-between; padding: 20px 24px 12px; }
+.fq-lab .fq-predict fieldset { border: 0; padding: 0; min-width: 0; margin: 0; }
+.fq-lab .fq-predict legend { color: #e0ebfa; font-size: 13px; font-weight: 600; padding: 0 0 12px; }
+.fq-predict fieldset > div { display: flex; gap: 12px; flex-wrap: wrap; }
+.fq-lab .fq-predict label { display: flex; gap: 8px; align-items: center; width: auto; margin: 0; color: #b2c4db; font-size: 12px; min-height: 40px; cursor: pointer; }
+.fq-lab .fq-predict input[type="radio"] { display: inline-block; accent-color: #a38bd3; width: 16px; height: 16px; flex: 0 0 16px; padding: 0; margin: 0; }
+.fq-lab .fq-run { min-height: 44px; flex-shrink: 0; border: 1px solid #98dede; border-radius: 8px; padding: 12px 18px; background: #8ce0da; color: #0a2b31; font-weight: 700; cursor: pointer; }
+.fq-lab button:disabled { opacity: .5; cursor: default; }
+.fq-lab .fq-hint { color: #95aac6; font-size: 11px; }
+.fq-lab > .fq-hint, .fq-error { padding: 0 24px 12px; }
+.fq-error { color: #ffc1cb; font-size: 13px; }
+.fq-lab > .qse-guide { margin: 12px 24px 20px; }
+.fq-observation-grid { display: grid; grid-template-columns: minmax(240px, .9fr) minmax(0, 1.1fr); gap: 0; border-top: 1px solid #2c3e58; }
+.fq-state, .fq-readout { min-width: 0; padding: 22px; }
+.fq-state { background: radial-gradient(ellipse at 50% 45%, #71449b12, transparent 70%); border-right: 1px solid #2c3e58; }
+.fq-state .quantum-sphere.qs-hologram canvas { height: 230px; }
+.fq-results-key { display: flex; gap: 16px; margin: 20px 0; color: #aebed5; font-size: 10px; }
+.fq-results-key > span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; background: #75d9d9; }
+.fq-results-key > span:last-child::before { background: #a58ce7; }
+.fq-outcome { margin: 20px 0; }
+.fq-outcome > div:first-child { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px; color: #b7cbe1; }
+.fq-outcome strong { color: #e7effb; }
+.fq-result-track { height: 10px; background: #24344c; border-radius: 3px; margin: 8px 0; overflow: hidden; }
+.fq-result-track > span { display: block; height: 100%; background: #75d9d9; border-radius: inherit; transition: width 500ms ease; }
+.fq-sampled > span { background: #a58ce7; }
+.fq-outcome small { font-size: 11px; color: #a7b5cd; }
+.fq-conclusion, .fq-ready-note { border-left: 2px solid #7ed9dc; padding: 12px 14px; margin-top: 24px; background: #112334; }
+.fq-conclusion strong, .fq-ready-note strong { color: #a9e7e7; font-size: 13px; }
+.fq-amplitudes { border-top: 1px solid #2c3e58; padding: 16px 24px; }
+.fq-amplitudes summary { color: #c5b3ed; font-size: 12px; min-height: 36px; cursor: pointer; }
+.fq-amplitudes .qsv-view { margin-top: 16px; }
+.fq-hardware { padding: 24px; border-top: 1px solid #2c3e58; background: #111b2e; }
+.fq-hardware-content > div { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+.fq-hardware summary { cursor: pointer; min-height: 44px; align-content: center; font-size: 13px; color: #c8b3ef; }
+.fq-hardware[open] summary { margin-bottom: 18px; }
+.fq-hardware a { display: inline-flex; align-items: center; min-height: 40px; color: #88dbde; font-size: 12px; text-decoration: none; }
+.fq-lab :focus-visible { outline: 2px solid #8be9e8; outline-offset: 3px; }
+.first-qubit-purpose { max-width: 70ch; line-height: 1.8; }
+.first-qubit-brief ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; padding: 18px 0 0; list-style: none; margin: 0; }
+.first-qubit-brief li { display: flex; align-items: start; gap: 10px; border-top: 1px solid #344864; padding-top: 14px; }
+.first-qubit-brief li > span { color: #8ddedd; font: 11px ui-monospace, monospace; padding-top: 3px; }
+.first-qubit-brief strong { font-size: 13px; color: #dde7f5; }
+.first-qubit-brief li p { font-size: 12px; line-height: 1.7; color: #a2b6cf; margin-top: 8px; }
+@media (max-width: 1000px) { .fq-observation-grid { grid-template-columns: 1fr; } .fq-state { border-right: 0; border-bottom: 1px solid #2c3e58; } .fq-state .quantum-sphere { max-width: 420px; margin: auto; } .fq-protocol { grid-template-columns: 1fr; gap: 4px; } .fq-protocol label { max-width: 260px; } }
+@media (max-width: 600px) { .fq-header { flex-direction: column; padding: 18px; gap: 10px; } .fq-setups { padding: 16px 16px 0; } .fq-setups button { flex-basis: 100%; text-align: left; } .fq-protocol { padding: 16px; } .fq-circuit { margin: 0 16px; padding: 16px; gap: 20px; } .fq-circuit button::before { left: -21px; width: 20px; } .fq-predict { flex-direction: column; align-items: stretch; padding: 18px 16px; } .fq-state, .fq-readout, .fq-hardware { padding: 18px; } .fq-lab > .qse-guide { margin: 10px 16px; } .fq-amplitudes { padding: 16px; } .first-qubit-brief ol { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .fq-result-track > span { transition: none; } }

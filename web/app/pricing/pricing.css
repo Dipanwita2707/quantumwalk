@@ -1,0 +1,15 @@
+.q-ui-pricing .q-ui-page-heading { text-align: center; justify-content: center; margin-bottom: 36px; }
+.q-ui-pricing .q-ui-description { max-width: 68ch; }
+.q-ui-pricing-grid { display: flex; justify-content: center; flex-wrap: wrap; gap: 24px; margin-bottom: 28px; }
+.q-ui-pricing-grid .pricing-plan { flex: 1 1 280px; max-width: 360px; display: flex; flex-direction: column; padding: 26px; border-color: #574277; }
+.q-ui-pricing-grid .pricing-plan h2 { font-size: 22px; margin: 12px 0 18px; }
+.q-ui-plan-art { display: grid; place-items: center; width: 100%; height: 100px; color: #b19aff; background: radial-gradient(ellipse,#543c842e,transparent 70%); }
+.q-ui-pricing-grid .pricing-amount { font-size: 32px; color: var(--q-text); margin: 18px 0; font-variant-numeric: tabular-nums; }
+.q-ui-pricing-grid .pricing-plan ul { list-style: none; padding: 0; margin: 0 0 24px; }
+.q-ui-pricing-grid .pricing-plan li { position: relative; padding: 7px 0 7px 20px; color: var(--q-muted); line-height: 1.7; font-size: 12px; }
+.q-ui-pricing-grid .pricing-plan li::before { content: ""; position: absolute; left: 0; top: 15px; width: 5px; height: 5px; border: 1px solid var(--q-cyan); border-radius: 50%; }
+.q-ui-pricing-grid .pricing-plan>.q-ui-button { margin-top: auto; width: 100%; }
+.q-ui-pricing>p[role=status] { text-align: center; color: var(--q-muted); font-size: 12px; line-height: 1.8; }
+.q-ui-pricing .q-ui-pricing-terms { max-width: 1120px; margin-inline: auto; padding: 16px 22px; }
+.q-ui-pricing-terms summary { font-size: 14px; color: var(--q-text); }
+.q-ui-pricing-terms p { color: var(--q-muted); font-size: 13px; line-height: 1.8; }

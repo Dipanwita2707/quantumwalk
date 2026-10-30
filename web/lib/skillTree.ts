@@ -33,11 +33,19 @@ export const SKILL_NODES: SkillNode[] = [
     activity: "lesson:entanglement",
   },
   {
+    id: "search",
+    title: "Amplify a mark",
+    plain: "Walk the Grover explorer, then run the preset in the lab.",
+    href: "/learn/grover-boost",
+    requires: ["shared"],
+    activity: "lesson:grover-boost",
+  },
+  {
     id: "prove",
     title: "Prove your circuit",
     plain: "Pass a mission graded by the simulator.",
     href: "/challenges/make-bell-pair",
-    requires: ["shared"],
+    requires: ["search"],
     activity: "challenge:make-bell-pair",
   },
 ];

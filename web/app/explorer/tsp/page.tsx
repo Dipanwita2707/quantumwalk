@@ -84,6 +84,15 @@ export default function TspExplorerPage() {
   const [solveResult, setSolveResult] = useState<SolveTspResponse | null>(null);
   const solveAbort = useRef<AbortController | null>(null);
 
+  const updateMatrixInputs = (next: string[][]) => {
+    solveAbort.current?.abort();
+    solveAbort.current = null;
+    setSolveLoading(false);
+    setSolveError("");
+    setSolveResult(null);
+    setMatrixInputs(next);
+  };
+
   const parsedMatrix = useMemo(() => validateMatrixInputs(matrixInputs), [matrixInputs]);
   const classicalTours = useMemo(() => {
     if (!parsedMatrix.ok) return [];
@@ -200,7 +209,7 @@ export default function TspExplorerPage() {
           cityCount={cityCount}
           inputs={matrixInputs}
           onCityCountChange={setCityCount}
-          onInputsChange={setMatrixInputs}
+          onInputsChange={updateMatrixInputs}
           validation={matrixValidation ?? (!parsedMatrix.ok ? parsedMatrix : null)}
           onValidationChange={setMatrixValidation}
         />

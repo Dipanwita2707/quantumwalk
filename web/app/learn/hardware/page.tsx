@@ -3,22 +3,27 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { CharacterizationToy } from "@/components/CharacterizationToy";
+import { ArchitectureConnectivity } from "@/components/ArchitectureConnectivity";
+import { PageHeading } from "@/components/ui/QuantumUI";
 
 const architectures = [
   {
     name: "Superconducting",
     plain: "Microwave pulses on chip. Fast gates, cryogenic temperatures, planar connectivity.",
     gates: "CX, RZ, H",
+    topology: "planar" as const,
   },
   {
     name: "Trapped ion",
     plain: "Ions held by fields. High fidelity, slower gates, all-to-all pairs often easier.",
     gates: "MS gates, rotations",
+    topology: "all-to-all" as const,
   },
   {
     name: "Neutral atom",
     plain: "Atoms in arrays. Flexible layout, Rydberg interactions for entanglement.",
     gates: "Controlled-Z, single-qubit R",
+    topology: "grid" as const,
   },
 ];
 
@@ -27,11 +32,7 @@ export default function LearnHardwarePage() {
     <>
       <SiteHeader />
       <main className="content-shell">
-        <p className="eyebrow">HONEST HARDWARE STORY</p>
-        <h1>What real machines look like</h1>
-        <p className="content-intro">
-          These cards are conceptual. QuantumWalk does not connect to a live device unless a provider is configured and labeled.
-        </p>
+        <PageHeading title="What real machines look like" eyebrow="HARDWARE CONCEPTS" description="These architectures are conceptual. Explore how physical connectivity shapes a quantum circuit." />
         <div className="content-cards">
           {architectures.map((item) => (
             <article key={item.name} className="content-card">
@@ -41,6 +42,7 @@ export default function LearnHardwarePage() {
               <p>
                 <strong>Typical native gates:</strong> {item.gates}
               </p>
+              <ArchitectureConnectivity topology={item.topology} label={`Typical ${item.name} qubit connectivity (conceptual)`} />
             </article>
           ))}
         </div>

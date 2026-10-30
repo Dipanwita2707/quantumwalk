@@ -20,11 +20,12 @@ export const PRIMARY_NAV: PrimaryNavItem[] = [
 export function getPrimaryNavActiveId(pathname: string): PrimaryNavId | null {
   if (pathname.startsWith("/hub")) return "tools";
   if (pathname.startsWith("/explorer")) return "explore";
-  if (pathname.startsWith("/workspace") || pathname === "/studio") return "lab";
+  if (pathname.startsWith("/workspace") || pathname === "/studio" || pathname === "/lab" || pathname.startsWith("/lab/")) return "lab";
   if (
     pathname.startsWith("/learn") ||
     pathname.startsWith("/academy") ||
     pathname.startsWith("/challenges") ||
+    pathname.startsWith("/missions") ||
     pathname.startsWith("/algorithms")
   ) {
     return "learn";

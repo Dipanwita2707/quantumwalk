@@ -1,0 +1,111 @@
+openapi: 3.1.0
+info:
+  title: Sirraya-compatible platform API (QuantumWalk layer)
+  version: 0.1.0
+  description: |
+    Endpoints observed in Sirraya Quantum Explorer client (localhost:8000).
+    Implemented independently in QuantumWalk; not Sirraya's proprietary backend.
+servers:
+  - url: http://localhost:8000
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /api/v3/solve-tsp:
+    post:
+      summary: TSP quantum/classical solve (Explorer compatibility)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SolveTspRequest"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SolveTspResponse"
+        "422":
+          description: Validation error
+        "501":
+          description: Algorithm not implemented
+components:
+  schemas:
+    SolveTspRequest:
+      type: object
+      required: [distance_matrix, algorithm, shots, optimization_level, enable_error_mitigation, error_mitigation_method]
+      properties:
+        distance_matrix:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+        algorithm:
+          type: string
+          enum: [grover, qaoa, vqe]
+        shots:
+          type: integer
+          minimum: 100
+          maximum: 16384
+        optimization_level:
+          type: integer
+          minimum: 0
+          maximum: 3
+        enable_error_mitigation:
+          type: boolean
+        error_mitigation_method:
+          type: string
+          enum: [readout, zne, none]
+        grover_iterations:
+          type: integer
+          minimum: 1
+          maximum: 5
+    SolveTspResponse:
+      type: object
+      required: [success, execution_time, quantum_solutions, quantum_advantage, execution_details]
+      properties:
+        success:
+          type: boolean
+        execution_time:
+          type: number
+        quantum_solutions:
+          type: array
+          items:
+            type: object
+            properties:
+              route:
+                type: array
+                items:
+                  type: integer
+              distance:
+                type: number
+              probability:
+                type: number
+              measurement_count:
+                type: integer
+              bitstring:
+                type: string
+                nullable: true
+        quantum_advantage:
+          type: object
+          properties:
+            found_optimal:
+              type: boolean
+            quantum_optimal_distance:
+              type: number
+            classical_optimal_distance:
+              type: number
+        execution_details:
+          type: object
+        circuit_metrics:
+          type: object
+        recommendations:
+          type: array
+          items:
+            type: string

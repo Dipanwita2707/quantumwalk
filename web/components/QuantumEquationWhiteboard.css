@@ -476,10 +476,62 @@
 }
 
 .qwb-sphere-canvas-box {
-  width: 280px;
-  height: 280px;
+  width: 100%;
+  max-width: 440px;
+  min-width: 0;
   margin: 0 auto;
 }
+
+.qwb-result-note {
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.qwb-run-circuit {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 20px 12px;
+  margin: 16px 0;
+  border: 1px solid #30425d;
+  border-radius: 12px;
+  background: linear-gradient(#0b1729, #0b1729) padding-box;
+}
+
+.qwb-run-circuit button {
+  position: relative;
+  flex: 0 0 44px;
+  min-height: 44px;
+  border: 1px solid #8f7dec;
+  border-radius: 8px;
+  background: #252244;
+  color: #e0d3ff;
+  font: 700 16px ui-monospace, monospace;
+  cursor: pointer;
+}
+
+.qwb-run-circuit button::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 1px;
+  left: -21px;
+  top: 50%;
+  background: #6d95b0;
+}
+
+.qwb-run-circuit button[aria-current="step"] {
+  border-color: #7de6e7;
+  background: #174552;
+  color: #c7fcff;
+  box-shadow: 0 0 16px #7de6e733;
+}
+
+.qwb-run-circuit button:focus-visible { outline: 2px solid #7de6e7; outline-offset: 3px; }
+.qwb-run-circuit button:disabled { opacity: .45; cursor: default; }
+.qwb-wire-label { flex: 0 0 auto; color: #aebed5; font: 12px ui-monospace, monospace; }
 
 /* Coordinates & Expectation Values */
 .qwb-coords-matrix {

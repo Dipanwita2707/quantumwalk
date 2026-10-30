@@ -6,6 +6,9 @@ import hashlib
 import hmac
 import secrets
 import time
+import json
+from pathlib import Path
+import httpx
 from urllib.parse import quote
 from dataclasses import dataclass
 
@@ -33,7 +36,10 @@ if google_enabled:
         name="google",
         client_id=google_client_id,
         client_secret=google_client_secret,
-        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        # Cached public discovery metadata, verified 2026-10-28 against Google's
+        # well-known document. Signing keys are still fetched/rotated by Authlib.
+        # Starting sign-in need not make an outbound metadata request.
+        **json.loads(Path(__file__).with_name("google_oidc_metadata.json").read_text()),
         client_kwargs={"scope": "openid email profile", "code_challenge_method": "S256"},
     )
 
@@ -137,8 +143,13 @@ async def google_callback(request: Request, db: Session):
         raise HTTPException(status_code=503, detail="Google sign-in is not configured")
     try:
         token = await oauth.google.authorize_access_token(request)
-    except OAuthError:
-        return RedirectResponse(f"{frontend_origin}/login?error=sign_in_failed", status_code=303)
+    except OAuthError as exc:
+        request.session.clear()
+        reason = "session_expired" if exc.error == "mismatching_state" else "sign_in_failed"
+        return RedirectResponse(f"{frontend_origin}/login?error={reason}", status_code=303)
+    except httpx.HTTPError:
+        request.session.clear()
+        return RedirectResponse(f"{frontend_origin}/login?error=provider_unavailable", status_code=303)
     profile = token.get("userinfo")
     if not isinstance(profile, dict):
         return RedirectResponse(f"{frontend_origin}/login?error=sign_in_failed", status_code=303)

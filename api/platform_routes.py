@@ -29,6 +29,7 @@ from settings import ai_api_base_url, ai_api_style, google_enabled, openai_api_k
 from circuit_bridge import build_qiskit_circuit, export_cirq_python, export_qiskit_python
 from qiskit import transpile
 from simulator import CircuitRequest, simulate
+from lesson_versions import lesson_content, published_lessons
 
 _PUBLIC_GET_PREFIXES = (
     "/api/me",
@@ -78,6 +79,7 @@ class CircuitView(BaseModel):
 class LessonAnswer(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     choice: int = Field(ge=0, le=10)
+    content_version: str | None = Field(default=None, max_length=36)
 
 
 class ChallengeSubmission(BaseModel):
@@ -120,8 +122,10 @@ def owned_circuit(db: Session, circuit_id: str, user_id: str) -> Circuit:
     return circuit
 
 
-def save_progress(db: Session, user_id: str, activity_slug: str, score: int) -> None:
+def save_progress(db: Session, user_id: str, activity_slug: str, score: int) -> int:
+    db.scalar(select(User).where(User.id == user_id).with_for_update())
     progress = db.scalar(select(Progress).where(Progress.user_id == user_id, Progress.activity_slug == activity_slug))
+    previous = progress.score if progress else 0
     if progress is None:
         progress = Progress(user_id=user_id, activity_slug=activity_slug, score=score, completed=score == 100)
         db.add(progress)
@@ -129,15 +133,18 @@ def save_progress(db: Session, user_id: str, activity_slug: str, score: int) -> 
         progress.score = max(progress.score, score)
         progress.completed = progress.score == 100
     db.commit()
+    return max(0, score - previous)
 
 
 @router.get("/me")
-def me(auth: AuthContext | None = Depends(optional_auth)) -> dict:
+def me(auth: AuthContext | None = Depends(optional_auth), db: Session = Depends(get_db)) -> dict:
     if auth is None:
         return {"authenticated": False, "google_enabled": google_enabled}
     user = auth.user
+    from collaboration_routes import roles
     return {
         "authenticated": True,
+        "roles": sorted(roles(db, user.id)),
         "id": user.id,
         "display_name": user.display_name,
         "email": user.email,
@@ -161,16 +168,13 @@ def algorithm(slug: str) -> dict:
 
 
 @router.get("/lessons")
-def lessons() -> list[dict]:
-    return LESSONS
+def lessons(db: Session = Depends(get_db)) -> list[dict]:
+    return published_lessons(db)
 
 
 @router.get("/lessons/{slug}")
-def lesson(slug: str) -> dict:
-    item = next((entry for entry in LESSONS if entry["slug"] == slug), None)
-    if item is None:
-        raise HTTPException(status_code=404, detail="Lesson not found")
-    return item
+def lesson(slug: str, version: str | None = Query(default=None, max_length=36), db: Session = Depends(get_db)) -> dict:
+    return lesson_content(db, slug, version)[0]
 
 
 @router.post("/lessons/{slug}/answer")
@@ -178,18 +182,16 @@ def answer_lesson(
     slug: str, answer: LessonAnswer, request: Request,
     auth: AuthContext | None = Depends(optional_auth), db: Session = Depends(get_db),
 ) -> dict:
-    item = next((entry for entry in LESSONS if entry["slug"] == slug), None)
-    if item is None:
-        raise HTTPException(status_code=404, detail="Lesson not found")
+    item, correct_choice = lesson_content(db, slug, answer.content_version)
     enforce_rate(request, "lesson", 30)
     if auth:
         check_csrf(request, auth)
     if answer.choice >= len(item["choices"]):
         raise HTTPException(status_code=422, detail="Invalid answer choice")
-    correct = answer.choice == LESSON_ANSWERS[slug]
+    correct = answer.choice == correct_choice
     if auth:
         save_progress(db, auth.user.id, f"lesson:{slug}", 100 if correct else 0)
-    return {"correct": correct, "score": 100 if correct else 0, "saved": auth is not None}
+    return {"correct": correct, "score": 100 if correct else 0, "saved": auth is not None, "content_version": item["content_version"]}
 
 
 @router.get("/challenges")
@@ -238,9 +240,9 @@ def submit_challenge(
         if len(gate_ops) <= limits["reference_ops"]:
             tier = "gold"
     score = {"none": 0, "bronze": 60, "silver": 80, "gold": 100}[tier]
-    xp_awarded = score
+    xp_awarded = 0
     if auth:
-        save_progress(db, auth.user.id, f"challenge:{slug}", score)
+        xp_awarded = save_progress(db, auth.user.id, f"challenge:{slug}", score)
     return {
         "solved": solved,
         "score": score,
@@ -293,8 +295,10 @@ def transpile_preview(circuit: CircuitRequest, request: Request) -> dict:
 
 @router.get("/progress")
 def progress(auth: AuthContext = Depends(current_auth), db: Session = Depends(get_db)) -> list[dict]:
+    from extended_models import MissionEvent
     records = db.scalars(select(Progress).where(Progress.user_id == auth.user.id).limit(100)).all()
-    return [{"activity_slug": item.activity_slug, "completed": item.completed, "score": item.score} for item in records]
+    missions = db.scalars(select(MissionEvent).where(MissionEvent.user_id == auth.user.id, MissionEvent.completed.is_(True)))
+    return [{"activity_slug": item.activity_slug, "completed": item.completed, "score": item.score} for item in records] + [{"activity_slug": f"mission:{item.mission_slug}", "completed": True, "score": 100} for item in missions]
 
 
 @router.get("/circuits", response_model=list[CircuitView])
@@ -350,12 +354,14 @@ def update_profile(payload: ProfileUpdate, auth: AuthContext = Depends(require_c
 
 @router.get("/account/export")
 def export_account(auth: AuthContext = Depends(current_auth), db: Session = Depends(get_db)) -> dict:
+    from privacy_export import account_product_data
     circuits = db.scalars(select(Circuit).where(Circuit.owner_user_id == auth.user.id).limit(1000)).all()
     progress_rows = db.scalars(select(Progress).where(Progress.user_id == auth.user.id).limit(1000)).all()
     return {
         "profile": {"display_name": auth.user.display_name, "email": auth.user.email},
         "circuits": [circuit_view(item).model_dump(mode="json") for item in circuits],
         "progress": [{"activity_slug": item.activity_slug, "score": item.score} for item in progress_rows],
+        "laboratory": account_product_data(db, auth.user.id),
     }
 
 

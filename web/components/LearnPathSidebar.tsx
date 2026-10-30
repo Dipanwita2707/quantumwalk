@@ -6,21 +6,10 @@ import { api, useSession } from "@/lib/api";
 import { LEARN_UNITS, unitCompletion } from "@/lib/learnUnits";
 import { loadGuestLessonProgress } from "@/lib/guestLessonProgress";
 
-const PRESET_BY_LESSON: Record<string, string> = {
-  "first-qubit": "superposition",
-  "math-amplitudes": "superposition",
-  entanglement: "bell",
-  "quantum-teleportation": "bell",
-  "grover-boost": "grover2",
-  "pedagogy-noise": "bell",
-  "tsp-classical": "tsp3",
-  "qec-bit-flip": "bell",
-  "quantum-reservoir": "bell",
-};
-
 export function LearnPathSidebar({ activeSlug }: { activeSlug?: string }) {
   const { profile } = useSession();
   const [completed, setCompleted] = useState<Set<string>>(new Set());
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (!profile?.authenticated) {
@@ -43,26 +32,29 @@ export function LearnPathSidebar({ activeSlug }: { activeSlug?: string }) {
   );
 
   return (
-    <nav className="learn-path-sidebar" aria-label="Academy path">
-      {units.map(({ unit, stats }) => (
-        <section key={unit.id}>
-          <div className="learn-unit-head">
-            <h2>{unit.title}</h2>
+    <aside className="learn-path-rail">
+      <button type="button" className="learn-path-toggle" aria-expanded={mobileOpen} aria-controls="learn-course-navigation" onClick={() => setMobileOpen(!mobileOpen)}>Course navigation <span>{mobileOpen ? "Close ↑" : "Open ↓"}</span></button>
+    <nav id="learn-course-navigation" className={`learn-path-sidebar${mobileOpen ? " is-open" : ""}`} aria-label="Academy path">
+      <div className="learn-path-heading"><span>QUANTUM ACADEMY</span><strong>Your learning path</strong></div>
+      <Link className="learn-path-foundations" href="/academy/foundations">Foundations activities ↗</Link>
+      {units.filter(({ unit }) => unit.id !== "math-spine").map(({ unit, stats }) => (
+        <details key={unit.id} className="learn-path-unit" open={unit.lessonSlugs.includes(activeSlug ?? "") || (!activeSlug && unit.id === "foundations")}>
+          <summary className="learn-unit-head">
+            <span>{unit.title}</span>
             {stats.total > 0 ? (
-              <span className="learn-unit-pct" aria-label={`${stats.pct}% of lessons complete in ${unit.title}`}>
-                {stats.pct}% · {stats.done}/{stats.total}
+              <span className="learn-unit-pct" aria-label={`${stats.done} of ${stats.total} lessons complete in ${unit.title}`}>
+                {stats.done}/{stats.total}
               </span>
             ) : (
               <span className="learn-unit-pct learn-unit-pct-muted">Concepts</span>
             )}
-          </div>
+          </summary>
           {stats.total > 0 && (
             <progress className="learn-unit-progress" value={stats.done} max={stats.total} aria-hidden="true" />
           )}
           <ul>
             {unit.lessonSlugs.map((slug) => {
               const label = slug.replace(/-/g, " ");
-              const preset = PRESET_BY_LESSON[slug];
               const done = completed.has(`lesson:${slug}`);
               return (
                 <li key={slug} className={done ? "learn-path-done" : ""}>
@@ -70,26 +62,22 @@ export function LearnPathSidebar({ activeSlug }: { activeSlug?: string }) {
                     {done ? "✓ " : ""}
                     {label.charAt(0).toUpperCase() + label.slice(1)}
                   </Link>
-                  {preset && (
-                    <Link className="learn-path-lab-link" href={`/workspace?preset=${preset}`}>
-                      Lab preset →
-                    </Link>
-                  )}
                 </li>
               );
             })}
-            {unit.links.map((link) => (
+            {unit.links.filter(link => link.href !== "/learn/reference").map((link) => (
               <li key={link.href}>
                 <Link href={link.href}>{link.label}</Link>
               </li>
             ))}
           </ul>
-        </section>
+        </details>
       ))}
       <section className="learn-path-extras">
         <Link href="/learn">Learn home</Link>
         <Link href="/learn/reference">Glossary & cheat sheets</Link>
       </section>
     </nav>
+    </aside>
   );
 }

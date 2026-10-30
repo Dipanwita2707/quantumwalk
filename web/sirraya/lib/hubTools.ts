@@ -13,7 +13,7 @@ export const HUB_TOOLS: HubTool[] = [
   {
     id: "document-generator",
     name: "Document Pro",
-    description: "Templates, clauses, and export to print/PDF — independent implementation.",
+    description: "Prepare templates or imported drafts, then print or export the document.",
     href: "/hub/document-pro",
     category: "Documents",
     featured: true,

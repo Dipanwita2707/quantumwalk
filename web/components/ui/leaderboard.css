@@ -1,0 +1,11 @@
+.q-ui-leaderboard h2 { font-size: 18px; margin: 0 0 18px; }
+.q-ui-leaderboard p { color: var(--q-muted); font-size: 12px; line-height: 1.8; }
+.q-ui-leaderboard .q-ui-segments { gap: 6px; }
+.q-ui-leaderboard .q-ui-segments button { flex: 1; padding-inline: 8px; font-size: 11px; }
+.q-ui-ranking { padding: 0; margin: 18px 0; list-style: none; }
+.q-ui-ranking li { display: grid; grid-template-columns: 22px 28px minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--q-border); font-size: 12px; }
+.q-ui-ranking .q-ui-avatar { width: 28px; height: 28px; font-size: 11px; }
+.q-ui-ranking strong { font-size: 12px; font-weight: 500; overflow-wrap: anywhere; }
+.q-ui-ranking li>span:last-child { font-size: 11px; color: #c9b3ef; }
+.q-ui-rank { color: var(--q-muted); font-variant-numeric: tabular-nums; }
+.q-ui-leaderboard .q-ui-leaderboard-note { font-size: 11px; margin-bottom: 8px; }

@@ -46,7 +46,8 @@ export function PathPickerSection({ onSelect, paused = false }: { onSelect: (lev
       <nav className="path-tool-hub" aria-label="QuantumWalk tools">
         <Link href="/workspace?mode=circuit">Lab</Link>
         <Link href="/learn">Path</Link>
-        <Link href="/explorer/grover">Explorer</Link>
+        <Link href="/explorer">Explorer</Link>
+        <Link href="/workspace?preset=bell">Compare engines</Link>
         <Link href="/learn/hardware">Hardware story</Link>
       </nav>
       <header className="path-picker-head">

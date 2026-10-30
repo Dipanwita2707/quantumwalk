@@ -69,12 +69,15 @@ test.describe("TSP live backend @live-backend", () => {
     test.setTimeout(180_000);
 
     await page.goto("/explorer/tsp");
+    await page.getByRole("tab", { name: "Run" }).click();
     await expect(page.getByRole("status", { name: "Backend API status" })).toContainText(/API online/i, {
       timeout: 30_000,
     });
 
+    await page.getByRole("tab", { name: "Configure" }).click();
     await page.getByTestId("tsp-matrix-cell-0-1").fill("1");
     await page.getByTestId("tsp-matrix-cell-0-1").blur();
+    await page.getByRole("tab", { name: "Run" }).click();
 
     const solveBtn = page.getByRole("button", { name: "Run backend Grover solve" });
     await expect(solveBtn).toBeEnabled();
@@ -114,6 +117,7 @@ test.describe("TSP live backend @live-backend", () => {
     test.setTimeout(180_000);
 
     await page.goto("/explorer/tsp");
+    await page.getByRole("tab", { name: "Run" }).click();
     await expect(page.getByRole("status", { name: "Backend API status" })).toContainText(/API online/i, {
       timeout: 30_000,
     });
@@ -146,5 +150,30 @@ test.describe("TSP live backend @live-backend", () => {
     await expect(page.getByTestId("tsp-backend-solve-row-0")).toBeVisible();
     await expect(page.getByTestId("tsp-backend-solve-distance-0")).toContainText(/^cost /);
     await expect(page.getByTestId("tsp-backend-solve-probability-0")).toContainText(/%$/);
+  });
+
+  test("six-city matrix reaches the bounded live solver", async ({ page }) => {
+    test.setTimeout(180_000);
+
+    await page.goto("/explorer/tsp");
+    await page.getByTestId("tsp-city-count").fill("6");
+    await expect(page.getByTestId("tsp-city-count-value")).toHaveText("6");
+    await page.getByRole("tab", { name: "Run" }).click();
+    await expect(page.getByRole("status", { name: "Backend API status" })).toContainText(/API online/i);
+
+    const solveResponsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/v3/solve-tsp") && res.request().method() === "POST",
+      { timeout: 120_000 },
+    );
+    await page.getByRole("button", { name: "Run backend Grover solve" }).click();
+    const solveResponse = await solveResponsePromise;
+    expect(solveResponse.status()).toBe(200);
+    const requestBody = solveResponse.request().postDataJSON() as { distance_matrix: number[][] };
+    expect(requestBody.distance_matrix).toHaveLength(6);
+    const body = (await solveResponse.json()) as SolveTspResponse;
+    expect(body.success).toBe(true);
+    expect(body.quantum_solutions.length).toBeGreaterThan(0);
+    expect(body.quantum_solutions[0].route).toHaveLength(6);
+    await expect(page.getByTestId("tsp-backend-solve-results")).toBeVisible();
   });
 });

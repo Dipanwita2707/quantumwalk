@@ -1,0 +1,91 @@
+import { expect, test } from "@playwright/test";
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/me", route => route.fulfill({ json: { authenticated: false, google_enabled: true } }));
+});
+
+test("all four foundations activities work inline without navigating to the Lab", async ({ page }, testInfo) => {
+  await page.goto("/academy/foundations");
+  await expect(page.getByRole("heading", { name: "Quantum foundations, through experiments" })).toBeVisible();
+  const activity = page.getByRole("region", { name: "Amplitudes & phase", exact: true });
+  await activity.getByRole("slider", { name: "Probability of reading 1", exact: true }).fill("25");
+  await activity.getByRole("slider", { name: "Phase of the 1 amplitude", exact: true }).fill("180");
+  await expect(activity.locator('.qsv-row[data-basis="1"]')).toContainText("25.0%");
+  await expect(activity.locator('.qsv-row[data-basis="1"]').getByRole("img")).toHaveAccessibleName("Relative phase 180 degrees");
+  await activity.getByRole("button", { name: "25%", exact: true }).click();
+  await expect(activity.getByRole("status")).toContainText("Correct");
+  await page.locator(".fa-course").screenshot({ path: testInfo.outputPath("foundations-inline.png") });
+  await activity.getByRole("button", { name: "Next activity", exact: false }).click();
+  const measurement = page.getByRole("region", { name: "Measurement & sampling", exact: true });
+  await measurement.getByRole("radio", { name: "About half 0, half 1", exact: true }).check();
+  await measurement.getByRole("button", { name: "Run experiment", exact: true }).click();
+  await expect(measurement.getByRole("slider")).toBeEnabled();
+  await measurement.getByRole("slider").fill("2");
+  await expect(measurement.locator(".fq-conclusion")).toContainText("Your prediction matches");
+  await measurement.getByRole("button", { name: "Finite-sample variation", exact: true }).click();
+  await measurement.getByRole("button", { name: "Next activity", exact: false }).click();
+  const joint = page.getByRole("region", { name: "Two-qubit states", exact: true });
+  await joint.getByRole("combobox", { name: "State of q0" }).selectOption("1");
+  await joint.getByRole("combobox", { name: "State of q1" }).selectOption("1");
+  await expect(joint.locator('.qsv-row[data-basis="11"]')).toContainText("100.0%");
+  await joint.getByRole("button", { name: "Prepare Bell state", exact: true }).click();
+  await expect(joint.locator('.qsv-row[data-basis="00"]')).toContainText("50.0%");
+  await expect(joint.locator('.qsv-row[data-basis="11"]')).toContainText("50.0%");
+  await joint.getByRole("button", { name: "All four equally", exact: true }).click();
+  await expect(joint.getByRole("status")).toContainText("Try again");
+  await joint.getByRole("button", { name: "00 and 11, each with 50% probability", exact: true }).click();
+  await joint.getByRole("button", { name: "Next activity", exact: false }).click();
+  const gates = page.getByRole("region", { name: "Reversible gates", exact: true });
+  const slider = gates.getByRole("slider", { name: "Quantum evolution step" });
+  await expect(slider).toBeEnabled();
+  await slider.fill("2");
+  await expect(gates.locator('.qsv-row[data-basis="0"]')).toContainText("100.0%");
+  await gates.getByRole("button", { name: "H → Z → H", exact: true }).click();
+  await expect(slider).toHaveAttribute("max", "3");
+  await slider.fill("3");
+  await expect(gates.locator('.qsv-row[data-basis="1"]')).toContainText("100.0%");
+  await gates.getByRole("button", { name: "Returns it to |0⟩", exact: true }).click();
+  await expect(page.getByRole("progressbar", { name: "Foundation activity checks completed" })).toHaveAttribute("value", "4");
+  await expect(page).toHaveURL(/\/academy\/foundations$/);
+});
+
+test("foundations controls are keyboard-operable and fit mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/academy/foundations");
+  await expect(page.getByRole("slider", { name: "Phase of the 1 amplitude", exact: true })).toBeEnabled();
+  await page.getByRole("slider", { name: "Phase of the 1 amplitude", exact: true }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("slider", { name: "Phase of the 1 amplitude", exact: true })).toHaveValue("15");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  await page.getByRole("navigation", { name: "Foundation activities" }).getByRole("button", { name: /Two-qubit states/ }).click();
+  await expect(page.getByRole("region", { name: "Two-qubit states", exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+});
+
+test("discovery visuals respond to state presets, phase sweep, and motion preferences", async ({ page }, testInfo) => {
+  await page.goto("/academy/foundations");
+  const phase = page.getByRole("slider", { name: "Phase of the 1 amplitude", exact: true });
+  const presets = page.getByRole("group", { name: "Prepare an amplitude state" });
+  await presets.getByRole("button", { name: "|+i⟩", exact: true }).click();
+  await expect(phase).toHaveValue("90");
+  await expect(page.getByRole("img", { name: /Amplitude diagram/ })).toHaveAccessibleName(/phase parameter 90 degrees/);
+  await presets.getByRole("button", { name: "|+⟩", exact: true }).click();
+  await page.getByRole("button", { name: "Sweep phase", exact: true }).click();
+  await expect(phase).not.toHaveValue("0");
+  await page.getByRole("button", { name: "Pause phase sweep", exact: true }).click();
+  const held = await phase.inputValue();
+  await page.waitForTimeout(400);
+  await expect(phase).toHaveValue(held);
+  await page.getByRole("button", { name: "Pause ambient motion", exact: true }).click();
+  expect(await page.locator(".fa-orbit-halo").evaluate(element => getComputedStyle(element).animationPlayState)).toBe("paused");
+  await page.getByRole("button", { name: "25%", exact: true }).click();
+  await expect(page.getByRole("navigation", { name: "Foundation activities" }).locator(".fa-node-unlocked")).toHaveCount(1);
+  await expect(page.locator(".fa-progress")).not.toContainText("1 of 4");
+  await page.locator(".fa-state-lens").screenshot({ path: testInfo.outputPath("quantum-state-instrument.png") });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const advance = page.getByRole("button", { name: "Advance phase 15°", exact: true });
+  await expect(advance).toBeVisible();
+  await advance.click();
+  await expect(phase).toHaveValue(String((Number(held) + 15) % 360));
+  expect(await page.locator(".fa-orbit-halo").evaluate(element => getComputedStyle(element).animationName)).toBe("none");
+});

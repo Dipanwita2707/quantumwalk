@@ -155,14 +155,68 @@
 }
 
 /* Phase 2 — focused home dashboard */
-.db-continue-primary {
+.db-dashboard-grid {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 5%;
-  align-items: center;
-  padding: 12px 0 28px;
-  border-bottom: 1px solid #95aac525;
-  margin-bottom: 8px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(340px, .85fr);
+  align-items: start;
+  gap: 28px;
+  margin: 20px 0 24px;
+}
+
+.db-main-column {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.db-continue-primary {
+  padding: 8px 0 0;
+}
+
+.db-continue-primary .db-greeting {
+  margin-bottom: 12px;
+}
+
+.db-dashboard-grid .db-bloch-demo {
+  width: 100%;
+  max-width: none;
+  padding: 16px;
+}
+
+.db-dashboard-grid .db-bloch-demo .quantum-sphere.qs-hologram canvas {
+  height: 260px !important;
+}
+
+.db-main-column .db-overview {
+  margin: 0;
+  padding: 16px 0;
+}
+
+.db-main-column .db-overview > div {
+  gap: 10px;
+  padding: 0 14px;
+}
+
+.db-main-column .db-overview > div:first-child {
+  padding-left: 0;
+}
+
+.db-main-column .db-stat-icon {
+  width: 24px;
+  font-size: 24px;
+}
+
+.db-main-column .db-progress-line {
+  margin: -8px 0 0;
+}
+
+.db-main-column .db-secondary-row {
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  margin: 0;
+}
+
+.db-main-column .db-card {
+  padding: 20px;
 }
 
 .db-continue-copy h1 {
@@ -171,10 +225,19 @@
   margin: 0 0 8px;
 }
 
-.db-continue-lesson {
-  font-size: 20px !important;
-  margin: 0 0 10px !important;
-  color: #d8e4f8;
+.db-continue-copy h1 {
+  color: #e8f0ff;
+}
+
+.db-continue-blurb {
+  max-width: 36rem;
+  margin: 0 0 12px;
+}
+
+.db-progress-line {
+  margin: -12px 0 24px;
+  font-size: 0.92rem;
+  color: #94a3b8;
 }
 
 .db-action-primary {
@@ -215,40 +278,81 @@
   color: #cafff0;
 }
 
+.db-discovery-details,
 .db-progress-details {
-  margin: 8px 0 24px;
+  margin: 0 0 16px;
   border: 1px solid #899cc52b;
   border-radius: 12px;
   background: #10192a66;
   padding: 4px 18px 18px;
 }
 
-.db-progress-details summary {
+.db-discovery-details > summary,
+.db-progress-details > summary {
   cursor: pointer;
   padding: 14px 4px;
   font-size: 13px;
   font-weight: 600;
   color: #bfcce1;
   list-style: none;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
 }
 
-.db-progress-details summary::-webkit-details-marker {
+.db-discovery-details > summary::-webkit-details-marker,
+.db-progress-details > summary::-webkit-details-marker {
   display: none;
 }
 
-.db-progress-details summary:focus-visible {
+.db-discovery-details > summary:focus-visible,
+.db-progress-details > summary:focus-visible {
   outline: 2px solid var(--cyan);
   outline-offset: 2px;
   border-radius: 6px;
 }
 
+.db-discovery-details .db-card,
 .db-progress-details .db-card {
-  margin-top: 16px;
+  margin-top: 12px;
+  border: none;
+  background: transparent;
+  padding: 8px 0 0;
+}
+
+.db-card-flat {
+  box-shadow: none;
+}
+
+.db-secondary-row {
+  margin-bottom: 20px;
+}
+
+.db-milestone-inline {
+  margin-top: 8px;
+  border: none;
+  background: transparent;
+  padding: 16px 0 8px;
 }
 
 @media (max-width: 850px) {
-  .db-continue-primary {
+  .db-dashboard-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .db-dashboard-grid .db-bloch-demo {
+    max-width: 600px;
+  }
+}
+
+@media (max-width: 550px) {
+  .db-main-column .db-overview > div {
+    padding: 0 8px;
+  }
+
+  .db-dashboard-grid .db-bloch-demo .quantum-sphere.qs-hologram canvas {
+    height: 230px !important;
   }
 }
 

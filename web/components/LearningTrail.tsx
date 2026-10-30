@@ -6,8 +6,10 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { api, useSession } from "@/lib/api";
 import { DiscoveryCoach } from "@/components/DiscoveryCoach";
 import { CircuitViewer, type Operation } from "@/components/CircuitViewer";
-import { labPresetHref } from "@/lib/lessonPresets";
+import { FirstQubitExperiment } from "@/components/FirstQubitExperiment";
+import { labPresetHref, LESSON_CIRCUITS } from "@/lib/lessonPresets";
 import { LearnPathSidebar } from "@/components/LearnPathSidebar";
+import { LessonHistory } from "@/components/LessonPublishing";
 import { AcademyUnitOverview } from "@/components/AcademyUnitOverview";
 import { GuestExperienceBanner } from "@/components/GuestExperienceBanner";
 import { LearnLoadingSkeleton } from "@/components/LearnLoadingSkeleton";
@@ -17,6 +19,7 @@ import { loadGuestLessonProgress, recordGuestLessonAttempt } from "@/lib/guestLe
 import "@/app/learn/learn.css";
 
 type Lesson = {
+  content_version?: string;
   slug: string;
   title: string;
   level: string;
@@ -32,55 +35,14 @@ type Lesson = {
 type Answer = { correct: boolean; score: number; saved: boolean };
 type Progress = { activity_slug: string; completed: boolean; score: number };
 
-const LESSON_CIRCUITS: Record<string, { qubits: number; operations: Operation[] }> = {
-  superposition: {
-    qubits: 1,
-    operations: [{ gate: "h", target: 0 }],
-  },
-  "bell-pair": {
-    qubits: 2,
-    operations: [
-      { gate: "h", target: 0 },
-      { gate: "cx", control: 0, target: 1 },
-    ],
-  },
-  "teleportation-demo": {
-    qubits: 3,
-    operations: [
-      { gate: "h", target: 0 },
-      { gate: "h", target: 1 },
-      { gate: "cx", control: 1, target: 2 },
-      { gate: "cx", control: 0, target: 1 },
-      { gate: "cz", control: 0, target: 2 },
-    ],
-  },
-  "deutsch-jozsa-balanced": {
-    qubits: 2,
-    operations: [
-      { gate: "x", target: 1 },
-      { gate: "h", target: 0 },
-      { gate: "h", target: 1 },
-      { gate: "cx", control: 0, target: 1 },
-      { gate: "h", target: 0 },
-    ],
-  },
-  "grover-two": {
-    qubits: 2,
-    operations: [
-      { gate: "h", target: 0 },
-      { gate: "h", target: 1 },
-      { gate: "cz", control: 0, target: 1 },
-      { gate: "h", target: 0 },
-      { gate: "h", target: 1 },
-      { gate: "x", target: 0 },
-      { gate: "x", target: 1 },
-      { gate: "cz", control: 0, target: 1 },
-      { gate: "x", target: 0 },
-      { gate: "x", target: 1 },
-      { gate: "h", target: 0 },
-      { gate: "h", target: 1 },
-    ],
-  },
+const LESSON_EXPERIMENTS: Record<string, { title: string; description: string; href: string }> = {
+  "tsp-classical": { title: "Compare tours in the TSP Explorer", description: "Edit actual route costs, then compare classical tour costs with the Grover sampler.", href: "/explorer/tsp" },
+  "qft-intro": { title: "Explore the Quantum Fourier Transform", description: "Set complex input amplitudes, normalize, and compare the Fourier output with its inverse.", href: "/academy/labs/qft" },
+  "shor-intro": { title: "Factor 15 in the Shor lab", description: "Inspect period finding, the gate circuit, and sampled results in the educational factoring experiment.", href: "/academy/labs/shor" },
+  "qec-bit-flip": { title: "Detect and correct a bit flip", description: "Inject an error, read the syndrome, and apply the correction in the three-qubit experiment.", href: "/academy/labs/qec" },
+  "quantum-reservoir": { title: "Run the reservoir experiment", description: "Compare the educational reservoir response across input sequences and reruns.", href: "/academy/labs/reservoir" },
+  "pedagogy-noise": { title: "Compare ideal and noisy readout", description: "In the Bell Lab, open Engine, noise, and comparison, enable pedagogical noise, execute, then inspect Measurement sampling.", href: "/workspace?mode=circuit&preset=bell" },
+  "vqe-intro": { title: "VQE concept and supporting circuit exercise", description: "This lesson introduces the hybrid optimization loop. A complete VQE optimizer is not implemented here; explore entanglement in the supporting Bell circuit.", href: "/workspace?mode=circuit&preset=bell" },
 };
 
 export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
@@ -102,7 +64,8 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
       const progress =
         profile?.authenticated ? await api<Progress[]>("/api/progress") : ([] as Progress[]);
       const guest = loadGuestLessonProgress();
-      const selected = lessonSlug ? lessons.filter((lesson) => lesson.slug === lessonSlug) : lessons;
+      const version = lessonSlug ? new URLSearchParams(window.location.search).get("version") : null;
+      const selected = lessonSlug && version ? [await api<Lesson>(`/api/lessons/${encodeURIComponent(lessonSlug)}?version=${encodeURIComponent(version)}`)] : lessonSlug ? lessons.filter((lesson) => lesson.slug === lessonSlug) : lessons;
       if (lessonSlug && selected.length === 0)
         throw new Error("Lesson not found. Choose a mission from the learning trail.");
       setItems(selected);
@@ -126,7 +89,7 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
     try {
       const result = await api<Answer>(
         `/api/lessons/${slug}/answer`,
-        { method: "POST", body: JSON.stringify({ choice }) },
+        { method: "POST", body: JSON.stringify({ choice, content_version: items?.find(item => item.slug === slug)?.content_version }) },
         profile?.authenticated ? profile.csrf_token : undefined
       );
       setAnswers((current) => ({ ...current, [slug]: result }));
@@ -161,69 +124,50 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
   return (
     <>
       <SiteHeader />
-      <main className={`content-shell learn-trail-layout${lessonSlug ? "" : " learn-trail-index"}`}>
-        <LearnPathSidebar activeSlug={lessonSlug} />
+      <main className={`content-shell learn-trail-layout${lessonSlug ? " learn-lesson-page" : " learn-trail-index"}`}>
+        {lessonSlug && <LearnPathSidebar activeSlug={lessonSlug} />}
         <div className="learn-trail-main">
         <GuestExperienceBanner context="learn" />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-          <Link className="card-action" style={{ margin: 0 }} href={lessonSlug ? "/learn" : "/coach"}>
-            {lessonSlug ? "← Back to Learning Trail" : "Ask AI Coach →"}
-          </Link>
-          {lessonSlug && (
-            <span style={{ fontSize: "12px", color: "var(--muted)", fontFamily: "monospace" }}>
-              INTERACTIVE LESSON LAB
-            </span>
-          )}
-        </div>
-
-        <p className="eyebrow">QUANTUM ACADEMY</p>
-        <h1>{lessonSlug ? items?.[0]?.title ?? "Learning Mission" : "Quantum Academy"}</h1>
-        {lessonNav && (
-          <nav className="learn-lesson-nav" aria-label="Lesson navigation">
-            {lessonNav.prev ? (
-              <Link className="card-action" href={`/learn/${lessonNav.prev}`}>
-                ← Previous lesson
-              </Link>
-            ) : (
-              <span />
-            )}
-            {lessonNav.next ? (
-              <Link className="card-action" href={`/learn/${lessonNav.next}`}>
-                Next lesson →
-              </Link>
-            ) : null}
-          </nav>
+        {lessonSlug && (
+          <div className="learn-trail-toolbar">
+            <Link className="card-action" href="/learn">
+              ← Back to trail
+            </Link>
+            {lessonNav && <nav className="learn-lesson-nav" aria-label="Lesson navigation">
+              {lessonNav.prev && <Link className="card-action" href={`/learn/${lessonNav.prev}`}>← Previous lesson</Link>}
+              {lessonNav.next && <Link className="card-action" href={`/learn/${lessonNav.next}`}>Next lesson →</Link>}
+            </nav>}
+          </div>
         )}
-        <p className="content-intro">
-          Structured path: Foundations → algorithms → noise → hardware concepts. Each mission embeds the simulator;
-          cheat sheets and lab anchors live in{" "}
-          <Link href="/learn/reference">Reference</Link>.
-        </p>
 
-        {!lessonSlug && <AcademyUnitOverview />}
-        {!lessonSlug && <LearnDiscoveryLanes />}
-        {!lessonSlug && <LearnModuleIndex />}
+        {!lessonSlug && <p className="eyebrow">LEARN</p>}
+        <h1>{lessonSlug ? items?.[0]?.title ?? "Learning Mission" : "Learning trail"}</h1>
+        {lessonSlug && <LessonHistory key={lessonSlug} slug={lessonSlug} />}
+        {lessonSlug && items?.[0] && <p className="learn-lesson-objective">{items[0].objective}</p>}
+        {!lessonSlug && (
+          <p className="content-intro learn-trail-lede">
+            Missions with embedded simulators.{" "}
+            <Link href="/learn/reference">Glossary</Link>
+            {" · "}
+            <Link href="/coach">Coach</Link>
+          </p>
+        )}
 
-        {items && items.length > 0 && !lessonSlug && (
-          <section className="learning-scoreboard" aria-label="Saved learning progress">
-            <div>
-              <span className="panel-kicker">RECORDED MASTERY</span>
-              <h2>
-                {items.length > 0 && finished === items.length
-                  ? "Foundations Trail Mastered ✦"
-                  : finished
-                  ? "Your Next Discovery Awaits"
-                  : "Begin Your Quantum Journey"}
-              </h2>
-              <p>
-                {finished} of {items.length} missions completed · {finished * 100} learning XP
-              </p>
-            </div>
-            <progress value={finished} max={Math.max(1, items.length)} aria-label="Completed learning missions" />
-            <span className="learning-badge">
-              {items.length > 0 && finished === items.length ? "✦ Quantum Architect" : "◇ Quantum Explorer"}
-            </span>
-          </section>
+        {!lessonSlug && <AcademyUnitOverview completed={new Set(Object.keys(completed).filter(key => completed[key]))} progressReady={items !== null && !error} />}
+
+        {!lessonSlug && items && items.length > 0 && (
+          <p className="learn-progress-line" role="status">
+            {finished} of {items.length} missions complete
+            {finished > 0 ? ` · ${finished * 100} XP on this device` : ""}
+          </p>
+        )}
+
+        {!lessonSlug && (
+          <details className="learn-more-panel">
+            <summary>More paths &amp; module index</summary>
+            <LearnDiscoveryLanes />
+            <LearnModuleIndex />
+          </details>
         )}
 
         {error && (
@@ -260,16 +204,15 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
           const missionList = (
           <div className="learning-list">
             {items.map((item, index) => {
-              const lessonCircuit =
-                LESSON_CIRCUITS[item.algorithm_slug] || { qubits: 1, operations: [{ gate: "h", target: 0 }] };
-
+              const lessonCircuit = LESSON_CIRCUITS[item.slug === "math-amplitudes" ? "phase-interference" : item.algorithm_slug];
+              const experiment = LESSON_EXPERIMENTS[item.slug];
               return (
                 <article
-                  className={`content-card lesson-card ${completed[`lesson:${item.slug}`] ? "mission-complete" : ""}`}
+                  className={`content-card lesson-card ${lessonSlug ? "lesson-detail " : ""}${completed[`lesson:${item.slug}`] ? "mission-complete" : ""}`}
                   key={item.slug}
                 >
                   <span className="panel-kicker">
-                    MISSION {index + 1} · {item.minutes} MIN · {item.level.toUpperCase()}
+                    {lessonSlug ? "GUIDED LESSON" : `MISSION ${index + 1}`} · {item.minutes} MIN · {item.level.toUpperCase()}
                   </span>
                   {completed[`lesson:${item.slug}`] && (
                     <span className="mission-status" style={{ float: "right", color: "var(--cyan)", fontWeight: 700 }}>
@@ -277,15 +220,8 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
                     </span>
                   )}
 
-                  <h2>
-                    {lessonSlug ? (
-                      item.title
-                    ) : (
-                      <Link href={`/learn/${encodeURIComponent(item.slug)}`}>{item.title}</Link>
-                    )}
-                  </h2>
-
-                  <p>{item.objective}</p>
+                  {!lessonSlug && <><h2><Link href={`/learn/${encodeURIComponent(item.slug)}`}>{item.title}</Link></h2><p>{item.objective}</p></>}
+                  {lessonSlug && <nav className="lesson-stage-nav" aria-label="Lesson stages"><a href="#lesson-explanation"><span>01</span> Understand</a><a href="#lesson-experiment"><span>02</span> Experiment</a><a href="#lesson-check"><span>03</span> Check understanding</a></nav>}
                   {item.prerequisites && (
                     <p className="explorer-note" data-testid={`lesson-prereq-${item.slug}`}>
                       <strong>Prerequisites:</strong> {item.prerequisites}
@@ -305,15 +241,26 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
                     </p>
                   )}
 
-                  <ol>
+                  <div className={lessonSlug ? "lesson-workbench" : undefined}>
+                  {lessonSlug && <section id="lesson-explanation" className="lesson-understand" aria-label="Understand the idea"><h2 className="lesson-section-heading"><span>01</span> Understand the idea</h2>
+                  {lessonSlug === "first-qubit" ? <section className="first-qubit-brief" aria-label="Experimental method">
+                    <p className="first-qubit-purpose">Your task: distinguish a predictable prepared state from a superposition, then verify that quantum gates can reverse the preparation.</p>
+                    <ol><li><span>01</span><div><strong>Prepare the input</strong><p>Start each trial in |0⟩. This is the reference state, not an empty qubit.</p></div></li><li><span>02</span><div><strong>Apply a controlled change</strong><p>Compare no gate, H, and H followed by H. Change the sequence while keeping the readout basis fixed.</p></div></li><li><span>03</span><div><strong>Repeat and interpret</strong><p>A readout returns one bit. Many fresh preparations reveal the outcome distribution.</p></div></li></ol>
+                  </section> : <ol className="lesson-explanation-steps">
                     {item.steps.map((step) => (
                       <li key={step}>{step}</li>
                     ))}
-                  </ol>
+                  </ol>}
+                  </section>}
+                  {!lessonSlug && <ol className="lesson-explanation-steps">{item.steps.map(step => <li key={step}>{step}</li>)}</ol>}
 
+                  <div className={lessonSlug ? "lesson-experiment-pane" : undefined}>
                   {/* EMBEDDED CIRCUIT SIMULATOR FOR ACTIVE LESSON */}
-                  {lessonSlug ? (
-                    <div style={{ marginTop: "24px", marginBottom: "24px" }}>
+                  {lessonSlug && <h2 className="lesson-section-heading lesson-experiment-heading"><span>02</span> Try the experiment</h2>}
+                  {lessonSlug === "first-qubit" ? <FirstQubitExperiment /> : lessonSlug && experiment ? (
+                    <section id="lesson-experiment" className="lesson-dedicated-experiment"><span className="panel-kicker">02 / EXPERIMENT</span><h3>{experiment.title}</h3><p>{experiment.description}</p><Link className="card-action" href={experiment.href}>Open experiment →</Link></section>
+                  ) : lessonSlug && lessonCircuit ? (
+                    <div id="lesson-experiment" style={{ marginTop: "24px", marginBottom: "24px" }}>
                       <CircuitViewer
                         initialQubits={lessonCircuit.qubits}
                         initialOperations={lessonCircuit.operations}
@@ -331,9 +278,9 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
                                     ? "bell"
                                     : undefined
                         }
-                        title={`Live Demonstration: ${item.title}`}
-                        subtitle="Step through the circuit to see quantum amplitudes split or entangle in real time."
-                        fullLabHref={labPresetHref(item.algorithm_slug)}
+                        title="Circuit experiment"
+                        subtitle={item.slug === "quantum-teleportation" ? "Deferred-measurement demonstration: coherent corrections transfer the prepared |+⟩ state to q2. Step through each gate." : item.slug === "math-amplitudes" ? "H → Z → H: Z changes relative phase while probabilities stay 50/50. The final H reveals that phase through interference." : "Follow each gate, compare amplitudes and relative phase, then use the quiz to check what changed."}
+                        fullLabHref={labPresetHref(item.algorithm_slug, item.slug)}
                       />
                     </div>
                   ) : (
@@ -341,19 +288,24 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
                       <Link className="card-action" href={`/learn/${encodeURIComponent(item.slug)}`}>
                         Explore this Lesson & Simulator →
                       </Link>
-                      <Link className="card-action" href={labPresetHref(item.algorithm_slug)} style={{ marginLeft: "12px" }}>
+                      <Link className="card-action" href={labPresetHref(item.algorithm_slug, item.slug)} style={{ marginLeft: "12px" }}>
                         Open preset in Lab →
                       </Link>
                     </>
                   )}
 
+                  </div>
+                  </div>
                   {/* INTERACTIVE COMPREHENSION QUIZ */}
+                  <section className={lessonSlug ? "lesson-check-block" : undefined} aria-label="Check understanding">
+                  {lessonSlug && <h2 className="lesson-section-heading"><span>03</span> Check understanding</h2>}
                   {!profile?.authenticated && (
                     <p className="question-invitation" role="status">
                       Guest mode: quizzes work here; scores save on this device only. Sign in to sync XP across sessions.
                     </p>
                   )}
                   <fieldset
+                    id={lessonSlug ? "lesson-check" : undefined}
                     disabled={accountLoading || busy !== "" || completed[`lesson:${item.slug}`]}
                     style={{ marginTop: "20px" }}
                     data-testid={`lesson-quiz-${item.slug}`}
@@ -386,6 +338,7 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
                     </p>
                   )}
 
+                  </section>
                   <div style={{ marginTop: "20px" }}>
                     <DiscoveryCoach topic={item.algorithm_slug === "bell-pair" ? "bell" : "superposition"} level="beginner" />
                   </div>
@@ -397,7 +350,9 @@ export function LearningTrail({ lessonSlug }: { lessonSlug?: string }) {
           if (lessonSlug) return missionList;
           return (
             <details className="learn-mission-catalog">
-              <summary>All missions — expanded cards &amp; quizzes</summary>
+              <summary>
+                All missions — cards &amp; quizzes ({finished}/{items.length} done)
+              </summary>
               {missionList}
             </details>
           );

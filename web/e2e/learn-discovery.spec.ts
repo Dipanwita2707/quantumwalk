@@ -4,15 +4,17 @@ test.describe("Learn discovery (Phase 4)", () => {
   test("/academy redirects to unified /learn hub", async ({ page }) => {
     await page.goto("/academy");
     await expect(page).toHaveURL(/\/learn\/?$/);
-    await expect(page.getByRole("heading", { level: 1, name: /Quantum Academy/i })).toBeVisible({
+    await expect(page.getByRole("heading", { level: 1, name: /Learning trail/i })).toBeVisible({
       timeout: 20_000,
     });
     await expect(page.getByLabel("Academy units")).toBeVisible();
+    await page.locator("details.learn-more-panel > summary").click();
     await expect(page.getByLabel("More learning resources")).toBeVisible();
   });
 
   test("module index is collapsible", async ({ page }) => {
     await page.goto("/learn");
+    await page.locator("details.learn-more-panel > summary").click();
     const details = page.locator("details.learn-module-index");
     await expect(details).toBeVisible({ timeout: 20_000 });
     await expect(page.getByLabel("Sirraya-aligned modules")).toBeHidden();

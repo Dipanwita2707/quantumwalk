@@ -1,0 +1,106 @@
+/* Canonical reference primitives. Route adapters below preserve existing behaviours. */
+:root {
+  --q-bg: #050c12;
+  --q-surface: #0d1923;
+  --q-surface-raised: #121e2a;
+  --q-border: #243646;
+  --q-text: #f0efff;
+  --q-muted: #a7b6ce;
+  --q-accent: #9254ff;
+  --q-accent-bright: #bd6aff;
+  --q-cyan: #7bdbe9;
+  --q-radius: 7px;
+  --q-gap: 20px;
+  --q-control-height: 40px;
+  --bg: var(--q-bg); --surface: var(--q-surface); --surface-2: var(--q-surface-raised);
+  --text: var(--q-text); --muted: var(--q-muted); --line: var(--q-border);
+  --qw-radius: var(--q-radius); --qw-topbar-height: 60px;
+}
+.q-ui-panel { min-width: 0; border: 1px solid var(--q-border); border-radius: var(--q-radius); background: var(--q-surface); padding: 20px; box-shadow: none; }
+.q-ui-page-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin: 0 0 24px; }
+.q-ui-page-heading h1 { font-size: clamp(25px,2.5vw,32px); line-height: 1.2; letter-spacing: -.6px; margin: 0 0 8px; }
+.q-ui-description { color: var(--q-muted); font-size: 13px; line-height: 1.7; max-width: 72ch; margin: 0; }
+.q-ui-eyebrow { color: var(--q-cyan); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin: 0 0 8px; }
+.q-ui-heading-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--q-muted); }
+.q-ui-workspace-links { display: flex; flex-wrap: wrap; gap: 24px; padding: 20px 0; border-top: 1px solid var(--q-border); margin-top: 36px; font-size: 12px; color: var(--q-muted); }
+.q-ui-workspace-links a { display: inline-flex; align-items: center; min-height: 44px; }
+.qw-reference-ui .lab-shell .panel, .qw-reference-ui .lab-analysis-card { border-radius: var(--q-radius); border-color: var(--q-border); background: var(--q-surface); box-shadow: none; }
+.qw-reference-ui .lab-shell .lab-mode-switcher-bar { background: transparent; }
+@media(max-width:760px) { .q-ui-page-heading { align-items: start; flex-direction: column; gap: 12px; } }
+.q-ui-button { display: inline-flex; justify-content: center; align-items: center; gap: 10px; min-height: var(--q-control-height); padding: 9px 16px; border: 1px solid transparent; border-radius: 5px; font: inherit; font-size: 13px; font-weight: 500; line-height: 1.4; text-decoration: none; cursor: pointer; }
+.q-ui-button-primary { color: white; background: linear-gradient(110deg,#7846f5,#a64df0); border-color: #ad79ff; }
+.q-ui-button-secondary { color: var(--q-text); background: #0c1723; border-color: #35485b; }
+.q-ui-button-quiet { color: var(--q-muted); background: transparent; border-color: transparent; }
+.q-ui-button:focus-visible { outline: 2px solid var(--q-cyan); outline-offset: 3px; }
+.q-ui-button:disabled { opacity: .5; cursor: not-allowed; }
+.q-ui-metric { display: grid; gap: 7px; align-content: center; justify-items: center; min-width: 0; padding: 16px 12px; background: var(--q-surface); border: 1px solid #20303e; border-radius: 6px; text-align: center; }
+.q-ui-metric strong { font-size: 25px; line-height: 1.15; color: var(--q-text); font-variant-numeric: tabular-nums; }
+.q-ui-metric>span:not(.q-ui-metric-icon) { color: var(--q-muted); font-size: 11px; }.q-ui-metric small { color: var(--q-muted); font-size: 10px; }.q-ui-metric-icon { color: #e3ad65; height: 23px; }
+.q-ui-segments { display: flex; flex-wrap: wrap; gap: 8px; }.q-ui-segments button { min-height: var(--q-control-height); padding: 8px 14px; border: 1px solid #283b4c; border-radius: 5px; color: var(--q-muted); background: #0b1621; font-size: 12px; }.q-ui-segments button[aria-pressed=true] { color: #221839; background: #e7dfff; border-color: #e7dfff; }
+.q-ui-segments button { cursor: pointer; }
+.q-ui-segments button:focus-visible, .q-ui-rail a:focus-visible, .q-ui-modules a:focus-visible, .q-ui-catalog-toolbar select:focus-visible { outline: 2px solid var(--q-cyan); outline-offset: 3px; }
+/* Reference screen 4: six paths, compact artwork, one action per path. */
+.q-ui-catalog-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin: 16px 0 24px; }
+.q-ui-catalog-sort { display: flex; align-items: center; gap: 10px; color: var(--q-muted); font-size: 12px; }
+.q-ui-catalog-toolbar select { min-height: var(--q-control-height); border: 1px solid var(--q-border); border-radius: 5px; background: var(--q-surface); color: var(--q-text); padding: 8px; font: inherit; }
+.qw-reference-ui .academy-unit-cards { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; }
+.qw-reference-ui .academy-unit-card.q-ui-course-card { display: flex; flex-direction: column; gap: 0; padding: 14px; overflow: hidden; background: var(--q-surface); border: 1px solid var(--q-border); border-radius: var(--q-radius); }
+.qw-reference-ui .q-ui-course-card h2 { font-size: 17px; margin: 16px 0 8px; }
+.qw-reference-ui .q-ui-course-card>p { font-size: 12px; line-height: 1.65; margin: 0 0 12px; color: var(--q-muted); }
+.qw-reference-ui .q-ui-course-card>progress { width: 100%; height: 5px; margin: 0 0 16px; accent-color: var(--q-accent); }
+.qw-reference-ui .q-ui-course-card>.academy-resume { margin-top: auto; align-self: flex-end; font-size: 12px; }
+.qw-reference-ui .academy-unit-card .q-ui-button-primary { background: linear-gradient(110deg,#7846f5,#a64df0); border-color: #ad79ff; }
+.qw-reference-ui .learn-trail-index { padding-top: 26px; }
+.qw-reference-ui .learn-trail-index h1 { font-size: 30px; margin: 0 0 10px; letter-spacing: -.6px; }
+.qw-reference-ui .learn-trail-index .eyebrow { display: none; }
+.qw-reference-ui .learn-trail-index .academy-unit-overview-head { display: flex; align-items: center; justify-content: flex-end; }
+.qw-reference-ui .learn-trail-index .academy-unit-overview-head>.panel-kicker { display: none; }
+.qw-reference-ui .learn-trail-index .academy-unit-overview-head>.card-action { background: transparent; border: 0; box-shadow: none; padding: 0; font-size: 12px; min-height: 24px; margin: 0; }
+.qw-reference-ui .science-controls .q-ui-button-primary { color: white; background: linear-gradient(110deg,#7846f5,#a64df0); border: 1px solid #ad79ff; }
+.qw-reference-ui .science-controls .q-ui-button:disabled { opacity: .55; }
+.q-ui-course-art { min-height: 136px; border-radius: 4px; border: 1px solid #294152; background-image: linear-gradient(0deg,#080f2833,transparent),url('/images/quantum-quest-v1.png'); background-size: 300% 300%; background-position: center top; }
+.q-ui-course-art-foundations { background-position: right top; }
+.q-ui-course-art-algorithms { background-position: right bottom; }
+.q-ui-course-art-noise { background-position: center center; }
+.q-ui-course-art-hardware { display: grid; place-items: center; color: #70dfff; background: radial-gradient(ellipse,#104b6c,#071424 75%); }
+.q-ui-course-art-reservoir { background-image: url('/images/quantum-universe-v1.png'); background-size: cover; background-position: center; }
+.q-ui-course-resources { margin-top: 14px; border-top: 1px solid var(--q-border); padding-top: 4px; }
+.q-ui-course-resources summary { cursor: pointer; min-height: 40px; align-content: center; color: var(--q-muted); font-size: 11px; }
+.q-ui-course-resources ul { padding-left: 18px; font-size: 12px; line-height: 1.9; }
+@media(max-width:900px) { .qw-reference-ui .academy-unit-cards { grid-template-columns: repeat(2,minmax(0,1fr)); }.q-ui-catalog-toolbar { flex-wrap: wrap; } }
+@media(max-width:560px) { .qw-reference-ui .academy-unit-cards { grid-template-columns: minmax(0,1fr); }.q-ui-catalog-toolbar { align-items: stretch; }.q-ui-catalog-sort { width: 100%; justify-content: space-between; }.q-ui-course-art { min-height: 156px; } }
+.q-ui-rail { padding: 24px 14px; min-width: 0; border-right: 1px solid #20313f; background: #0a141f; }
+.q-ui-rail-person { display: flex; align-items: center; gap: 10px; padding: 0 8px 24px; }.q-ui-rail-person strong { display: block; font-size: 13px; max-width: 130px; overflow-wrap: anywhere; }.q-ui-rail-person small { display: block; color: var(--q-muted); font-size: 10px; margin-top: 5px; }
+.q-ui-avatar { display: grid; place-items: center; flex-shrink: 0; width: 33px; height: 33px; border: 1px solid #a78de5; border-radius: 50%; color: #e6dbff; background: #2c2751; font-size: 13px; }
+.q-ui-rail nav, .q-ui-rail-footer { display: grid; gap: 4px; }.q-ui-rail a { display: flex; align-items: center; gap: 10px; min-height: 39px; border-radius: 5px; padding: 8px 10px; color: #b8c7da; font-size: 12px; }.q-ui-rail a[aria-current=page] { background: #1b2b42; color: #eeebff; }.q-ui-rail a:hover { background: #172435; color: white; }.q-ui-rail-footer { margin-top: 28px; border-top: 1px solid #233341; padding-top: 16px; }
+/* Shared header: the reference uses quiet text navigation and restrained account controls. */
+.qw-reference-ui .site-topbar-shell { background: #060d16; border-bottom: 1px solid #243344; }
+.qw-reference-ui .site-topbar-shell .site-topbar { height: 60px; min-height: 60px; padding-inline: 28px; max-width: 1600px; gap: 24px; }
+.qw-reference-ui .site-topbar .brand { min-width: 190px; }.qw-reference-ui .site-topbar .brand strong { font-size: 16px; }.qw-reference-ui .site-topbar .brand small { display: none; }.qw-reference-ui .site-topbar .brand-mark { width: 29px; height: 29px; }
+.qw-reference-ui .site-topbar .header-nav-pills { gap: 8px; }.qw-reference-ui .site-topbar .header-nav-pills a { padding: 8px 14px; font-size: 12px; font-weight: 400; background: transparent; border: 0; box-shadow: none; color: #bdc9da; }.qw-reference-ui .site-topbar .header-nav-pills a.active { color: #e7dcff; background: #8d5ff011; }.qw-reference-ui .site-topbar .header-nav-pills a:hover { background: #142235; }
+.qw-reference-ui .site-topbar .header-account-menu summary { background: transparent; border: 0; }.qw-reference-ui .site-topbar .account-link { border: 1px solid #7f60b5; border-radius: 5px; padding: 8px 14px; background: transparent; font-size: 12px; }
+.qw-reference-ui .site-topbar-shell .app-breadcrumb-bar { font-size: 11px; padding-block: 9px; border-top: 0; }
+/* Dashboard composition mirrors reference screen 3: rail, learning column, profile. */
+.qw-reference-ui .db-reference-frame { display: grid; grid-template-columns: 204px minmax(0,1fr); max-width: 1600px; margin: auto; min-height: calc(100vh - 96px); }
+.qw-reference-ui .db-shell .db-main-column { gap: 0; }
+.qw-reference-ui .db-shell .db-dashboard-grid { margin-top: 0; }
+.db-reference-utilities { display: flex; justify-content: flex-end; margin-top: 8px; }
+.qw-reference-ui .db-reference-utilities .db-motion-control { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; line-height: 1.5; }
+.qw-reference-ui .db-shell .db-home { width: 100%; padding: 22px 28px 48px; max-width: none; }.qw-reference-ui .db-shell .db-dashboard-grid { display: grid; grid-template-columns: minmax(0,1fr) 242px; gap: 24px; }.db-reference-welcome h1 { font-size: clamp(24px,2.3vw,32px) !important; margin: 0 0 8px !important; font-weight: 650; letter-spacing: -.65px !important; }.db-reference-welcome p { font-size: 13px; color: var(--q-muted); margin: 0 0 24px; }
+.qw-reference-ui .db-shell .db-home-header { justify-content: flex-end; margin-bottom: 12px; padding: 0; min-height: 0; }.qw-reference-ui .db-home-header>div { display: none; }.qw-reference-ui .db-motion-control { font-size: 10px; min-height: 28px; border: 0; background: transparent; }
+.qw-reference-ui .db-shell .db-reference-metrics { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin: 0 0 22px; padding: 0; border: 0; background: transparent; }.qw-reference-ui .db-reference-metrics>div { border: 1px solid #20303e; padding: 16px 8px; min-height: 106px; display: grid; }.qw-reference-ui .db-reference-metrics strong { font-size: 24px; }
+.qw-reference-ui .db-shell .db-continue-primary { padding: 20px; margin-bottom: 24px; border: 1px solid var(--q-border); border-radius: var(--q-radius); background: var(--q-surface); }.qw-reference-ui .db-shell .db-greeting { font-size: 14px; margin: 0 0 14px; font-weight: 600; color: var(--q-text); }.qw-reference-ui .db-shell .db-continue-primary h2 { font-size: 21px; margin: 0 0 8px; }.qw-reference-ui .db-shell .db-continue-blurb { font-size: 13px; line-height: 1.7; max-width: 58ch; }.qw-reference-ui .db-hero-actions { margin-top: 16px; gap: 18px; }
+.db-reference-aside { min-width: 0; padding-top: 0; }.q-ui-explorer-profile { padding: 16px; overflow: hidden; }.q-ui-explorer-profile>p { font-size: 12px; margin: 0 0 12px; font-weight: 500; }.q-ui-explorer-portrait { height: 238px; display: grid; align-items: end; background: radial-gradient(ellipse at bottom,#26325860,transparent 70%); margin-inline: -12px; overflow: hidden; }.q-ui-explorer-portrait img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }.q-ui-explorer-profile h2 { font-size: 19px !important; margin: 12px 0 4px !important; }.q-ui-explorer-profile>span { display: block; font-size: 12px; color: var(--q-muted); }.q-ui-explorer-profile progress { width: 100%; height: 6px; margin: 16px 0 8px; }.q-ui-explorer-profile small { display: block; text-align: right; font-size: 10px; color: var(--q-muted); line-height: 1.6; margin-top: 10px; }
+.db-bloch-disclosure { margin-top: 16px; border-top: 1px solid var(--q-border); padding-top: 10px; }.db-bloch-disclosure>summary { color: var(--q-muted); font-size: 12px; cursor: pointer; min-height: 36px; align-content: center; }.qw-reference-ui .db-shell .db-bloch-demo { padding: 12px; width: 100%; }.qw-reference-ui .db-shell .db-bloch-demo .quantum-sphere.qs-hologram canvas { height: 220px !important; }
+.q-ui-modules { margin-bottom: 24px; }.q-ui-modules h2 { margin: 0 0 14px !important; font-size: 18px !important; }.q-ui-modules>div { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 10px; }.q-ui-modules a { display: grid; align-content: start; justify-items: center; padding: 20px 8px 14px; min-height: 120px; border: 1px solid var(--q-border); border-radius: 6px; background: #0b1723; text-align: center; gap: 14px; }.q-ui-modules a>span { color: #b997ff; height: 32px; }.q-ui-modules a:nth-child(2)>span { color: #66d6f7; }.q-ui-modules a:nth-child(3)>span { color: #f8b177; }.q-ui-modules a:nth-child(4)>span { color: #dc98f7; }.q-ui-modules strong { font-size: 11px; font-weight: 500; line-height: 1.5; }
+.qw-reference-ui .db-shell .db-home-grid { gap: 16px; }.qw-reference-ui .db-shell .db-card { padding: 18px; background: var(--q-surface); border-color: var(--q-border); }.qw-reference-ui .db-shell .db-discovery-details,.qw-reference-ui .db-shell .db-progress-details { margin-top: 20px; }
+/* Landing composition: the introductory hero and four compact entry cards. */
+.qw-reference-ui .quantum-landing .ql-hero { padding-top: 0; grid-template-columns: 1fr 1fr; }.qw-reference-ui .quantum-landing .ql-hero-copy { padding: 54px 0 48px; }.qw-reference-ui .quantum-landing .ql-hero-copy>.ql-eyebrow,.qw-reference-ui .quantum-landing .ql-welcome { display: none; }.qw-reference-ui .quantum-landing .ql-hero h1 { font-size: clamp(42px,4.6vw,66px); font-weight: 650; letter-spacing: -1.8px; line-height: 1.08; margin: 0 0 20px; }.qw-reference-ui .quantum-landing .ql-hero h1>span { background: none; -webkit-text-fill-color: var(--q-text); }.qw-reference-ui .quantum-landing .ql-hero-tagline { color: #d09ae8; font-size: 24px; margin: 0 0 20px; }.qw-reference-ui .quantum-landing .ql-hero-description { font-size: 14px; line-height: 1.75; margin-bottom: 24px; }.qw-reference-ui .quantum-landing .ql-universe { min-height: 488px; }.qw-reference-ui .ql-showcase-backdrop { height: 520px; }
+.qw-reference-ui .ql-feature-grid { margin: 12px 0 24px; gap: 16px; }.qw-reference-ui .ql-feature-grid>a { position: relative; min-height: 130px; margin-top: 18px; padding: 34px 16px 16px; background: #0d1925; border-color: var(--q-border); border-radius: 7px; }.qw-reference-ui .ql-feature-grid>a>span { position: absolute; top: -21px; left: 18px; width: 44px; height: 44px; margin: 0; font-size: 25px; }.qw-reference-ui .quantum-landing .ql-feature-grid h2 { font-size: 14px; margin: 0 0 8px; letter-spacing: -.2px; }.qw-reference-ui .ql-feature-grid p { font-size: 12px; margin: 0; line-height: 1.65; }.qw-reference-ui .ql-feature-grid small { display: none; }.qw-reference-ui .quantum-landing .ql-primary { min-height: 44px; padding: 10px 18px; font-size: 13px; }.qw-reference-ui .quantum-landing .ql-text-link { min-height: 44px; border-color: #344a61; }.qw-reference-ui .ql-scene-top,.qw-reference-ui .ql-formula { opacity: .8; }
+@media(max-width:1000px) { .qw-reference-ui .site-topbar .brand { min-width: 0; }.qw-reference-ui .site-topbar .header-nav-pills a { padding-inline: 10px; } }
+@media(max-width:1150px) { .qw-reference-ui .db-reference-frame { grid-template-columns: 176px minmax(0,1fr); }.qw-reference-ui .db-shell .db-dashboard-grid { grid-template-columns: minmax(0,1fr) 204px; gap: 18px; }.qw-reference-ui .db-shell .db-home { padding-inline: 20px; }.q-ui-explorer-portrait { height: 204px; }.q-ui-modules>div { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media(max-width:950px) { .qw-reference-ui .db-shell .db-dashboard-grid { grid-template-columns: minmax(0,1fr); }.db-reference-aside { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 20px; }.q-ui-explorer-portrait { height: 180px; }.db-bloch-disclosure { margin: 0; } }
+@media(max-width:800px) { .qw-reference-ui .site-topbar-shell .site-topbar { padding-inline: 18px; gap: 12px; }.q-ui-rail { display: none; } }
+@media(max-width:800px) { .qw-reference-ui .db-reference-frame { grid-template-columns: 1fr; }.qw-reference-ui .db-shell .db-home { padding-inline: 20px; }.qw-reference-ui .quantum-landing .ql-hero { grid-template-columns: 1fr; }.qw-reference-ui .quantum-landing .ql-hero-copy { padding: 34px 0 12px; }.qw-reference-ui .quantum-landing .ql-hero h1 { font-size: clamp(40px,7vw,58px); }.qw-reference-ui .quantum-landing .ql-universe { min-height: 360px; }.qw-reference-ui .ql-showcase-backdrop { top: 260px; height: 430px; } }
+@media(max-width:560px) { .qw-reference-ui .db-shell .db-reference-metrics { gap: 8px; grid-template-columns: repeat(2,minmax(0,1fr)); }.qw-reference-ui .db-shell .db-reference-metrics>div { min-height: 92px; }.db-reference-aside { display: block; }.db-bloch-disclosure { margin-top: 16px; }.q-ui-modules>div { grid-template-columns: repeat(2,minmax(0,1fr)); }.qw-reference-ui .db-shell .db-home-grid { grid-template-columns: minmax(0,1fr); }.qw-reference-ui .ql-feature-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }.qw-reference-ui .quantum-landing .ql-hero-tagline { font-size: 20px; } }
+@media(max-width:560px) { .q-ui-button,.q-ui-segments button { min-height: 44px; }.q-ui-panel { padding: 16px; } }

@@ -203,6 +203,7 @@
   .quantum-portal { max-width:280px; margin:4px auto 14px; }
   .portal-tag { font-size:6px; }
   .path-picker-head h2 { font-size:24px; }
+  .path-picker-ambient { inset:0; overflow:hidden; }
   .path-stream { grid-template-columns:auto 1fr; gap:16px; padding:22px 0; }
   .path-stream-enter { display:none; }
   .discovery-shell .discovery-split { grid-template-columns:1fr; }

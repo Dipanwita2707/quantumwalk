@@ -1,0 +1,30 @@
+{
+  "browser": {
+    "mode": "launch",
+    "executable_path": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "headless": true
+  },
+  "start_url": { "url": "https://tools.sirraya.org/" },
+  "capture": {
+    "after_each_step": ["accessibility", "url"],
+    "at_end": ["accessibility", "screenshot"],
+    "events": ["network", "console", "page-errors"],
+    "network": { "request_body": false, "response_body": true, "header_values": false }
+  },
+  "actions": [
+    {
+      "step_id": "hub-ready",
+      "action": "wait_for",
+      "timeout_ms": 60000,
+      "locator": { "kind": "role", "role": "button", "name": "Create a document" },
+      "state": "visible"
+    },
+    {
+      "step_id": "open-create-document",
+      "action": "click",
+      "timeout_ms": 30000,
+      "locator": { "kind": "role", "role": "button", "name": "Create a document" }
+    },
+    { "step_id": "settle", "action": "wait_for_timeout", "duration_ms": 12000 }
+  ]
+}

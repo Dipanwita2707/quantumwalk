@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-25  
 **Sirraya evidence:** `2026-10-25-comprehensive-recon-report.md`, scenario JSON under this folder (local), `docs/03-evidence-register.md` (E001–E027)  
-**QuantumWalk evidence:** Repository inspection (paths cited below); not runtime-tested in this task.
+**QuantumWalk evidence:** Repository inspection and the later [27 October execution audit](../../../../docs/ux-audit/2026-10-27-platform-execution-audit.md). The Sirraya observations below remain historical; current Sirraya tool actions were not reverified.
 
 **Status legend:** `MATCH` | `PARTIAL` | `MISSING` | `BLOCKED` | `UNKNOWN`
 
@@ -12,7 +12,7 @@
 
 | Sirraya tool | QW primary surface | Overall parity | P0 gap |
 | --- | --- | --- | --- |
-| Quantum Explorer | `/explorer/tsp`, `/api/explorer/tsp`, `/api/v3/solve-tsp` | **PARTIAL** | 4–6 city live solve UX + health wiring to QW API |
+| Quantum Explorer | `/explorer/tsp`, `/api/explorer/tsp`, `/api/v3/solve-tsp` | **PARTIAL** (3- and 6-city live solve tested) | QAOA/VQE and configurable shots/iterations remain unimplemented; five-city UI and runtime trends unverified |
 | Quantum Mapper | `/explorer/mapper` | **PARTIAL** (IMPLEMENTED+TESTED) | Gate-level Sirraya UI UNKNOWN |
 | ML Studio | `/hub/ml-studio` | **PARTIAL** | ResNet/LISA-style demo vs layer toy |
 | Doc Editor | `/hub/doc-editor` | **PARTIAL** | CodeMirror, KaTeX, Mermaid, AI |
@@ -25,12 +25,12 @@
 
 | Sirraya feature / workflow | Evidence | Observed Sirraya behavior | QuantumWalk implementation | Status | Backend / deps | Work needed | Pri | Verification |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| TSP problem config (4+ cities, shots, Grover iters) | OBSERVED v3 a11y | Sliders, 4 cities default, algorithm select Grover/QAOA/VQE | `web/app/explorer/tsp/page.tsx` — **fixed 3-city** narrative; `web/lib/tspExplorer.ts` | **PARTIAL** | QW: `/api/explorer/tsp` demo; Sirraya: `localhost:8000` | Extend city count UI + API or document education scope | P1 | 4-city solve matches `/api/v3/solve-tsp` when API up |
-| Backend health check | OBSERVED E021, E026 | `GET http://localhost:8000/health`; Check Status re-triggers probe | No Sirraya-style health banner on TSP page; uses `/api/explorer/tsp` | **PARTIAL** | Local FastAPI | Add optional health to `/api/v3` or proxy; surface offline state | P0 | Health 200 enables run; UI matches state |
-| Solve / run quantum job | INFERRED E009; UNKNOWN live | Run disabled when offline | Grover **preset** + demo simulate; not Sirraya POST shape in UI | **PARTIAL** | `sirraya/api/sirraya_v3_routes.py`, `api/tsp_grover.py` | Wire TSP UI to v3 solve or unify APIs | P0 | POST solve-tsp from UI returns tour |
-| Results / documentation tabs | OBSERVED v3 a11y | Configuration, Results, Documentation | Stage stepper (Encode→Compare) in TSP page | **PARTIAL** | — | Tabbed results + doc panel | P2 | Tabs present with content |
-| Error mitigation controls | OBSERVED v3 a11y | Checkbox + combobox | Not in QW TSP explorer | **MISSING** | — | Omit or label as future | P3 | — |
-| Distance matrix editing | OBSERVED v3 a11y | Editable spinbuttons | Static matrix in `tspExplorer.ts` | **PARTIAL** | — | Optional editable matrix (client-only) | P2 | Edit matrix updates classical cost |
+| TSP problem config (4+ cities, shots, Grover iters) | OBSERVED v3 a11y | Sliders, 4 cities default, algorithm select Grover/QAOA/VQE | Editable 3–6 city matrix; fixed Grover/1,024-shot execution; API returns 501 for unsupported QAOA/VQE | **PARTIAL** | QW local FastAPI; Sirraya local backend in historical capture | Add real QAOA/VQE only with validated implementations; assess five-city UI | P1 | 3- and 6-city live E2E pass; 4- and 6-city API tests pass |
+| Backend health check | OBSERVED E021, E026 | `GET http://localhost:8000/health`; Check Status re-triggers probe | Online/offline status and Check status control are wired to QW API | **MATCH** (local behavior) | Local FastAPI | Keep offline recovery visible | P2 | Mock offline/online and live online E2E pass |
+| Solve / run quantum job | INFERRED E009; UNKNOWN live | Run disabled when offline | Run sends edited matrix to `POST /api/v3/solve-tsp` and shows returned tours | **PARTIAL** | `sirraya/api/tsp_quantum_grover.py` | Test five-city UI and repeated-run quality | P1 | 3- and 6-city live E2E pass; Sirraya server remained offline in prior capture |
+| Results / documentation tabs | OBSERVED v3 a11y | Configuration, Results, Documentation | Configure, Run, Results, Explanation runbook | **PARTIAL** | — | Compare documentation depth | P2 | Browser runbook E2E passes |
+| Error mitigation controls | OBSERVED v3 a11y | Checkbox + combobox | Not in QW TSP explorer; local simulation reports mitigation disabled and leaves unmeasured fidelity/quantum volume unset | **MISSING** | — | Implement and validate a real method before exposing controls | P3 | API response assertions pass |
+| Distance matrix editing | OBSERVED v3 a11y | Editable spinbuttons | Editable 3–6 city matrix with validation, classical recomputation, and stale-result clearing | **MATCH** (local behavior) | — | Evaluate editing at five-city size | P2 | Matrix edit/validation E2E, six-city live E2E, and API bounds pass |
 | SPA URL (no `/quantumtsp` path) | OBSERVED E006 | URL stays `/` | QW uses `/explorer/tsp` (deep link) | **MATCH** (QW superset) | — | Optional hub-only entry | P3 | `/explorer/tsp` loads |
 
 ---
@@ -108,7 +108,7 @@
 | Hub tool registry (6 ids) | OBSERVED E004–E005 | `sirraya/web/lib/hubTools.ts` | **MATCH** | — |
 | Hub recent tools / Mod+K | OBSERVED E007 | Partial via hub only | **PARTIAL** | P2 |
 | Guest vs signed-in | UNKNOWN auth | `AuthGate`, guest banners | **PARTIAL** | P1 |
-| Sirraya API compat | OBSERVED E009 | `sirraya/api/sirraya_v3_routes.py` | **PARTIAL** (backend exists; UI not wired) | P0 |
+| Sirraya API compat | OBSERVED E009 | QW UI calls its local `/api/v3/solve-tsp`; Sirraya's backend was offline in the historical capture | **PARTIAL** (local flow tested; live Sirraya interoperability unverified) | P1 |
 | Privacy / local-first docs | INFERRED E016 | QW docs localStorage hubs | **PARTIAL** | P2 |
 
 ---
@@ -121,3 +121,22 @@
 | Source maps | **OBSERVED:** `index-BmWPZvib.js.map` → HTTP **404** (Vercel) | curl probe, **E027** |
 | Locators | **OBSERVED:** Playwright `exact: true` requires full button names; fixed in `sirraya-capture-check-status.json` | Script diff |
 | Authentication | **UNKNOWN** (unchanged) | — |
+
+---
+
+## Release audit evidence (2026-10-26)
+
+**Git baseline audited:** `3f77ade` (includes `fb2349e` multi-shot Shor). **Test execution:** current working tree (large unstaged delta — see `docs/release-readiness-audit.md`).
+
+| Area | Prior status | Audit result | Evidence |
+| --- | --- | --- | --- |
+| TSP health + solve UI | PARTIAL | **CONFIRMED (WIP tree)** — offline/validation/loading e2e; **live** POST `/api/v3/solve-tsp` via Next proxy | `web/e2e/tsp-backend.spec.ts` (7/7), `web/e2e/tsp-live-integration.spec.ts` (2/2), API `127.0.0.1:8000/health` 200 |
+| TSP at clean `3f77ade` | — | **FAIL** — `/api/v3/solve-tsp` 404; router only in uncommitted `sirraya/api` + `api/main.py` | Detached worktree pytest `test_explorer_health_solve` 2 failed |
+| Quantum Mapper encode/decode | PARTIAL (TESTED) | **CONFIRMED** | `web/e2e/mapper.spec.ts` (4/4) |
+| QFT lab direct/gate | PARTIAL (TESTED) | **CONFIRMED** | `web/e2e/qft-lab.spec.ts` (4/4), `api/tests/test_qft_simulator.py` |
+| Shor paths + multi-shot | PARTIAL (TESTED) | **CONFIRMED** for N=15 demo; not cryptoscale | `web/e2e/shor-lab.spec.ts` (5/5), `api/tests/test_shor_multishot.py`, `fb2349e` |
+| Guest vs signed-in UX | PARTIAL / UNKNOWN | **CONFIRMED (mock auth only)** — not live OAuth | `web/e2e/ux-audit-authenticated.spec.ts` (7/7) |
+| Sirraya API compat | PARTIAL backend | **WIP only** — v3 routes not in committed tree at `3f77ade` | Same as TSP clean-checkout failure |
+| ML Studio / Doc Editor / Document Pro | PARTIAL | **UNVERIFIED** this run (smoke hub only) | `web/e2e/smoke.spec.ts` hub + doc-editor |
+
+**Sirraya parity claim:** Still **PARTIAL** overall; no hardware execution; no pixel/behavioral Sirraya clone.
