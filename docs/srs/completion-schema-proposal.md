@@ -1,6 +1,6 @@
 # Additive schema for remaining SRS features
 
-Proposed 30 October 2026. This is a reviewable proposal; no models or migrations for these additions have been applied.
+Proposed 30 October 2026; explicitly approved by the user. Models and the additive migration are implemented. Upgrade/downgrade tests and the isolated `.preview/srs-browser.sqlite` upgrade have run; no production migration has run.
 
 Existing approved SRS tables and their data remain unchanged. These additions support the remaining lesson-history, structured-rubric, boss-mission and durable-job requirements. Implement and test migrations only against isolated local databases. Production migration execution is excluded.
 

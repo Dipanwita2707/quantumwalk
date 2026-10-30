@@ -20,3 +20,10 @@ backups/
 *.dump
 *.dump.sha256
 .next-srs/
+# Local verification copies and generated browser artifacts.
+.audit-wt/
+tsp-v3-verify-wt/
+.tmp-*.png
+web/test-results/
+web/playwright-report/
+web/debug.log

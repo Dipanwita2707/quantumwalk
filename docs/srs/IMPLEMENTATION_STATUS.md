@@ -2,6 +2,8 @@
 
 Updated 30 October 2026. Source requirements: `QuantumWalk_Lab_SRS_v1.docx`. Visual source: `Quantum Lab Neon UI Showcase.png`.
 
+The latest implementation checkpoint is [COMPLETION_CONTINUATION.md](COMPLETION_CONTINUATION.md): lesson versions, weighted rubrics, boss missions, Discovery Universe, What-If/Autopsy, operations and opt-in durable scientific jobs have now been added. The tables and test results below describe the preceding baseline where they differ; outstanding acceptance is explicitly listed in the continuation note.
+
 This is a working implementation in the existing Next.js/FastAPI application. It is not a claim that live payment/email providers, scientific review, institutional pilot acceptance or production deployment have been completed.
 
 The detailed requirement ledger is [requirement-traceability.csv](requirement-traceability.csv). It explicitly separates implemented behaviour from partial requirements and external acceptance.

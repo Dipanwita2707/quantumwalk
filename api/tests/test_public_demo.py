@@ -14,7 +14,7 @@ from main import app  # noqa: E402
 client = TestClient(app)
 
 
-def test_guest_can_read_lessons_and_challenges():
+def test_guest_can_read_lessons_and_challenges(store):
     assert client.get("/api/lessons").status_code == 200
     assert client.get("/api/challenges").status_code == 200
     assert len(client.get("/api/lessons").json()) >= 6
